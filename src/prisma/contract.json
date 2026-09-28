@@ -1514,6 +1514,13 @@
                   "codecId": "pg/uuid@1",
                   "kind": "scalar"
                 }
+              },
+              "variable": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/bool@1",
+                  "kind": "scalar"
+                }
               }
             },
             "relations": {
@@ -1611,6 +1618,9 @@
                 },
                 "userId": {
                   "column": "userId"
+                },
+                "variable": {
+                  "column": "variable"
                 }
               },
               "namespaceId": "public",
@@ -3480,6 +3490,15 @@
                   "codecId": "pg/uuid@1",
                   "nativeType": "uuid",
                   "nullable": false
+                },
+                "variable": {
+                  "codecId": "pg/bool@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": false
+                  },
+                  "nativeType": "bool",
+                  "nullable": false
                 }
               },
               "foreignKeys": [
@@ -3662,7 +3681,7 @@
         "kind": "postgres-schema"
       }
     },
-    "storageHash": "52e68c189fa84984a0f61f00438450a959f03e0c060b43e56ae20d5638fbadf8"
+    "storageHash": "342e0cddf05a7fba4b37a251a4f201879cab79de6656cdf9460e94d1c4bb241a"
   },
   "execution": {
     "executionHash": "a21b9b774f61f307afad29ca5342cb265b748fb75e2385ca7b9f248a5c24ba63",

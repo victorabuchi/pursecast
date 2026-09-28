@@ -46,31 +46,35 @@ export async function completeSetupAction(formData: FormData) {
   // Bills, subscriptions, pay and rent.
   const nextDate = (date: string, cadence: Cadence) => (date > me.today ? date : rollForward(date, cadence, me.today));
   const kept = new Set<string>();
-  const creates: Array<{ userId: string; name: string; amount: number; cadence: string; nextDate: string; categoryId: string | null }> = [];
-  const save = (id: string, r: { name: string; amount: number; cadence: Cadence; date: string | null; category: string }) => {
+  const creates: Array<{ userId: string; name: string; amount: number; cadence: string; nextDate: string; categoryId: string | null; variable: boolean }> = [];
+  // A row with no price or no date is saved as "varies": a date defaults to
+  // the 1st of next month and nothing is posted automatically.
+  const firstNext = monthStart(addMonths(me.today, 1));
+  const save = (id: string, r: { name: string; amount: number; cadence: Cadence; date: string | null; category: string; variable?: boolean }) => {
     const row = id ? existing.find((x) => x.id === id) : undefined;
+    const variable = r.variable ?? (!r.amount || !r.date);
     if (row) {
       kept.add(row.id);
-      const next = { name: r.name, amount: r.amount, cadence: r.cadence, nextDate: r.date ? nextDate(r.date, r.cadence) : row.nextDate };
-      if (next.name !== row.name || next.amount !== row.amount || next.cadence !== row.cadence || next.nextDate !== row.nextDate) {
+      const next = { name: r.name, amount: r.amount, cadence: r.cadence, nextDate: r.date ? nextDate(r.date, r.cadence) : row.nextDate, variable };
+      if (next.name !== row.name || next.amount !== row.amount || next.cadence !== row.cadence || next.nextDate !== row.nextDate || next.variable !== row.variable) {
         writes.push(db.orm.public.Recurring.where({ id: row.id, userId: me.id }).update(next));
       }
-    } else if (r.date) {
-      creates.push({ userId: me.id, name: r.name, amount: r.amount, cadence: r.cadence, nextDate: nextDate(r.date, r.cadence), categoryId: byName.get(r.category) ?? null });
+    } else {
+      creates.push({ userId: me.id, name: r.name, amount: r.amount, cadence: r.cadence, nextDate: nextDate(r.date ?? firstNext, r.cadence), categoryId: byName.get(r.category) ?? null, variable });
     }
   };
   const salary = cents(formData, 'salary');
   // Pay without a date still counts: it defaults to the 1st of next month.
-  if (salary) save(str(formData, 'salaryId', 40), { name: str(formData, 'salaryName', 80) || 'Salary', amount: salary, cadence: 'monthly', date: day(formData, 'salaryDate') ?? monthStart(addMonths(me.today, 1)), category: 'Income' });
+  if (salary) save(str(formData, 'salaryId', 40), { name: str(formData, 'salaryName', 80) || 'Salary', amount: salary, cadence: 'monthly', date: day(formData, 'salaryDate') ?? firstNext, category: 'Income', variable: false });
   const rent = cents(formData, 'rent');
-  if (rent) save(str(formData, 'rentId', 40), { name: str(formData, 'rentName', 80) || 'Rent', amount: -rent, cadence: 'monthly', date: day(formData, 'rentDate'), category: 'Housing' });
+  if (rent) save(str(formData, 'rentId', 40), { name: str(formData, 'rentName', 80) || 'Rent', amount: -rent, cadence: 'monthly', date: day(formData, 'rentDate') ?? firstNext, category: 'Housing', variable: false });
   for (const [prefix, fixed] of [['bill', null], ['sub', 'Subscriptions']] as const) {
     for (let i = 0; i < 40; i++) {
       const name = str(formData, `${prefix}Name${i}`, 80);
       const amount = cents(formData, `${prefix}Amount${i}`);
       const cadence = str(formData, `${prefix}Cadence${i}`, 12);
-      if (!name || !amount) continue;
-      save(str(formData, `${prefix}Id${i}`, 40), { name, amount: -amount, cadence: isCadence(cadence) ? cadence : 'monthly', date: day(formData, `${prefix}Date${i}`), category: fixed ?? recurringCategory(name, false) });
+      if (!name) continue;
+      save(str(formData, `${prefix}Id${i}`, 40), { name, amount: -(amount ?? 0), cadence: isCadence(cadence) ? cadence : 'monthly', date: day(formData, `${prefix}Date${i}`), category: fixed ?? recurringCategory(name, false) });
     }
   }
   if (creates.length) writes.push(db.orm.public.Recurring.createAll(creates));
@@ -246,11 +250,14 @@ export async function addRecurringAction(formData: FormData) {
   const me = await getMe();
   const back = backTo(formData, '/spending?tab=bills');
   const name = str(formData, 'name', 80);
-  const amount = cents(formData, 'amount');
+  const amount = cents(formData, 'amount') ?? 0;
   const cadence = str(formData, 'cadence', 12);
-  const date = day(formData, 'nextDate');
-  const income = str(formData, 'direction') === 'in';
-  if (!name || !amount || !date || !isCadence(cadence)) done(back, 'Fill in the name, amount, how often and the next date.', 'error');
+  const given = day(formData, 'nextDate');
+  const income = str(formData, 'direction') === '+' || str(formData, 'direction') === 'in';
+  // No price or no date yet (cloud bills that change monthly): saved as varies.
+  const variable = Boolean(formData.get('variable')) || !amount || !given;
+  const date = given ?? monthStart(addMonths(me.today, 1));
+  if (!name || !isCadence(cadence)) done(back, 'Give it a name.', 'error');
   await ensureCategories(me.id);
   let categoryId = await ownedCategory(me.id, str(formData, 'categoryId', 40));
   if (!categoryId) {
@@ -258,9 +265,9 @@ export async function addRecurringAction(formData: FormData) {
     categoryId = cat?.id ?? null;
   }
   const nextDate = date > me.today ? date : rollForward(date, cadence, me.today);
-  await db.orm.public.Recurring.create({ userId: me.id, name, amount: income ? amount : -amount, cadence, nextDate, categoryId });
+  await db.orm.public.Recurring.create({ userId: me.id, name, amount: income ? amount : -amount, cadence, nextDate, categoryId, variable });
   const label = CADENCES.find(([c]) => c === cadence)![1].toLowerCase();
-  done(back, `${name} added · ${money(income ? amount : -amount, me.currency, { sign: true })} ${label}`);
+  done(back, variable ? `${name} added · price varies` : `${name} added · ${money(income ? amount : -amount, me.currency, { sign: true })} ${label}`);
 }
 
 export async function updateRecurringAction(formData: FormData) {
@@ -268,14 +275,16 @@ export async function updateRecurringAction(formData: FormData) {
   const back = backTo(formData, '/spending?tab=bills');
   const id = str(formData, 'id', 40);
   const row = await db.orm.public.Recurring.where({ id, userId: me.id }).first();
-  const amount = cents(formData, 'amount');
+  const amount = cents(formData, 'amount') ?? 0;
   const cadence = str(formData, 'cadence', 12);
-  const date = day(formData, 'nextDate');
-  if (!row || !amount || !date || !isCadence(cadence)) done(back, 'Check the amount and the next date.', 'error');
+  const given = day(formData, 'nextDate');
+  const date = given ?? row?.nextDate ?? me.today;
+  const variable = Boolean(formData.get('variable')) || !amount || !given;
+  if (!row || !isCadence(cadence)) done(back, 'That item is gone.', 'error');
   const name = str(formData, 'name', 80) || row.name;
   const nextDate = date > me.today ? date : rollForward(date, cadence, me.today);
   const categoryId = formData.has('categoryId') ? await ownedCategory(me.id, str(formData, 'categoryId', 40)) : row.categoryId;
-  await db.orm.public.Recurring.where({ id, userId: me.id }).update({ name, amount: row.amount < 0 ? -amount : amount, cadence, nextDate, categoryId });
+  await db.orm.public.Recurring.where({ id, userId: me.id }).update({ name, amount: row.amount < 0 ? -amount : amount, cadence, nextDate, categoryId, variable });
   done(back, `${name} updated`);
 }
 

@@ -137,6 +137,10 @@ model Recurring {
   categoryId Uuid?
   // Paused items are left out of the forecast and not posted until resumed.
   paused     Boolean           @default(false)
+  // The price or date is not fixed (cloud hosting, usage billing). amount is
+  // an estimate (0 when unknown); nothing is posted automatically, the person
+  // logs what it really cost.
+  variable   Boolean           @default(false)
   // Comma separated dates (YYYY-MM-DD) skipped once, like a month without
   // an electricity bill.
   skips      String            @default("")

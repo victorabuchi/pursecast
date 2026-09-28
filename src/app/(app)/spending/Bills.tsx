@@ -32,7 +32,7 @@ function RecurringForm({ row, currency, today, types, preset }: { row?: Recurrin
       <div className={styles.row}>
         <label className={styles.field}>
           Amount
-          <MoneyInput name="amount" currency={currency} value={row ? Math.abs(row.amount) : null} required />
+          <MoneyInput name="amount" currency={currency} value={row && row.amount ? Math.abs(row.amount) : null} placeholder="Leave empty if it varies" />
         </label>
         <label className={styles.field}>
           How often
@@ -48,7 +48,7 @@ function RecurringForm({ row, currency, today, types, preset }: { row?: Recurrin
       <div className={styles.row}>
         <label className={styles.field}>
           Next due date
-          <input className={styles.input} type="date" name="nextDate" defaultValue={row?.nextDate} min={today} required />
+          <input className={styles.input} type="date" name="nextDate" defaultValue={row?.nextDate} min={today} />
         </label>
         <label className={styles.field}>
           Type
@@ -62,6 +62,11 @@ function RecurringForm({ row, currency, today, types, preset }: { row?: Recurrin
           </select>
         </label>
       </div>
+      <label className={styles.check}>
+        <input type="checkbox" name="variable" defaultChecked={row?.variable} />
+        The price or date changes each time (like Render or Supabase)
+      </label>
+      <p className={styles.note}>Varying ones are never posted automatically; log what they really cost. A rough amount helps Money Weather.</p>
       <div className={styles.sheetActions}>
         <CloseButton className={styles.btnGhost}>Cancel</CloseButton>
         <Submit className={styles.btn}>{row ? 'Save' : 'Add'}</Submit>
@@ -92,6 +97,7 @@ function BillRow({ r, color, currency, today, types, openAdvance = false }: { r:
         <b>
           {r.name}
           {r.paused && <span className={styles.tag}>paused</span>}
+          {r.variable && <span className={styles.tag}>varies</span>}
         </b>
         <small>
           {CADENCES.find(([c]) => c === r.cadence)?.[1]}
@@ -125,7 +131,7 @@ function BillRow({ r, color, currency, today, types, openAdvance = false }: { r:
           <Submit className={`${styles.btnGhost} ${styles.btnSmall}`}>Resume</Submit>
         </form>
       ) : (
-        <b className={`${styles.num} ${income ? styles.pos : ''}`}>{exact(r.amount, currency, { sign: income })}</b>
+        <b className={`${styles.num} ${income ? styles.pos : ''}`}>{r.variable ? (r.amount ? `~${exact(Math.abs(r.amount), currency)}` : 'Varies') : exact(r.amount, currency, { sign: income })}</b>
       )}
       {income && !r.paused && (
         <SheetButton className={`${styles.btnGhost} ${styles.btnSmall}`} label="Advance" initiallyOpen={openAdvance} title={`${r.name} advance`} sub="Part of your pay early. The same amount comes off the next payday after it.">

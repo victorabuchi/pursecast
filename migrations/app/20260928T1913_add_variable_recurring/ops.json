@@ -1,0 +1,44 @@
+[
+  {
+    "id": "column.public.recurring.variable",
+    "label": "Add column \"variable\" to \"recurring\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "variable",
+        "table": "recurring"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"variable\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "recurring",
+          "variable"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"variable\"",
+        "sql": "ALTER TABLE \"public\".\"recurring\" ADD COLUMN \"variable\" bool DEFAULT false NOT NULL"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"variable\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "recurring",
+          "variable"
+        ]
+      }
+    ]
+  }
+]

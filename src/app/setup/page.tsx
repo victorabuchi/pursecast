@@ -61,8 +61,8 @@ export default async function SetupPage() {
   const catName = new Map(cats.map((c) => [c.id, c.name]));
   const salary = recurring.find((r) => r.amount > 0 && !r.paused);
   const rent = recurring.find((r) => r.amount < 0 && !r.paused && catName.get(r.categoryId ?? '') === 'Housing');
-  const others = recurring.filter((r) => r.id !== salary?.id && r.id !== rent?.id && r.amount < 0 && !r.paused);
-  const toRow = (r: RecurringRow, key: number) => ({ key, id: r.id, name: r.name, amount: String(-r.amount / 100), cadence: r.cadence, date: r.nextDate });
+  const others = recurring.filter((r) => r.id !== salary?.id && r.id !== rent?.id && r.amount <= 0 && !r.paused);
+  const toRow = (r: RecurringRow, key: number) => ({ key, id: r.id, name: r.name, amount: r.amount ? String(-r.amount / 100) : '', cadence: r.cadence, date: r.nextDate });
   const subRows = others.filter((r) => catName.get(r.categoryId ?? '') === 'Subscriptions').map(toRow);
   const billRows = others.filter((r) => catName.get(r.categoryId ?? '') !== 'Subscriptions').map(toRow);
   const open = debts.filter((d) => !d.settledAt && d.left > 0);
@@ -184,7 +184,7 @@ export default async function SetupPage() {
 
           <section className={styles.card}>
             <strong className={styles.cardTitle}>4. Subscriptions</strong>
-            <p className={styles.note}>Streaming, apps, the gym. Yearly ones too, so they never surprise you.</p>
+            <p className={styles.note}>Streaming, apps, the gym. Yearly ones too, so they never surprise you. No fixed price or date (like Render or Supabase)? Just add the name.</p>
             <RepeatRows prefix="sub" presets={POPULAR_SUBSCRIPTIONS} currency={cur} today={me.today} addLabel="Add a subscription" draftKey={k('subs')} initialRows={subRows} />
           </section>
 

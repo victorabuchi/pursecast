@@ -22,6 +22,11 @@ export const POPULAR_SUBSCRIPTIONS: Array<{ name: string; amount?: number; caden
   { name: 'Dropbox', amount: 1199 },
   { name: 'Gym', amount: 3900 },
   { name: 'Newspaper', amount: 1500 },
+  { name: 'Render' },
+  { name: 'Supabase' },
+  { name: 'Vercel' },
+  { name: 'AWS' },
+  { name: 'Anthropic API' },
 ];
 
 export const POPULAR_BILLS: Array<{ name: string; amount?: number; cadence?: Cadence }> = [

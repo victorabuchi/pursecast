@@ -38,6 +38,7 @@ export type RecurringRow = {
   nextDate: string;
   categoryId: string | null;
   paused: boolean;
+  variable: boolean;
   skips: string[];
   // pending: arrives on takenOn and is not in the balance yet.
   advances: Array<{ id: string; amount: number; payday: string; takenOn: string; pending: boolean }>;
@@ -122,6 +123,8 @@ export async function postDueRecurring(userId: string, today: string): Promise<v
     for (let i = 0; i < 60 && date <= today; i++) {
       if (skips.has(date)) {
         skips.delete(date);
+      } else if (r.variable) {
+        // The real price is not known ahead; the person logs it.
       } else {
         const mine = advances.filter((a) => a.payday <= date && !settled.includes(a.id));
         const taken = mine.reduce((s, a) => s + a.amount, 0);
@@ -152,6 +155,7 @@ export const getRecurring = cache(async (userId: string): Promise<RecurringRow[]
     nextDate: r.nextDate,
     categoryId: r.categoryId,
     paused: r.paused,
+    variable: r.variable,
     skips: splitSkips(r.skips),
     advances: advances.filter((a) => a.recurringId === r.id).map((a) => ({ id: a.id, amount: a.amount, payday: a.payday, takenOn: a.takenOn, pending: !a.entryId })),
   }));
