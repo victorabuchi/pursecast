@@ -1,0 +1,440 @@
+[
+  {
+    "id": "table.statement",
+    "label": "Create table \"statement\"",
+    "summary": "Creates table \"statement\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "statement"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"statement\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"statement\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"statement\"",
+        "sql": "CREATE TABLE \"public\".\"statement\" (\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"id\" uuid NOT NULL,\n  \"name\" text NOT NULL,\n  \"userId\" uuid NOT NULL,\n  PRIMARY KEY (\"id\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"statement\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"statement\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.statement_txn",
+    "label": "Create table \"statement_txn\"",
+    "summary": "Creates table \"statement_txn\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "statement_txn"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"statement_txn\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"statement_txn\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"statement_txn\"",
+        "sql": "CREATE TABLE \"public\".\"statement_txn\" (\n  \"amount\" int4 NOT NULL,\n  \"category\" text NOT NULL,\n  \"date\" text NOT NULL,\n  \"description\" text NOT NULL,\n  \"id\" uuid NOT NULL,\n  \"place\" text NOT NULL,\n  \"statementId\" uuid NOT NULL,\n  \"userId\" uuid NOT NULL,\n  PRIMARY KEY (\"id\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"statement_txn\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"statement_txn\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.statement.statement_userId_idx_a489d58a",
+    "label": "Create index \"statement_userId_idx_a489d58a\" on \"statement\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "statement_userId_idx_a489d58a",
+        "table": "statement"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"statement_userId_idx_a489d58a\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"statement_userId_idx_a489d58a\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"statement_userId_idx_a489d58a\"",
+        "sql": "CREATE INDEX \"statement_userId_idx_a489d58a\" ON \"public\".\"statement\" (\"userId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"statement_userId_idx_a489d58a\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"statement_userId_idx_a489d58a\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.statement_txn.statement_txn_statementId_idx_af8497c3",
+    "label": "Create index \"statement_txn_statementId_idx_af8497c3\" on \"statement_txn\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "statement_txn_statementId_idx_af8497c3",
+        "table": "statement_txn"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"statement_txn_statementId_idx_af8497c3\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"statement_txn_statementId_idx_af8497c3\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"statement_txn_statementId_idx_af8497c3\"",
+        "sql": "CREATE INDEX \"statement_txn_statementId_idx_af8497c3\" ON \"public\".\"statement_txn\" (\"statementId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"statement_txn_statementId_idx_af8497c3\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"statement_txn_statementId_idx_af8497c3\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.statement_txn.statement_txn_userId_date_idx_b0e9c250",
+    "label": "Create index \"statement_txn_userId_date_idx_b0e9c250\" on \"statement_txn\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "statement_txn_userId_date_idx_b0e9c250",
+        "table": "statement_txn"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"statement_txn_userId_date_idx_b0e9c250\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"statement_txn_userId_date_idx_b0e9c250\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"statement_txn_userId_date_idx_b0e9c250\"",
+        "sql": "CREATE INDEX \"statement_txn_userId_date_idx_b0e9c250\" ON \"public\".\"statement_txn\" (\"userId\", \"date\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"statement_txn_userId_date_idx_b0e9c250\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"statement_txn_userId_date_idx_b0e9c250\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.statement_txn.statement_txn_userId_idx_a489d58a",
+    "label": "Create index \"statement_txn_userId_idx_a489d58a\" on \"statement_txn\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "statement_txn_userId_idx_a489d58a",
+        "table": "statement_txn"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"statement_txn_userId_idx_a489d58a\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"statement_txn_userId_idx_a489d58a\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"statement_txn_userId_idx_a489d58a\"",
+        "sql": "CREATE INDEX \"statement_txn_userId_idx_a489d58a\" ON \"public\".\"statement_txn\" (\"userId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"statement_txn_userId_idx_a489d58a\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"statement_txn_userId_idx_a489d58a\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.statement.statement_userId_fkey",
+    "label": "Add foreign key \"statement_userId_fkey\" on \"statement\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "statement_userId_fkey",
+        "table": "statement"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"statement_userId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "statement_userId_fkey",
+          "public",
+          "\"public\".\"statement\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"statement_userId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"statement\"\nADD CONSTRAINT \"statement_userId_fkey\"\nFOREIGN KEY (\"userId\")\nREFERENCES \"public\".\"app_user\" (\"id\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"statement_userId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "statement_userId_fkey",
+          "public",
+          "\"public\".\"statement\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.statement_txn.statement_txn_statementId_fkey",
+    "label": "Add foreign key \"statement_txn_statementId_fkey\" on \"statement_txn\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "statement_txn_statementId_fkey",
+        "table": "statement_txn"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"statement_txn_statementId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "statement_txn_statementId_fkey",
+          "public",
+          "\"public\".\"statement_txn\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"statement_txn_statementId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"statement_txn\"\nADD CONSTRAINT \"statement_txn_statementId_fkey\"\nFOREIGN KEY (\"statementId\")\nREFERENCES \"public\".\"statement\" (\"id\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"statement_txn_statementId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "statement_txn_statementId_fkey",
+          "public",
+          "\"public\".\"statement_txn\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.statement_txn.statement_txn_userId_fkey",
+    "label": "Add foreign key \"statement_txn_userId_fkey\" on \"statement_txn\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "statement_txn_userId_fkey",
+        "table": "statement_txn"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"statement_txn_userId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "statement_txn_userId_fkey",
+          "public",
+          "\"public\".\"statement_txn\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"statement_txn_userId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"statement_txn\"\nADD CONSTRAINT \"statement_txn_userId_fkey\"\nFOREIGN KEY (\"userId\")\nREFERENCES \"public\".\"app_user\" (\"id\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"statement_txn_userId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "statement_txn_userId_fkey",
+          "public",
+          "\"public\".\"statement_txn\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "rowLevelSecurity.public.statement",
+    "label": "Enable row-level security on \"statement\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "rowLevelSecurity",
+        "name": "statement"
+      }
+    },
+    "precheck": [
+      {
+        "description": "check RLS is not already enabled on \"statement\"",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_class\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"relnamespace\" WHERE (\"n\".\"nspname\" = $1 AND \"c\".\"relname\" = $2 AND NOT (\"c\".\"relrowsecurity\"))) AS \"result\"",
+        "params": [
+          "public",
+          "statement"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "enable row-level security on \"statement\"",
+        "sql": "ALTER TABLE \"public\".\"statement\" ENABLE ROW LEVEL SECURITY"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify row-level security is enabled on \"statement\"",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_class\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"relnamespace\" WHERE (\"n\".\"nspname\" = $1 AND \"c\".\"relname\" = $2 AND \"c\".\"relrowsecurity\")) AS \"result\"",
+        "params": [
+          "public",
+          "statement"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "rowLevelSecurity.public.statement_txn",
+    "label": "Enable row-level security on \"statement_txn\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "rowLevelSecurity",
+        "name": "statement_txn"
+      }
+    },
+    "precheck": [
+      {
+        "description": "check RLS is not already enabled on \"statement_txn\"",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_class\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"relnamespace\" WHERE (\"n\".\"nspname\" = $1 AND \"c\".\"relname\" = $2 AND NOT (\"c\".\"relrowsecurity\"))) AS \"result\"",
+        "params": [
+          "public",
+          "statement_txn"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "enable row-level security on \"statement_txn\"",
+        "sql": "ALTER TABLE \"public\".\"statement_txn\" ENABLE ROW LEVEL SECURITY"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify row-level security is enabled on \"statement_txn\"",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_class\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"relnamespace\" WHERE (\"n\".\"nspname\" = $1 AND \"c\".\"relname\" = $2 AND \"c\".\"relrowsecurity\")) AS \"result\"",
+        "params": [
+          "public",
+          "statement_txn"
+        ]
+      }
+    ]
+  }
+]

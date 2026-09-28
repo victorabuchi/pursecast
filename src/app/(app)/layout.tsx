@@ -39,6 +39,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     { group: 'Go to', label: 'Worth-It', hint: 'Joy per euro', href: '/worth-it' },
     { group: 'Go to', label: 'Timeline Forks', hint: 'What if…', href: '/forks' },
     { group: 'Go to', label: 'Plan ahead', hint: 'Costs on your calendar', href: '/plan' },
+    { group: 'Go to', label: 'Statements', hint: 'Upload a statement, see where money went', href: '/statements' },
     { group: 'Go to', label: 'Bills and income', href: '/spending?tab=bills' },
     { group: 'Go to', label: 'Subscriptions', hint: 'Bills and income', href: '/spending?tab=bills' },
     { group: 'Go to', label: 'Money owed', hint: 'Lent and borrowed', href: '/spending?tab=owed' },

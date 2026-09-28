@@ -37,6 +37,8 @@ model User {
   notes        FutureNote[]
   advances     SalaryAdvance[]
   wishes       WishItem[]
+  statements   Statement[]
+  statementTxns StatementTxn[]
 
   @@rls
   @@map("app_user")
@@ -327,4 +329,39 @@ model WishItem {
   @@index([userId])
   @@rls
   @@map("wish_item")
+}
+
+// An uploaded bank statement, a set of screenshots, or an export file. Its
+// transactions are for looking back and do not move the balance.
+model Statement {
+  id        Uuid              @id @default(uuid())
+  user      User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    Uuid
+  name      String
+  createdAt TimestamptzString @default(now())
+  txns      StatementTxn[]
+
+  @@index([userId])
+  @@rls
+  @@map("statement")
+}
+
+// One transaction read from a statement. amount is cents, negative when
+// money went out. category is a category name, place the shop or payer.
+model StatementTxn {
+  id          Uuid      @id @default(uuid())
+  statement   Statement @relation(fields: [statementId], references: [id], onDelete: Cascade)
+  statementId Uuid
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId      Uuid
+  date        String
+  description String
+  place       String
+  amount      Int
+  category    String
+
+  @@index([userId, date])
+  @@index([statementId])
+  @@rls
+  @@map("statement_txn")
 }

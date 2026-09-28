@@ -11,6 +11,8 @@ import { personalInflation } from '../src/lib/money/inflation';
 import { guessCategory, parseQuick } from '../src/lib/money/categories';
 import { evaluate, isExpression, show } from '../src/lib/money/calc';
 import { affordableFrom } from '../src/lib/money/wish';
+import { parseCsv, rowsToTxns } from '../src/lib/statements/tabular';
+import { story } from '../src/lib/statements/analysis';
 import { paidBack, remaining } from '../src/lib/money/debts';
 import { noteFor, pauseFor, validAudio } from '../src/lib/money/notes';
 
@@ -303,4 +305,22 @@ test('want to buy: the first day it fits without a storm later', () => {
   assert.equal(affordableFrom(fc, 40000), '2026-09-28');
   assert.equal(affordableFrom(fc, 120000), '2026-10-09');
   assert.equal(affordableFrom(fc, 500000), null);
+});
+
+test('statements: bank CSV is read without AI and told as a story', () => {
+  const csv = ['Kirjauspäivä;Määrä;Maksaja;Maksunsaaja;Otsikko', '01.10.2025;2900,00;Acme Oy;Alex;Palkka', '03.10.2025;-950,00;Alex;Landlord;Vuokra', '05.10.2025;-12,99;Alex;Spotify;Spotify', '05.11.2025;-12,99;Alex;Spotify;Spotify', '06.12.2025;-12,99;Alex;Spotify;Spotify', '10.11.2025;-42,10;Alex;K-Market;K-Market Kamppi', '12.11.2025;-500,00;Alex;Alex;Oma tili siirto'].join('\n');
+  const txns = rowsToTxns(parseCsv(csv))!;
+  assert.equal(txns.length, 7);
+  assert.deepEqual([txns[0]!.date, txns[0]!.amount, txns[0]!.category], ['2025-10-01', 290000, 'Income']);
+  assert.equal(txns[5]!.category, 'Groceries');
+  const s = story(txns.map((t) => (t.description.includes('siirto') ? { ...t, category: 'Transfers' } : t)), (c) => `€${c / 100}`, (m) => m)!;
+  assert.equal(s.moneyIn, 290000);
+  assert.equal(s.moneyOut, 95000 + 3 * 1299 + 4210);
+  assert.equal(s.months.length, 3);
+  assert.deepEqual(s.recurring.map((r) => [r.name, r.typical, r.months]), [['Spotify', 1299, 3]]);
+  assert.deepEqual([txns[0]!.place, txns[5]!.place, txns[5]!.description], ['Acme Oy', 'K-Market', 'K-Market Kamppi']);
+  assert.deepEqual(s.biggest.map((t) => t.place), ['Landlord', 'K-Market']);
+  assert.equal(s.categories[0]!.name, 'Housing');
+  assert.equal(parseCsv('a,b\n"x, y",2')[1]![0], 'x, y');
+  assert.equal(rowsToTxns([['foo', 'bar'], ['1', '2']]), null);
 });

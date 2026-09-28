@@ -11,6 +11,7 @@ export const NAV: Array<[IconName, string, string]> = [
   ['heart', 'Worth-It', '/worth-it'],
   ['fork', 'Forks', '/forks'],
   ['cal', 'Plan', '/plan'],
+  ['file', 'Statements', '/statements'],
 ];
 
 export function Rail() {

@@ -2295,3 +2295,187 @@
   color: var(--muted);
   font-size: 12.5px;
 }
+
+/* Statements */
+.drop {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 150px;
+  padding: 22px;
+  border: 2px dashed #cfd5dc;
+  border-radius: 16px;
+  background: #fff;
+  color: var(--muted);
+  text-align: center;
+  cursor: pointer;
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease;
+}
+
+.drop b {
+  color: var(--ink);
+}
+
+.drop:hover,
+.dropOver {
+  border-color: var(--b);
+  background: var(--bt);
+}
+
+.drop svg {
+  color: var(--b);
+}
+
+.dropCompact {
+  flex-direction: row;
+  min-height: 0;
+  padding: 12px 16px;
+}
+
+.drop[aria-busy='true'] {
+  cursor: progress;
+}
+
+.spinner {
+  width: 22px;
+  height: 22px;
+  border: 3px solid var(--bt);
+  border-top-color: var(--b);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.error,
+.success {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 10px;
+  font-size: 13.5px;
+}
+
+.error {
+  background: #fef2f2;
+  color: var(--neg);
+}
+
+.success {
+  background: var(--bt);
+  color: var(--ink);
+}
+
+.flowChart {
+  display: flex;
+  align-items: flex-end;
+  gap: 6px;
+  height: 180px;
+  padding-top: 8px;
+}
+
+.flowMonth {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  height: 100%;
+}
+
+.flowBars {
+  display: flex;
+  flex: 1;
+  align-items: flex-end;
+  gap: 3px;
+  width: 100%;
+  justify-content: center;
+}
+
+.flowBars i {
+  width: 42%;
+  max-width: 18px;
+  border-radius: 5px 5px 2px 2px;
+  animation: grow 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  transform-origin: bottom;
+}
+
+.flowMonth small {
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.legendDot {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  margin-right: 6px;
+  border-radius: 3px;
+  vertical-align: -1px;
+}
+
+.bigStat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.bigStat small {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.bigStat b {
+  font-size: 26px;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+
+.story {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 16px 18px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #062a22, #0f7a63);
+  color: #fff;
+  list-style: none;
+}
+
+.story li {
+  display: flex;
+  gap: 10px;
+  font-size: 14.5px;
+  line-height: 1.5;
+}
+
+.story li::before {
+  content: '✦';
+  color: #fcd34d;
+}
+
+.txnTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13.5px;
+}
+
+.txnTable td {
+  padding: 8px 6px;
+  border-top: 1px solid var(--line);
+  vertical-align: middle;
+}
+
+.txnTable td:last-child {
+  width: 30px;
+}

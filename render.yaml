@@ -24,3 +24,5 @@ services:
         value: Pursecast <hello@pursecast.com>
       - key: NATIONAL_INFLATION
         sync: false
+      - key: ANTHROPIC_API_KEY
+        sync: false
