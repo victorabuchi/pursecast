@@ -1,0 +1,86 @@
+[
+  {
+    "id": "column.public.app_user.notepad",
+    "label": "Add column \"notepad\" to \"app_user\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "notepad",
+        "table": "app_user"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"notepad\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "app_user",
+          "notepad"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"notepad\"",
+        "sql": "ALTER TABLE \"public\".\"app_user\" ADD COLUMN \"notepad\" text DEFAULT '' NOT NULL"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"notepad\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "app_user",
+          "notepad"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.public.app_user.notepadAt",
+    "label": "Add column \"notepadAt\" to \"app_user\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "notepadAt",
+        "table": "app_user"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"notepadAt\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "app_user",
+          "notepadAt"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"notepadAt\"",
+        "sql": "ALTER TABLE \"public\".\"app_user\" ADD COLUMN \"notepadAt\" timestamptz"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"notepadAt\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "app_user",
+          "notepadAt"
+        ]
+      }
+    ]
+  }
+]

@@ -1,0 +1,47 @@
+{
+  "name": "pursecast",
+  "type": "module",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint",
+    "typecheck": "tsc --noEmit",
+    "contract:emit": "prisma contract emit",
+    "db:plan": "prisma migration plan",
+    "db:migrate": "prisma db migrate",
+    "db:verify": "prisma db verify",
+    "test": "tsx --test tests/*.test.ts",
+    "e2e:auth": "tsx scripts/e2e-auth.ts",
+    "seed:demo": "tsx scripts/seed-demo.ts"
+  },
+  "dependencies": {
+    "@prisma/orm-postgres": "^8.0.0-rc.10",
+    "canvas-confetti": "^1.9.4",
+    "dotenv": "^17.4.2",
+    "motion": "^13.4.4",
+    "next": "16.3.5",
+    "react": "19.2.8",
+    "react-dom": "19.2.8"
+  },
+  "devDependencies": {
+    "@prisma/cli-engine": "^0.2.3",
+    "@types/canvas-confetti": "^1.9.0",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "eslint": "^9",
+    "eslint-config-next": "16.3.5",
+    "prisma": "^8.0.0-rc.10",
+    "tsx": "^4.23.15",
+    "typescript": "^5"
+  },
+  "allowScripts": {
+    "esbuild@0.28.2": true,
+    "unrs-resolver@1.12.2": true,
+    "workerd": false,
+    "msgpackr-extract": false
+  }
+}

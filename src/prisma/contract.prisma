@@ -1,0 +1,306 @@
+// use prisma-8
+
+// One account per person. Everything a user owns will carry userId.
+
+model User {
+  id           Uuid               @id @default(uuid())
+  email        String             @unique
+  name         String
+  // ISO 4217 code used for amounts and the forecast.
+  currency     String             @default("EUR")
+  // IANA zone that decides what "today" is.
+  timezone     String             @default("Europe/Helsinki")
+  // Account balance in cents as entered by the person, and when. Entries
+  // created after balanceSetAt move it. Null until setup is done.
+  balance      Int?
+  balanceSetAt TimestamptzString?
+  // Money Weather treats a day below this (cents) as cloudy.
+  cushion      Int                @default(0)
+  // Secret iCal address of the person's calendar, read by Plan ahead.
+  calendarUrl  String?
+  calendarAt   TimestamptzString?
+  // The floating note, saved as it is typed.
+  notepad      String             @default("")
+  notepadAt    TimestamptzString?
+  createdAt    TimestamptzString  @default(now())
+  lastSignInAt TimestamptzString?
+  identities   AuthIdentity[]
+  categories   Category[]
+  entries      Entry[]
+  recurring    Recurring[]
+  budgetMoves  BudgetMove[]
+  forks        Fork[]
+  forkEffects  ForkEffect[]
+  planEvents   PlanEvent[]
+  planItems    PlanItem[]
+  debts        Debt[]
+  notes        FutureNote[]
+  advances     SalaryAdvance[]
+
+  @@rls
+  @@map("app_user")
+}
+
+// A way to sign in. provider is 'password' today; 'google' and 'apple' are
+// added later as new rows without schema changes. subject is the email for
+// passwords and the provider's user id otherwise.
+model AuthIdentity {
+  id         Uuid               @id @default(uuid())
+  user       User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId     Uuid
+  provider   String
+  subject    String
+  // scrypt hash, only for provider 'password'.
+  secretHash String?
+  createdAt  TimestamptzString  @default(now())
+  lastUsedAt TimestamptzString?
+
+  @@unique([provider, subject])
+  @@index([userId])
+  @@rls
+  @@map("auth_identity")
+}
+
+// One-time sign-in link. Only the SHA-256 of the token is stored.
+model LoginToken {
+  id        Uuid               @id @default(uuid())
+  tokenHash String             @unique
+  email     String
+  expiresAt TimestamptzString
+  usedAt    TimestamptzString?
+  createdAt TimestamptzString  @default(now())
+
+  @@index([email])
+  @@rls
+  @@map("login_token")
+}
+
+// Where money goes. kind is 'flex' (everyday spending with a monthly budget),
+// 'fixed' (bills) or 'income'. Amounts are cents.
+model Category {
+  id        Uuid              @id @default(uuid())
+  user      User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    Uuid
+  name      String
+  kind      String            @default("flex")
+  budget    Int               @default(0)
+  color     String            @default("#0f7a63")
+  position  Int               @default(0)
+  createdAt TimestamptzString @default(now())
+  entries   Entry[]
+  recurring Recurring[]
+  moves     BudgetMove[]
+  notes     FutureNote[]
+
+  @@unique([userId, name])
+  @@rls
+  @@map("category")
+}
+
+// One logged transaction. amount is cents, negative when money goes out.
+// date is the local day (YYYY-MM-DD). mood is the Worth-It rating:
+// 'love' | 'meh' | 'regret'.
+model Entry {
+  id          Uuid               @id @default(uuid())
+  user        User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId      Uuid
+  date        String
+  amount      Int
+  note        String
+  category    Category?          @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  categoryId  Uuid?
+  recurring   Recurring?         @relation(fields: [recurringId], references: [id], onDelete: SetNull)
+  recurringId Uuid?
+  // Money lent, borrowed or paid back.
+  debt        Debt?              @relation(fields: [debtId], references: [id], onDelete: SetNull)
+  debtId      Uuid?
+  mood        String?
+  ratedAt     TimestamptzString?
+  createdAt   TimestamptzString  @default(now())
+
+  @@index([userId, date])
+  @@rls
+  @@map("entry")
+}
+
+// A bill or income that repeats. cadence is 'weekly' | 'biweekly' |
+// 'monthly' | 'yearly'. It is posted as an Entry when nextDate arrives.
+model Recurring {
+  id         Uuid              @id @default(uuid())
+  user       User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId     Uuid
+  name       String
+  amount     Int
+  cadence    String            @default("monthly")
+  nextDate   String
+  category   Category?         @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  categoryId Uuid?
+  // Paused items are left out of the forecast and not posted until resumed.
+  paused     Boolean           @default(false)
+  // Comma separated dates (YYYY-MM-DD) skipped once, like a month without
+  // an electricity bill.
+  skips      String            @default("")
+  createdAt  TimestamptzString @default(now())
+  entries    Entry[]
+  advances   SalaryAdvance[]
+
+  @@index([userId])
+  @@rls
+  @@map("recurring")
+}
+
+// Money moved out of a budget. With month (YYYY-MM) it lowers that month
+// only (a Money Weather fix); without, it records a permanent Worth-It move
+// that was already applied to both budgets.
+model BudgetMove {
+  id             Uuid              @id @default(uuid())
+  user           User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId         Uuid
+  fromCategory   Category          @relation(fields: [fromCategoryId], references: [id], onDelete: Cascade)
+  fromCategoryId Uuid
+  toCategoryId   Uuid?
+  amount         Int
+  month          String?
+  reason         String
+  createdAt      TimestamptzString @default(now())
+
+  @@index([userId])
+  @@rls
+  @@map("budget_move")
+}
+
+// A "what if" future that runs next to real life from startDate.
+model Fork {
+  id        Uuid              @id @default(uuid())
+  user      User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    Uuid
+  name      String
+  // One-off cost (negative) or gain in cents when the fork starts.
+  oneTime   Int               @default(0)
+  startDate String
+  createdAt TimestamptzString @default(now())
+  effects   ForkEffect[]
+
+  @@index([userId])
+  @@rls
+  @@map("fork")
+}
+
+// A monthly difference a fork makes, in cents (+ more money, - less).
+model ForkEffect {
+  id      Uuid   @id @default(uuid())
+  fork    Fork   @relation(fields: [forkId], references: [id], onDelete: Cascade)
+  forkId  Uuid
+  user    User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId  Uuid
+  name    String
+  monthly Int
+
+  @@index([forkId])
+  @@rls
+  @@map("fork_effect")
+}
+
+// Something coming up that will cost money, typed in or read from the
+// calendar. Saving sets aside saveMonthly cents on the 1st of each month from
+// saveFrom (YYYY-MM) until the event.
+model PlanEvent {
+  id          Uuid              @id @default(uuid())
+  user        User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId      Uuid
+  date        String
+  name        String
+  tag         String            @default("Other")
+  source      String            @default("manual")
+  externalId  String?
+  hidden      Boolean           @default(false)
+  saveMonthly Int?
+  saveFrom    String?
+  createdAt   TimestamptzString @default(now())
+  items       PlanItem[]
+
+  @@unique([userId, externalId])
+  @@rls
+  @@map("plan_event")
+}
+
+// One priced part of a PlanEvent, such as flights or a gift. amount in cents.
+model PlanItem {
+  id      Uuid      @id @default(uuid())
+  event   PlanEvent @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  eventId Uuid
+  user    User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId  Uuid
+  name    String
+  amount  Int
+
+  @@index([eventId])
+  @@rls
+  @@map("plan_item")
+}
+
+// Money between the person and someone else. direction is 'lent' (they owe
+// you) or 'borrowed' (you owe them). amount is the original sum in cents.
+// Paybacks are entries with this debtId going the other way.
+model Debt {
+  id        Uuid               @id @default(uuid())
+  user      User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    Uuid
+  person    String
+  // 'person' or 'institution' (a bank, lender or the tax office).
+  party     String             @default("person")
+  direction String
+  amount    Int
+  note      String?
+  dueDate   String?
+  settledAt TimestamptzString?
+  createdAt TimestamptzString  @default(now())
+  entries   Entry[]
+
+  @@index([userId])
+  @@rls
+  @@map("debt")
+}
+
+// A note to your future self, as text and optionally a short voice
+// recording (a data: URL). It plays back before spending in its category, or
+// any regretted category when it has none, until the `until` day.
+model FutureNote {
+  id          Uuid              @id @default(uuid())
+  user        User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId      Uuid
+  text        String
+  audio       String?
+  category    Category?         @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  categoryId  Uuid?
+  until       String?
+  shown       Int               @default(0)
+  skipped     Int               @default(0)
+  saved       Int               @default(0)
+  createdAt   TimestamptzString @default(now())
+
+  @@index([userId])
+  @@rls
+  @@map("future_note")
+}
+
+// Part of a salary paid early. It comes off the pay on `payday`, the date the
+// salary was next due when the advance was taken. entryId is the entry that
+// brought the money in.
+model SalaryAdvance {
+  id          Uuid               @id @default(uuid())
+  user        User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId      Uuid
+  recurring   Recurring          @relation(fields: [recurringId], references: [id], onDelete: Cascade)
+  recurringId Uuid
+  amount      Int
+  takenOn     String
+  payday      String
+  entryId     Uuid?
+  settledAt   TimestamptzString?
+  createdAt   TimestamptzString  @default(now())
+
+  @@index([userId])
+  @@rls
+  @@map("salary_advance")
+}

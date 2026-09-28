@@ -1,0 +1,265 @@
+import { cache } from 'react';
+import { redirect } from 'next/navigation';
+import { db } from '../../prisma/db';
+import { requireViewer } from '../auth/viewer';
+import { addDays, monthOf, todayIn } from './dates';
+import { nextAfter, type Cadence } from './recurrence';
+import { DEFAULT_CATEGORIES } from './categories';
+import { buildForecast, type FcBudget, type FcEvent, type Forecast } from './forecast';
+import { paidBack, remaining } from './debts';
+
+// Everything a signed-in page needs about the person's money, loaded once per
+// request. Every query is filtered by the signed-in user's id.
+
+export type Me = {
+  id: string;
+  name: string;
+  email: string;
+  currency: string;
+  timezone: string;
+  balance: number | null;
+  balanceSetAt: string | null;
+  cushion: number;
+  calendarUrl: string | null;
+  calendarAt: string | null;
+  notepad: string;
+  notepadAt: string | null;
+  today: string;
+};
+
+export type Cat = { id: string; name: string; kind: string; budget: number; color: string; position: number };
+export type EntryRow = { id: string; date: string; amount: number; note: string; categoryId: string | null; recurringId: string | null; debtId: string | null; mood: string | null; createdAt: string };
+export type DebtRow = { id: string; person: string; party: string; direction: string; amount: number; note: string | null; dueDate: string | null; settledAt: string | null; createdAt: string; paid: number; left: number };
+export type RecurringRow = {
+  id: string;
+  name: string;
+  amount: number;
+  cadence: Cadence;
+  nextDate: string;
+  categoryId: string | null;
+  paused: boolean;
+  skips: string[];
+  // pending: arrives on takenOn and is not in the balance yet.
+  advances: Array<{ id: string; amount: number; payday: string; takenOn: string; pending: boolean }>;
+};
+export type EventRow = { id: string; date: string; name: string; tag: string; source: string; hidden: boolean; saveMonthly: number | null; saveFrom: string | null; items: Array<{ id: string; name: string; amount: number }>; cost: number };
+
+export const getMe = cache(async (): Promise<Me> => {
+  const viewer = await requireViewer();
+  const u = await db.orm.public.User.where({ id: viewer.id }).first();
+  if (!u) redirect('/login');
+  return {
+    id: u.id,
+    name: u.name,
+    email: u.email,
+    currency: u.currency,
+    timezone: u.timezone,
+    balance: u.balance,
+    balanceSetAt: u.balanceSetAt,
+    cushion: u.cushion,
+    calendarUrl: u.calendarUrl,
+    calendarAt: u.calendarAt,
+    notepad: u.notepad,
+    notepadAt: u.notepadAt,
+    today: todayIn(u.timezone),
+  };
+});
+
+// Pages other than setup need a balance to forecast from.
+export async function requireSetUp(): Promise<Me & { balance: number; balanceSetAt: string }> {
+  const me = await getMe();
+  if (me.balance === null || !me.balanceSetAt) redirect('/setup');
+  return me as Me & { balance: number; balanceSetAt: string };
+}
+
+export async function ensureCategories(userId: string): Promise<void> {
+  if (await db.orm.public.Category.where({ userId }).first()) return;
+  await db.orm.public.Category.createAll(
+    DEFAULT_CATEGORIES.map((c, i) => ({ userId, name: c.name, kind: c.kind, budget: 0, color: c.color, position: i })),
+  );
+}
+
+export const getCategories = cache(async (userId: string): Promise<Cat[]> => {
+  await ensureCategories(userId);
+  const rows = await db.orm.public.Category.where({ userId }).orderBy((c) => c.position.asc()).all();
+  return rows.map((c) => ({ id: c.id, name: c.name, kind: c.kind, budget: c.budget, color: c.color, position: c.position }));
+});
+
+// Advances whose day has come are logged as money in, once each.
+export async function postDueAdvances(userId: string, today: string): Promise<void> {
+  const due = await db.orm.public.SalaryAdvance.where({ userId })
+    .where((a) => a.entryId.isNull())
+    .where((a) => a.takenOn.lte(today))
+    .all();
+  for (const a of due) {
+    const r = await db.orm.public.Recurring.where({ id: a.recurringId, userId }).first();
+    await db.transaction(async (tx) => {
+      const entry = await tx.orm.public.Entry.create({ userId, date: a.takenOn, amount: a.amount, note: `${r?.name ?? 'Salary'} advance`, categoryId: r?.categoryId ?? null });
+      const claimed = await tx.orm.public.SalaryAdvance.where({ id: a.id, userId, entryId: null }).update({ entryId: entry.id });
+      if (!claimed) throw new Error('already posted');
+    }).catch(() => undefined);
+  }
+}
+
+// Bills and income whose date has come are logged as entries, once each, and
+// move on to their next date. Skipped dates are passed over, paused items
+// wait, and salary advances come off the pay they were taken from.
+export async function postDueRecurring(userId: string, today: string): Promise<void> {
+  const due = await db.orm.public.Recurring.where({ userId, paused: false })
+    .where((r) => r.nextDate.lte(today))
+    .all();
+  for (const r of due) {
+    const anchor = Number(r.nextDate.slice(8, 10));
+    const skips = new Set(splitSkips(r.skips));
+    const advances = r.amount > 0 ? await db.orm.public.SalaryAdvance.where({ userId, recurringId: r.id }).where((a) => a.settledAt.isNull()).all() : [];
+    let date = r.nextDate;
+    const rows: Array<{ userId: string; date: string; amount: number; note: string; categoryId: string | null; recurringId: string }> = [];
+    const settled: string[] = [];
+    for (let i = 0; i < 60 && date <= today; i++) {
+      if (skips.has(date)) {
+        skips.delete(date);
+      } else {
+        const mine = advances.filter((a) => a.payday <= date && !settled.includes(a.id));
+        const taken = mine.reduce((s, a) => s + a.amount, 0);
+        settled.push(...mine.map((a) => a.id));
+        rows.push({ userId, date, amount: r.amount - taken, note: taken ? `${r.name} (advance taken off)` : r.name, categoryId: r.categoryId, recurringId: r.id });
+      }
+      date = nextAfter(date, r.cadence as Cadence, anchor);
+    }
+    // Moving the date first means a second request running at the same time
+    // finds nothing due and posts nothing.
+    const moved = await db.orm.public.Recurring.where({ id: r.id, nextDate: r.nextDate }).update({ nextDate: date, skips: [...skips].join(',') });
+    if (!moved) continue;
+    if (rows.length) await db.orm.public.Entry.createAll(rows);
+    for (const id of settled) await db.orm.public.SalaryAdvance.where({ id, userId }).update({ settledAt: new Date().toISOString() });
+  }
+}
+
+export const getRecurring = cache(async (userId: string): Promise<RecurringRow[]> => {
+  const [rows, advances] = await Promise.all([
+    db.orm.public.Recurring.where({ userId }).orderBy((r) => r.nextDate.asc()).all(),
+    db.orm.public.SalaryAdvance.where({ userId }).where((a) => a.settledAt.isNull()).all(),
+  ]);
+  return rows.map((r) => ({
+    id: r.id,
+    name: r.name,
+    amount: r.amount,
+    cadence: r.cadence as Cadence,
+    nextDate: r.nextDate,
+    categoryId: r.categoryId,
+    paused: r.paused,
+    skips: splitSkips(r.skips),
+    advances: advances.filter((a) => a.recurringId === r.id).map((a) => ({ id: a.id, amount: a.amount, payday: a.payday, takenOn: a.takenOn, pending: !a.entryId })),
+  }));
+});
+
+export const splitSkips = (s: string) => s.split(',').filter(Boolean);
+
+// Entries from `since` on, newest first.
+export const getEntries = cache(async (userId: string, since: string): Promise<EntryRow[]> => {
+  const rows = await db.orm.public.Entry.where({ userId })
+    .where((e) => e.date.gte(since))
+    .orderBy([(e) => e.date.desc(), (e) => e.createdAt.desc()])
+    .all();
+  return rows.map((e) => ({ id: e.id, date: e.date, amount: e.amount, note: e.note, categoryId: e.categoryId, recurringId: e.recurringId, debtId: e.debtId, mood: e.mood, createdAt: e.createdAt }));
+});
+
+// The account balance now: what was entered plus everything logged since.
+export const getBalance = cache(async (me: Me): Promise<number> => {
+  if (me.balance === null || !me.balanceSetAt) return 0;
+  const since = me.balanceSetAt;
+  const res = await db.orm.public.Entry.where({ userId: me.id })
+    .where((e) => e.createdAt.gt(since))
+    .aggregate((a) => ({ total: a.sum('amount') }));
+  return me.balance + Number(res.total ?? 0);
+});
+
+export const getEvents = cache(async (userId: string, from: string): Promise<EventRow[]> => {
+  const events = await db.orm.public.PlanEvent.where({ userId })
+    .where((e) => e.date.gte(from))
+    .orderBy((e) => e.date.asc())
+    .all();
+  const items = events.length ? await db.orm.public.PlanItem.where({ userId }).where((i) => i.eventId.in(events.map((e) => e.id))).all() : [];
+  return events.map((e) => {
+    const mine = items.filter((i) => i.eventId === e.id).map((i) => ({ id: i.id, name: i.name, amount: i.amount }));
+    return { id: e.id, date: e.date, name: e.name, tag: e.tag, source: e.source, hidden: e.hidden, saveMonthly: e.saveMonthly, saveFrom: e.saveFrom, items: mine, cost: mine.reduce((s, i) => s + i.amount, 0) };
+  });
+});
+
+// This month's cuts per budget, from Money Weather fixes.
+export const getCuts = cache(async (userId: string, fromMonth: string): Promise<Map<string, Record<string, number>>> => {
+  const moves = await db.orm.public.BudgetMove.where({ userId })
+    .where((m) => m.month.gte(fromMonth))
+    .all();
+  const out = new Map<string, Record<string, number>>();
+  for (const m of moves) {
+    if (!m.month) continue;
+    const rec = out.get(m.fromCategoryId) ?? {};
+    rec[m.month] = (rec[m.month] ?? 0) + m.amount;
+    out.set(m.fromCategoryId, rec);
+  }
+  return out;
+});
+
+// Debts with what was paid back, from all of their entries.
+export const getDebts = cache(async (userId: string): Promise<DebtRow[]> => {
+  const debts = await db.orm.public.Debt.where({ userId }).orderBy((d) => d.createdAt.desc()).all();
+  if (!debts.length) return [];
+  const paybacks = await db.orm.public.Entry.where({ userId })
+    .where((e) => e.debtId.in(debts.map((d) => d.id)))
+    .all();
+  return debts.map((d) => {
+    const paid = paidBack(d, paybacks);
+    return { id: d.id, person: d.person, party: d.party, direction: d.direction, amount: d.amount, note: d.note, dueDate: d.dueDate, settledAt: d.settledAt, createdAt: d.createdAt, paid, left: remaining(d, paid) };
+  });
+});
+
+// Recurring items as the forecast wants them: paused ones left out, and
+// advances that have not arrived yet coming in on their day.
+export function forForecast(rows: RecurringRow[]) {
+  return rows
+    .filter((r) => !r.paused)
+    .map((r) => ({ ...r, advances: r.advances.map((a) => ({ payday: a.payday, amount: a.amount, arrivesOn: a.pending ? a.takenOn : undefined })) }));
+}
+
+export type Money = {
+  me: Me & { balance: number; balanceSetAt: string };
+  cats: Cat[];
+  recurring: RecurringRow[];
+  entries: EntryRow[];
+  events: EventRow[];
+  debts: DebtRow[];
+  budgets: FcBudget[];
+  balance: number;
+  forecast: Forecast;
+};
+
+// The shared load for app pages: posts due bills, then builds the forecast.
+export async function loadMoney(days = 91, historyDays = 460): Promise<Money> {
+  const me = await requireSetUp();
+  await postDueAdvances(me.id, me.today);
+  await postDueRecurring(me.id, me.today);
+  const [cats, recurring, entries, events, cuts, balance, debts] = await Promise.all([
+    getCategories(me.id),
+    getRecurring(me.id),
+    getEntries(me.id, addDays(me.today, -historyDays)),
+    getEvents(me.id, addDays(me.today, -31)),
+    getCuts(me.id, monthOf(me.today)),
+    getBalance(me),
+    getDebts(me.id),
+  ]);
+  const month = monthOf(me.today);
+  const budgets: FcBudget[] = cats
+    .filter((c) => c.kind === 'flex')
+    .map((c) => ({
+      id: c.id,
+      name: c.name,
+      budget: c.budget,
+      spent: -entries.filter((e) => e.categoryId === c.id && e.amount < 0 && monthOf(e.date) === month).reduce((s, e) => s + e.amount, 0),
+      cuts: cuts.get(c.id) ?? {},
+    }));
+  const fcEvents: FcEvent[] = events.filter((e) => !e.hidden && e.cost > 0).map((e) => ({ id: e.id, name: e.name, date: e.date, cost: e.cost, saveMonthly: e.saveMonthly, saveFrom: e.saveFrom, source: e.source }));
+  const fcDebts = debts.filter((d) => d.direction === 'borrowed' && d.left > 0 && d.dueDate).map((d) => ({ id: d.id, person: d.person, remaining: d.left, dueDate: d.dueDate! }));
+  const forecast = buildForecast({ today: me.today, balance, cushion: me.cushion, recurring: forForecast(recurring), budgets, events: fcEvents, debts: fcDebts, days });
+  return { me, cats, recurring, entries, events, debts, budgets, balance, forecast };
+}

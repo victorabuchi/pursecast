@@ -1,0 +1,462 @@
+/* Floating calculator and note, styled after macOS. */
+
+.window {
+  /* Light, like macOS in light mode; dark follows the device theme. */
+  --w-bg: #ececec;
+  --w-note: #ffffff;
+  --w-fg: #1d1d1f;
+  --w-muted: rgba(29, 29, 31, 0.5);
+  --w-line: rgba(0, 0, 0, 0.1);
+  --w-soft: rgba(0, 0, 0, 0.05);
+  --w-soft-on: rgba(0, 0, 0, 0.12);
+  --w-border: rgba(0, 0, 0, 0.14);
+  --k-num: #fdfdfd;
+  --k-fn: #d0d0d3;
+  --k-edge: inset 0 -1px 0 rgba(0, 0, 0, 0.08), 0 1px 1px rgba(0, 0, 0, 0.06);
+  --w-shadow: 0 30px 80px -24px rgba(0, 0, 0, 0.35), 0 0 0 0.5px rgba(0, 0, 0, 0.2);
+  --light-off: #d0d0d3;
+  position: fixed;
+  color: var(--w-fg);
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', var(--font-sans), system-ui, sans-serif;
+  border: 1px solid var(--w-border);
+  box-shadow: var(--w-shadow);
+  animation: winIn 0.22s cubic-bezier(0.2, 0.9, 0.3, 1.15) both;
+  touch-action: none;
+}
+
+@keyframes winIn {
+  from {
+    opacity: 0;
+    transform: scale(0.94) translateY(8px);
+  }
+}
+
+.lights {
+  display: inline-flex;
+  flex: none;
+  gap: 8px;
+}
+
+.lights button {
+  width: 13px;
+  height: 13px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  box-shadow: inset 0 0 0 0.5px rgba(0, 0, 0, 0.25);
+}
+
+.lightRed {
+  background: #ff5f57;
+}
+
+.lightYellow {
+  background: #febc2e;
+}
+
+.lightGreen {
+  background: #28c840;
+}
+
+.lightGreen:disabled {
+  background: var(--light-off);
+  cursor: default;
+}
+
+/* Calculator */
+.calc {
+  width: 232px;
+  border-radius: 22px;
+  background: var(--w-bg);
+}
+
+.calcWide {
+  width: 412px;
+}
+
+.calcInner {
+  display: flex;
+  outline: none;
+}
+
+.calcMain {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  padding: 10px 10px 12px;
+  min-width: 0;
+}
+
+.calcBar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 44px;
+  padding: 0 2px 0 8px;
+  cursor: grab;
+}
+
+.calcBar:active {
+  cursor: grabbing;
+}
+
+.barSpacer {
+  flex: 1;
+}
+
+.roundTool {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  padding: 0;
+  border: 1px solid var(--w-line);
+  border-radius: 50%;
+  background: var(--w-soft);
+  color: var(--w-fg);
+  cursor: pointer;
+}
+
+.roundTool[aria-pressed='true'] {
+  background: var(--w-soft-on);
+}
+
+.display {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+  min-height: 104px;
+  padding: 14px 8px 10px;
+  cursor: copy;
+  user-select: none;
+}
+
+.display small {
+  max-width: 100%;
+  overflow: hidden;
+  color: var(--w-muted);
+  font-size: 13px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.display output {
+  max-width: 100%;
+  overflow: hidden;
+  font-size: 42px;
+  font-weight: 300;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.display .preview {
+  color: #ff9f0a;
+}
+
+.keys {
+  display: grid;
+  grid-template-columns: repeat(4, 48px);
+  gap: 7px;
+  justify-content: center;
+}
+
+.key {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: var(--k-num);
+  color: var(--w-fg);
+  font-family: inherit;
+  font-size: 22px;
+  cursor: pointer;
+  box-shadow: var(--k-edge);
+  transition:
+    filter 0.1s ease,
+    transform 0.08s ease;
+}
+
+.key:hover {
+  filter: brightness(1.15);
+}
+
+.key:active {
+  transform: scale(0.94);
+  filter: brightness(1.35);
+}
+
+.keyFn {
+  background: var(--k-fn);
+  font-size: 20px;
+}
+
+.keyOp {
+  background: #ff9f0a;
+  color: #fff;
+  font-size: 26px;
+}
+
+.useBtn {
+  margin-top: 10px;
+  padding: 7px 10px;
+  border: 1px solid var(--w-line);
+  border-radius: 10px;
+  background: var(--w-soft);
+  color: var(--w-fg);
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.useBtn:hover {
+  background: var(--w-soft-on);
+}
+
+.tape {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 170px;
+  max-height: 460px;
+  padding: 58px 8px 12px 12px;
+  border-right: 1px solid var(--w-line);
+  overflow-y: auto;
+}
+
+.tape > b {
+  margin-bottom: 6px;
+  font-size: 13px;
+}
+
+.tape > small {
+  color: var(--w-muted);
+  font-size: 12px;
+}
+
+.tape button {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  padding: 6px 8px;
+  border: none;
+  border-radius: 8px;
+  background: none;
+  color: var(--w-fg);
+  font-family: inherit;
+  font-size: 16px;
+  text-align: right;
+  cursor: pointer;
+}
+
+.tape button:hover {
+  background: var(--w-soft);
+}
+
+.tape button small {
+  color: var(--w-muted);
+  font-size: 11px;
+}
+
+/* Note */
+.note {
+  display: flex;
+  flex-direction: column;
+  width: 460px;
+  height: 440px;
+  min-width: 300px;
+  min-height: 180px;
+  max-width: calc(100vw - 16px);
+  border-radius: 20px;
+  background: var(--w-note);
+  overflow: hidden;
+  resize: both;
+}
+
+.noteBig {
+  width: min(720px, calc(100vw - 16px));
+  height: min(620px, calc(100dvh - 60px));
+}
+
+.noteMin {
+  height: auto !important;
+  min-height: 0;
+  resize: none;
+}
+
+.noteBar {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 16px;
+  padding: 12px 12px 10px 18px;
+  cursor: grab;
+}
+
+.noteBar:active {
+  cursor: grabbing;
+}
+
+.noteTitle {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  font-size: 17px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.noteTools {
+  display: inline-flex;
+  flex: none;
+  gap: 4px;
+  padding: 4px 6px;
+  border: 1px solid var(--w-line);
+  border-radius: 999px;
+  background: var(--w-soft);
+}
+
+.noteTools button {
+  display: grid;
+  place-items: center;
+  min-width: 36px;
+  height: 32px;
+  padding: 0 6px;
+  border: none;
+  border-radius: 999px;
+  background: none;
+  color: var(--w-fg);
+  font-family: inherit;
+  font-size: 18px;
+  cursor: pointer;
+}
+
+.noteTools button:hover {
+  background: var(--w-soft-on);
+}
+
+.noteDate {
+  flex: none;
+  margin: 2px 0 8px;
+  color: var(--w-muted);
+  font-size: 13px;
+  text-align: center;
+}
+
+.noteText {
+  flex: 1;
+  width: 100%;
+  padding: 4px 20px 20px;
+  border: none;
+  outline: none;
+  background: none;
+  color: var(--w-fg);
+  font-family: inherit;
+  line-height: 1.55;
+  resize: none;
+  caret-color: #f5b400;
+}
+
+.noteText::placeholder {
+  color: var(--w-muted);
+}
+
+/* In-field result bubble */
+.bubble {
+  position: fixed;
+  z-index: 200;
+  padding: 4px 9px;
+  border-radius: 8px;
+  background: #14181f;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  pointer-events: none;
+  transform: translateX(-100%);
+  box-shadow: 0 8px 20px -8px rgba(0, 0, 0, 0.5);
+  font-variant-numeric: tabular-nums;
+  animation: winIn 0.15s ease both;
+}
+
+.bubble small {
+  margin-left: 4px;
+  padding: 1px 5px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.15);
+  font-size: 10px;
+  font-weight: 600;
+}
+
+@media (max-width: 760px) {
+  .note {
+    width: calc(100vw - 16px);
+    height: 60dvh;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .window,
+  .bubble {
+    animation: none;
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  .window {
+    --w-bg: #1f1f1f;
+    --w-note: #1e1e1e;
+    --w-fg: #f5f5f7;
+    --w-muted: rgba(245, 245, 247, 0.5);
+    --w-line: rgba(255, 255, 255, 0.1);
+    --w-soft: rgba(255, 255, 255, 0.07);
+    --w-soft-on: rgba(255, 255, 255, 0.16);
+    --w-border: rgba(255, 255, 255, 0.14);
+    --k-num: #505052;
+    --k-fn: #7d7d80;
+    --k-edge: inset 0 1px 0 rgba(255, 255, 255, 0.12);
+    --w-shadow: 0 30px 80px -20px rgba(0, 0, 0, 0.65), 0 0 0 0.5px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    --light-off: #4a4a4c;
+  }
+}
+
+/* Apple's symbols on the traffic lights: shown on hover, always on touch. */
+.lights button {
+  display: grid;
+  place-items: center;
+}
+
+.glyph {
+  opacity: 0;
+  transition: opacity 0.1s ease;
+}
+
+.lights:hover .glyph,
+.lights:focus-within .glyph {
+  opacity: 1;
+}
+
+@media (hover: none) {
+  .glyph {
+    opacity: 1;
+  }
+}
+
+.lightRed .glyph {
+  color: #4d0000;
+}
+
+.lightYellow .glyph {
+  color: #985712;
+}
+
+.lightGreen .glyph {
+  color: #0b650d;
+}

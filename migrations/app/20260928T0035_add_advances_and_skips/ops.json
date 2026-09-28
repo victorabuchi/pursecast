@@ -1,0 +1,326 @@
+[
+  {
+    "id": "table.salary_advance",
+    "label": "Create table \"salary_advance\"",
+    "summary": "Creates table \"salary_advance\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "salary_advance"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"salary_advance\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"salary_advance\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"salary_advance\"",
+        "sql": "CREATE TABLE \"public\".\"salary_advance\" (\n  \"amount\" int4 NOT NULL,\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"entryId\" uuid,\n  \"id\" uuid NOT NULL,\n  \"payday\" text NOT NULL,\n  \"recurringId\" uuid NOT NULL,\n  \"settledAt\" timestamptz,\n  \"takenOn\" text NOT NULL,\n  \"userId\" uuid NOT NULL,\n  PRIMARY KEY (\"id\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"salary_advance\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"salary_advance\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.public.recurring.paused",
+    "label": "Add column \"paused\" to \"recurring\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "paused",
+        "table": "recurring"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"paused\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "recurring",
+          "paused"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"paused\"",
+        "sql": "ALTER TABLE \"public\".\"recurring\" ADD COLUMN \"paused\" bool DEFAULT false NOT NULL"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"paused\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "recurring",
+          "paused"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.public.recurring.skips",
+    "label": "Add column \"skips\" to \"recurring\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "skips",
+        "table": "recurring"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"skips\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "recurring",
+          "skips"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"skips\"",
+        "sql": "ALTER TABLE \"public\".\"recurring\" ADD COLUMN \"skips\" text DEFAULT '' NOT NULL"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"skips\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "recurring",
+          "skips"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.salary_advance.salary_advance_recurringId_idx_1efc3657",
+    "label": "Create index \"salary_advance_recurringId_idx_1efc3657\" on \"salary_advance\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "salary_advance_recurringId_idx_1efc3657",
+        "table": "salary_advance"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"salary_advance_recurringId_idx_1efc3657\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"salary_advance_recurringId_idx_1efc3657\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"salary_advance_recurringId_idx_1efc3657\"",
+        "sql": "CREATE INDEX \"salary_advance_recurringId_idx_1efc3657\" ON \"public\".\"salary_advance\" (\"recurringId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"salary_advance_recurringId_idx_1efc3657\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"salary_advance_recurringId_idx_1efc3657\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.salary_advance.salary_advance_userId_idx_a489d58a",
+    "label": "Create index \"salary_advance_userId_idx_a489d58a\" on \"salary_advance\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "salary_advance_userId_idx_a489d58a",
+        "table": "salary_advance"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"salary_advance_userId_idx_a489d58a\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"salary_advance_userId_idx_a489d58a\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"salary_advance_userId_idx_a489d58a\"",
+        "sql": "CREATE INDEX \"salary_advance_userId_idx_a489d58a\" ON \"public\".\"salary_advance\" (\"userId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"salary_advance_userId_idx_a489d58a\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"salary_advance_userId_idx_a489d58a\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.salary_advance.salary_advance_userId_fkey",
+    "label": "Add foreign key \"salary_advance_userId_fkey\" on \"salary_advance\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "salary_advance_userId_fkey",
+        "table": "salary_advance"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"salary_advance_userId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "salary_advance_userId_fkey",
+          "public",
+          "\"public\".\"salary_advance\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"salary_advance_userId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"salary_advance\"\nADD CONSTRAINT \"salary_advance_userId_fkey\"\nFOREIGN KEY (\"userId\")\nREFERENCES \"public\".\"app_user\" (\"id\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"salary_advance_userId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "salary_advance_userId_fkey",
+          "public",
+          "\"public\".\"salary_advance\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.salary_advance.salary_advance_recurringId_fkey",
+    "label": "Add foreign key \"salary_advance_recurringId_fkey\" on \"salary_advance\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "salary_advance_recurringId_fkey",
+        "table": "salary_advance"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"salary_advance_recurringId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "salary_advance_recurringId_fkey",
+          "public",
+          "\"public\".\"salary_advance\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"salary_advance_recurringId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"salary_advance\"\nADD CONSTRAINT \"salary_advance_recurringId_fkey\"\nFOREIGN KEY (\"recurringId\")\nREFERENCES \"public\".\"recurring\" (\"id\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"salary_advance_recurringId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "salary_advance_recurringId_fkey",
+          "public",
+          "\"public\".\"salary_advance\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "rowLevelSecurity.public.salary_advance",
+    "label": "Enable row-level security on \"salary_advance\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "rowLevelSecurity",
+        "name": "salary_advance"
+      }
+    },
+    "precheck": [
+      {
+        "description": "check RLS is not already enabled on \"salary_advance\"",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_class\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"relnamespace\" WHERE (\"n\".\"nspname\" = $1 AND \"c\".\"relname\" = $2 AND NOT (\"c\".\"relrowsecurity\"))) AS \"result\"",
+        "params": [
+          "public",
+          "salary_advance"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "enable row-level security on \"salary_advance\"",
+        "sql": "ALTER TABLE \"public\".\"salary_advance\" ENABLE ROW LEVEL SECURITY"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify row-level security is enabled on \"salary_advance\"",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_class\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"relnamespace\" WHERE (\"n\".\"nspname\" = $1 AND \"c\".\"relname\" = $2 AND \"c\".\"relrowsecurity\")) AS \"result\"",
+        "params": [
+          "public",
+          "salary_advance"
+        ]
+      }
+    ]
+  }
+]

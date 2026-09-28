@@ -1,0 +1,524 @@
+[
+  {
+    "id": "table.debt",
+    "label": "Create table \"debt\"",
+    "summary": "Creates table \"debt\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "debt"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"debt\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"debt\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"debt\"",
+        "sql": "CREATE TABLE \"public\".\"debt\" (\n  \"amount\" int4 NOT NULL,\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"direction\" text NOT NULL,\n  \"dueDate\" text,\n  \"id\" uuid NOT NULL,\n  \"note\" text,\n  \"person\" text NOT NULL,\n  \"settledAt\" timestamptz,\n  \"userId\" uuid NOT NULL,\n  PRIMARY KEY (\"id\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"debt\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"debt\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.future_note",
+    "label": "Create table \"future_note\"",
+    "summary": "Creates table \"future_note\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "future_note"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"future_note\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"future_note\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"future_note\"",
+        "sql": "CREATE TABLE \"public\".\"future_note\" (\n  \"audio\" text,\n  \"categoryId\" uuid,\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"id\" uuid NOT NULL,\n  \"saved\" int4 DEFAULT 0 NOT NULL,\n  \"shown\" int4 DEFAULT 0 NOT NULL,\n  \"skipped\" int4 DEFAULT 0 NOT NULL,\n  \"text\" text NOT NULL,\n  \"until\" text,\n  \"userId\" uuid NOT NULL,\n  PRIMARY KEY (\"id\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"future_note\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"future_note\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.public.entry.debtId",
+    "label": "Add column \"debtId\" to \"entry\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "debtId",
+        "table": "entry"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"debtId\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "entry",
+          "debtId"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"debtId\"",
+        "sql": "ALTER TABLE \"public\".\"entry\" ADD COLUMN \"debtId\" uuid"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"debtId\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "entry",
+          "debtId"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.debt.debt_userId_idx_a489d58a",
+    "label": "Create index \"debt_userId_idx_a489d58a\" on \"debt\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "debt_userId_idx_a489d58a",
+        "table": "debt"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"debt_userId_idx_a489d58a\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"debt_userId_idx_a489d58a\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"debt_userId_idx_a489d58a\"",
+        "sql": "CREATE INDEX \"debt_userId_idx_a489d58a\" ON \"public\".\"debt\" (\"userId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"debt_userId_idx_a489d58a\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"debt_userId_idx_a489d58a\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.entry.entry_debtId_idx_a05c3fb8",
+    "label": "Create index \"entry_debtId_idx_a05c3fb8\" on \"entry\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "entry_debtId_idx_a05c3fb8",
+        "table": "entry"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"entry_debtId_idx_a05c3fb8\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"entry_debtId_idx_a05c3fb8\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"entry_debtId_idx_a05c3fb8\"",
+        "sql": "CREATE INDEX \"entry_debtId_idx_a05c3fb8\" ON \"public\".\"entry\" (\"debtId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"entry_debtId_idx_a05c3fb8\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"entry_debtId_idx_a05c3fb8\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.future_note.future_note_categoryId_idx_15c304f2",
+    "label": "Create index \"future_note_categoryId_idx_15c304f2\" on \"future_note\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "future_note_categoryId_idx_15c304f2",
+        "table": "future_note"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"future_note_categoryId_idx_15c304f2\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"future_note_categoryId_idx_15c304f2\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"future_note_categoryId_idx_15c304f2\"",
+        "sql": "CREATE INDEX \"future_note_categoryId_idx_15c304f2\" ON \"public\".\"future_note\" (\"categoryId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"future_note_categoryId_idx_15c304f2\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"future_note_categoryId_idx_15c304f2\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.future_note.future_note_userId_idx_a489d58a",
+    "label": "Create index \"future_note_userId_idx_a489d58a\" on \"future_note\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "future_note_userId_idx_a489d58a",
+        "table": "future_note"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"future_note_userId_idx_a489d58a\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"future_note_userId_idx_a489d58a\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"future_note_userId_idx_a489d58a\"",
+        "sql": "CREATE INDEX \"future_note_userId_idx_a489d58a\" ON \"public\".\"future_note\" (\"userId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"future_note_userId_idx_a489d58a\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"future_note_userId_idx_a489d58a\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.debt.debt_userId_fkey",
+    "label": "Add foreign key \"debt_userId_fkey\" on \"debt\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "debt_userId_fkey",
+        "table": "debt"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"debt_userId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "debt_userId_fkey",
+          "public",
+          "\"public\".\"debt\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"debt_userId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"debt\"\nADD CONSTRAINT \"debt_userId_fkey\"\nFOREIGN KEY (\"userId\")\nREFERENCES \"public\".\"app_user\" (\"id\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"debt_userId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "debt_userId_fkey",
+          "public",
+          "\"public\".\"debt\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.entry.entry_debtId_fkey",
+    "label": "Add foreign key \"entry_debtId_fkey\" on \"entry\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "entry_debtId_fkey",
+        "table": "entry"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"entry_debtId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "entry_debtId_fkey",
+          "public",
+          "\"public\".\"entry\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"entry_debtId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"entry\"\nADD CONSTRAINT \"entry_debtId_fkey\"\nFOREIGN KEY (\"debtId\")\nREFERENCES \"public\".\"debt\" (\"id\")\nON DELETE SET NULL"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"entry_debtId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "entry_debtId_fkey",
+          "public",
+          "\"public\".\"entry\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.future_note.future_note_userId_fkey",
+    "label": "Add foreign key \"future_note_userId_fkey\" on \"future_note\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "future_note_userId_fkey",
+        "table": "future_note"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"future_note_userId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "future_note_userId_fkey",
+          "public",
+          "\"public\".\"future_note\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"future_note_userId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"future_note\"\nADD CONSTRAINT \"future_note_userId_fkey\"\nFOREIGN KEY (\"userId\")\nREFERENCES \"public\".\"app_user\" (\"id\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"future_note_userId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "future_note_userId_fkey",
+          "public",
+          "\"public\".\"future_note\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.future_note.future_note_categoryId_fkey",
+    "label": "Add foreign key \"future_note_categoryId_fkey\" on \"future_note\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "future_note_categoryId_fkey",
+        "table": "future_note"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"future_note_categoryId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "future_note_categoryId_fkey",
+          "public",
+          "\"public\".\"future_note\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"future_note_categoryId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"future_note\"\nADD CONSTRAINT \"future_note_categoryId_fkey\"\nFOREIGN KEY (\"categoryId\")\nREFERENCES \"public\".\"category\" (\"id\")\nON DELETE SET NULL"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"future_note_categoryId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "future_note_categoryId_fkey",
+          "public",
+          "\"public\".\"future_note\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "rowLevelSecurity.public.debt",
+    "label": "Enable row-level security on \"debt\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "rowLevelSecurity",
+        "name": "debt"
+      }
+    },
+    "precheck": [
+      {
+        "description": "check RLS is not already enabled on \"debt\"",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_class\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"relnamespace\" WHERE (\"n\".\"nspname\" = $1 AND \"c\".\"relname\" = $2 AND NOT (\"c\".\"relrowsecurity\"))) AS \"result\"",
+        "params": [
+          "public",
+          "debt"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "enable row-level security on \"debt\"",
+        "sql": "ALTER TABLE \"public\".\"debt\" ENABLE ROW LEVEL SECURITY"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify row-level security is enabled on \"debt\"",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_class\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"relnamespace\" WHERE (\"n\".\"nspname\" = $1 AND \"c\".\"relname\" = $2 AND \"c\".\"relrowsecurity\")) AS \"result\"",
+        "params": [
+          "public",
+          "debt"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "rowLevelSecurity.public.future_note",
+    "label": "Enable row-level security on \"future_note\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "rowLevelSecurity",
+        "name": "future_note"
+      }
+    },
+    "precheck": [
+      {
+        "description": "check RLS is not already enabled on \"future_note\"",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_class\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"relnamespace\" WHERE (\"n\".\"nspname\" = $1 AND \"c\".\"relname\" = $2 AND NOT (\"c\".\"relrowsecurity\"))) AS \"result\"",
+        "params": [
+          "public",
+          "future_note"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "enable row-level security on \"future_note\"",
+        "sql": "ALTER TABLE \"public\".\"future_note\" ENABLE ROW LEVEL SECURITY"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify row-level security is enabled on \"future_note\"",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_class\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"relnamespace\" WHERE (\"n\".\"nspname\" = $1 AND \"c\".\"relname\" = $2 AND \"c\".\"relrowsecurity\")) AS \"result\"",
+        "params": [
+          "public",
+          "future_note"
+        ]
+      }
+    ]
+  }
+]

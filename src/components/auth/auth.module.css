@@ -1,0 +1,256 @@
+.page {
+  --brand: #0f7a63;
+  --brand-hover: #0b5c4b;
+  --brand-tint: #e6f4f0;
+  --ink: #14181f;
+  --muted: #5d6673;
+  --line: #e3e7ec;
+  --danger: #c92a2a;
+  position: relative;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+  padding: max(40px, env(safe-area-inset-top)) 16px max(24px, env(safe-area-inset-bottom));
+  background: linear-gradient(180deg, #050d10 0%, #08171b 55%, #0b2125 100%);
+  color: var(--ink);
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.aurora {
+  position: absolute;
+  inset: -20% -10% auto;
+  z-index: -1;
+  height: 800px;
+  background:
+    radial-gradient(40% 35% at 30% 20%, rgba(15, 122, 99, 0.55), transparent 70%),
+    radial-gradient(30% 30% at 75% 15%, rgba(245, 165, 36, 0.2), transparent 70%),
+    radial-gradient(45% 40% at 55% 60%, rgba(56, 189, 248, 0.2), transparent 70%);
+  filter: blur(10px);
+  pointer-events: none;
+}
+
+.head {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  color: #fff;
+  text-align: center;
+}
+
+.logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: #fff;
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  text-decoration: none;
+}
+
+.tile {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: var(--brand);
+}
+
+.head h1 {
+  margin: 8px 0 0;
+  font-size: clamp(26px, 5vw, 32px);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+}
+
+.head p {
+  margin: 0;
+  max-width: 380px;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.card {
+  width: 100%;
+  max-width: 420px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 28px 24px;
+  background: #fff;
+  border-radius: 18px;
+  box-shadow: 0 30px 80px -20px rgba(0, 0, 0, 0.55);
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.hint {
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--muted);
+}
+
+.input {
+  width: 100%;
+  min-height: 48px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #fff;
+  color: var(--ink);
+  font: inherit;
+  font-size: 16px;
+}
+
+.input:focus {
+  outline: 2px solid var(--brand);
+  outline-offset: -1px;
+  border-color: var(--brand);
+}
+
+.passwordWrap {
+  position: relative;
+}
+
+.passwordWrap .input {
+  padding-right: 48px;
+}
+
+.eye {
+  position: absolute;
+  top: 50%;
+  right: 4px;
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  transform: translateY(-50%);
+  border: none;
+  background: none;
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.button,
+.buttonGhost {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 48px;
+  padding: 10px 16px;
+  border-radius: 10px;
+  font: inherit;
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.button {
+  border: 1px solid var(--brand);
+  background: var(--brand);
+  color: #fff;
+}
+
+.button:hover {
+  background: var(--brand-hover);
+}
+
+.buttonGhost {
+  border: 1px solid var(--line);
+  background: #fff;
+  color: var(--ink);
+}
+
+.buttonGhost:hover {
+  background: #f5f7fa;
+}
+
+.divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.divider::before,
+.divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--line);
+}
+
+.error,
+.success,
+.notice {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 10px;
+  font-size: 14px;
+}
+
+.error {
+  color: var(--danger);
+  background: color-mix(in srgb, var(--danger) 9%, #fff);
+}
+
+.success {
+  background: var(--brand-tint);
+}
+
+.notice {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  background: #fff7e6;
+  color: var(--muted);
+}
+
+.notice a {
+  color: var(--brand);
+  word-break: break-all;
+}
+
+.switch {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.75);
+  font-size: 15px;
+}
+
+.switch a {
+  color: #fff;
+  font-weight: 700;
+}
+
+.honey {
+  position: absolute;
+  left: -10000px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
+.fine {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+  text-align: center;
+}

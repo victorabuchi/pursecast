@@ -1,0 +1,44 @@
+[
+  {
+    "id": "column.public.debt.party",
+    "label": "Add column \"party\" to \"debt\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "party",
+        "table": "debt"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"party\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "debt",
+          "party"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"party\"",
+        "sql": "ALTER TABLE \"public\".\"debt\" ADD COLUMN \"party\" text DEFAULT 'person' NOT NULL"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"party\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "debt",
+          "party"
+        ]
+      }
+    ]
+  }
+]
