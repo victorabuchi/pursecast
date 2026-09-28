@@ -157,7 +157,9 @@ export default async function SetupPage() {
                 <MoneyInput name="salary" currency={cur} placeholder="2,900" value={salary ? salary.amount : null} />
               </label>
               <label className={styles.field}>
-                Next payday
+                <span>
+                  Next payday <small className={styles.muted}>empty = 1st of next month</small>
+                </span>
                 <input className={styles.input} type="date" name="salaryDate" min={me.today} defaultValue={salary?.nextDate} />
               </label>
             </div>

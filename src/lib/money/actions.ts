@@ -3,7 +3,7 @@
 import { redirect } from 'next/navigation';
 import { db } from '../../prisma/db';
 import { backTo, cents, day, done, str } from './act';
-import { addMonths, monthOf, short } from './dates';
+import { addMonths, monthOf, monthStart, short } from './dates';
 import { exact, money } from './format';
 import { CADENCES, isCadence, rollForward, type Cadence } from './recurrence';
 import { guessCategory, isKind, parseQuick, recurringCategory } from './categories';
@@ -60,7 +60,8 @@ export async function completeSetupAction(formData: FormData) {
     }
   };
   const salary = cents(formData, 'salary');
-  if (salary) save(str(formData, 'salaryId', 40), { name: str(formData, 'salaryName', 80) || 'Salary', amount: salary, cadence: 'monthly', date: day(formData, 'salaryDate'), category: 'Income' });
+  // Pay without a date still counts: it defaults to the 1st of next month.
+  if (salary) save(str(formData, 'salaryId', 40), { name: str(formData, 'salaryName', 80) || 'Salary', amount: salary, cadence: 'monthly', date: day(formData, 'salaryDate') ?? monthStart(addMonths(me.today, 1)), category: 'Income' });
   const rent = cents(formData, 'rent');
   if (rent) save(str(formData, 'rentId', 40), { name: str(formData, 'rentName', 80) || 'Rent', amount: -rent, cadence: 'monthly', date: day(formData, 'rentDate'), category: 'Housing' });
   for (const [prefix, fixed] of [['bill', null], ['sub', 'Subscriptions']] as const) {
@@ -131,7 +132,8 @@ export async function completeSetupAction(formData: FormData) {
     const was = openAdvances.find((x) => x.id === a.id);
     return !was || was.amount !== a.amount || was.takenOn !== a.date;
   });
-  const problems: string[] = [];
+  // An advance never stops the save. Without a pay to come off (or when it is
+  // more than the pay), money arriving today is simply logged as money in.
   if (changed.length || removed.length) {
     await Promise.all([...removed, ...changed.filter((a) => a.id).map((a) => a.id)].map((id) => removeAdvance(me.id, id)));
     const pay = changed.length
@@ -141,15 +143,11 @@ export async function completeSetupAction(formData: FormData) {
           .first()
       : null;
     for (const a of changed) {
-      if (!pay) {
-        problems.push('add your pay first');
-        break;
-      }
-      const res = await addAdvance(me.id, pay, a.amount, a.date < me.today && a.id ? me.today : a.date, me.today, currency);
-      if ('error' in res) problems.push(res.error);
+      const date = a.date < me.today ? me.today : a.date;
+      const res = pay ? await addAdvance(me.id, pay, a.amount, date, me.today, currency) : { error: 'no pay' };
+      if ('error' in res && date === me.today) await db.orm.public.Entry.create({ userId: me.id, date, amount: a.amount, note: 'Salary advance' });
     }
   }
-  if (problems.length) done('/setup', `Saved, but an advance was not: ${problems[0]}`, 'error');
   done('/forecast?setup=saved', editing ? 'Setup saved · forecast updated' : 'Your forecast is ready');
 }
 
