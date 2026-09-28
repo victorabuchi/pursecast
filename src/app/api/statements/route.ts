@@ -1,3 +1,4 @@
+import Anthropic from '@anthropic-ai/sdk';
 import { db } from '../../../prisma/db';
 import { getViewer } from '../../../lib/auth/viewer';
 import { todayIn } from '../../../lib/money/dates';
@@ -35,8 +36,12 @@ export async function POST(request: Request) {
       const res = await readUpload({ name: file.name, type: file.type, bytes: Buffer.from(await file.arrayBuffer()) }, today);
       read.push(...res.txns);
       if (res.note) notes.push(res.note);
-    } catch {
-      notes.push(`${file.name} could not be read. Try again, or a clearer screenshot.`);
+    } catch (error) {
+      console.error('Statement upload failed', file.name, error);
+      // A problem with the reading service itself (billing, key, outage) is
+      // not the file's fault; say so, and that spreadsheets still work.
+      if (error instanceof Anthropic.APIError) notes.push('Reading screenshots and PDFs is unavailable right now. Excel and CSV exports still work.');
+      else notes.push(`${file.name} could not be read. Try again, or a clearer screenshot.`);
     }
   }
 
