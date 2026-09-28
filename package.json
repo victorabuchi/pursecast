@@ -43,5 +43,8 @@
     "unrs-resolver@1.12.2": true,
     "workerd": false,
     "msgpackr-extract": false
+  },
+  "engines": {
+    "node": ">=22"
   }
 }

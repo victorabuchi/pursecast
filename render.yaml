@@ -1,0 +1,26 @@
+# Render Blueprint: New > Blueprint in the Render dashboard, pick this repo.
+services:
+  - type: web
+    name: pursecast
+    runtime: node
+    region: frankfurt
+    plan: starter
+    branch: main
+    # Database migrations run on every deploy, before the new version starts.
+    buildCommand: npm ci && npx prisma db migrate && npm run build
+    startCommand: npm start
+    healthCheckPath: /login
+    autoDeploy: true
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: DATABASE_URL
+        sync: false
+      - key: SESSION_SECRET
+        generateValue: true
+      - key: RESEND_API_KEY
+        sync: false
+      - key: RESEND_FROM
+        value: Pursecast <hello@pursecast.com>
+      - key: NATIONAL_INFLATION
+        sync: false
