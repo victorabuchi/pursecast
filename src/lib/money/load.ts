@@ -80,8 +80,12 @@ export async function ensureCategories(userId: string): Promise<void> {
 }
 
 export const getCategories = cache(async (userId: string): Promise<Cat[]> => {
-  await ensureCategories(userId);
-  const rows = await db.orm.public.Category.where({ userId }).orderBy((c) => c.position.asc()).all();
+  // One query normally; the defaults are created only the first time.
+  let rows = await db.orm.public.Category.where({ userId }).orderBy((c) => c.position.asc()).all();
+  if (!rows.length) {
+    await ensureCategories(userId);
+    rows = await db.orm.public.Category.where({ userId }).orderBy((c) => c.position.asc()).all();
+  }
   return rows.map((c) => ({ id: c.id, name: c.name, kind: c.kind, budget: c.budget, color: c.color, position: c.position }));
 });
 
@@ -237,8 +241,7 @@ export type Money = {
 // The shared load for app pages: posts due bills, then builds the forecast.
 export async function loadMoney(days = 91, historyDays = 460): Promise<Money> {
   const me = await requireSetUp();
-  await postDueAdvances(me.id, me.today);
-  await postDueRecurring(me.id, me.today);
+  await Promise.all([postDueAdvances(me.id, me.today), postDueRecurring(me.id, me.today)]);
   const [cats, recurring, entries, events, cuts, balance, debts] = await Promise.all([
     getCategories(me.id),
     getRecurring(me.id),

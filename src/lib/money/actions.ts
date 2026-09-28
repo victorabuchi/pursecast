@@ -21,6 +21,9 @@ const CURRENCIES = new Set(['EUR', 'USD', 'GBP', 'SEK', 'NOK', 'DKK', 'CHF', 'PL
 // First-run setup, and the same page opened again later to change things.
 // Rows that came with an id are updated, new rows are added, and ids the page
 // listed but did not send back were removed by the person.
+//
+// Kept fast on purpose: everything is read in one parallel round, rows that
+// did not change are skipped, and all writes then go out together.
 export async function completeSetupAction(formData: FormData) {
   const me = await getMe();
   const editing = me.balance !== null;
@@ -28,56 +31,65 @@ export async function completeSetupAction(formData: FormData) {
   const negative = str(formData, 'balanceSign') === '-';
   if (balance === null) done('/setup', 'Enter the money in your account today.', 'error');
   const currency = CURRENCIES.has(str(formData, 'currency')) ? str(formData, 'currency') : me.currency;
+  const ids = (name: string) => str(formData, name, 4000).split(',').filter(Boolean);
 
   await ensureCategories(me.id);
-  const cats = await db.orm.public.Category.where({ userId: me.id }).all();
+  const [cats, existing, debtsBefore, openAdvances] = await Promise.all([
+    db.orm.public.Category.where({ userId: me.id }).all(),
+    editing ? db.orm.public.Recurring.where({ userId: me.id }).all() : Promise.resolve([]),
+    editing ? getDebts(me.id) : Promise.resolve([]),
+    editing ? db.orm.public.SalaryAdvance.where({ userId: me.id }).where((a) => a.settledAt.isNull()).all() : Promise.resolve([]),
+  ]);
   const byName = new Map(cats.map((c) => [c.name, c.id]));
-  await applyBudgetRows(me.id, formData);
+  const writes: Array<PromiseLike<unknown>> = [applyBudgetRows(me.id, formData, cats)];
 
+  // Bills, subscriptions, pay and rent.
   const nextDate = (date: string, cadence: Cadence) => (date > me.today ? date : rollForward(date, cadence, me.today));
   const kept = new Set<string>();
-  // Update the owned row with this id, or create one when there is a date.
-  const save = async (id: string, r: { name: string; amount: number; cadence: Cadence; date: string | null; category: string }) => {
-    const row = id ? await db.orm.public.Recurring.where({ id, userId: me.id }).first() : null;
+  const creates: Array<{ userId: string; name: string; amount: number; cadence: string; nextDate: string; categoryId: string | null }> = [];
+  const save = (id: string, r: { name: string; amount: number; cadence: Cadence; date: string | null; category: string }) => {
+    const row = id ? existing.find((x) => x.id === id) : undefined;
     if (row) {
       kept.add(row.id);
-      await db.orm.public.Recurring.where({ id: row.id, userId: me.id }).update({ name: r.name, amount: r.amount, cadence: r.cadence, nextDate: r.date ? nextDate(r.date, r.cadence) : row.nextDate });
+      const next = { name: r.name, amount: r.amount, cadence: r.cadence, nextDate: r.date ? nextDate(r.date, r.cadence) : row.nextDate };
+      if (next.name !== row.name || next.amount !== row.amount || next.cadence !== row.cadence || next.nextDate !== row.nextDate) {
+        writes.push(db.orm.public.Recurring.where({ id: row.id, userId: me.id }).update(next));
+      }
     } else if (r.date) {
-      await db.orm.public.Recurring.create({ userId: me.id, name: r.name, amount: r.amount, cadence: r.cadence, nextDate: nextDate(r.date, r.cadence), categoryId: byName.get(r.category) ?? null });
+      creates.push({ userId: me.id, name: r.name, amount: r.amount, cadence: r.cadence, nextDate: nextDate(r.date, r.cadence), categoryId: byName.get(r.category) ?? null });
     }
   };
-
   const salary = cents(formData, 'salary');
-  if (salary) await save(str(formData, 'salaryId', 40), { name: str(formData, 'salaryName', 80) || 'Salary', amount: salary, cadence: 'monthly', date: day(formData, 'salaryDate'), category: 'Income' });
+  if (salary) save(str(formData, 'salaryId', 40), { name: str(formData, 'salaryName', 80) || 'Salary', amount: salary, cadence: 'monthly', date: day(formData, 'salaryDate'), category: 'Income' });
   const rent = cents(formData, 'rent');
-  if (rent) await save(str(formData, 'rentId', 40), { name: str(formData, 'rentName', 80) || 'Rent', amount: -rent, cadence: 'monthly', date: day(formData, 'rentDate'), category: 'Housing' });
+  if (rent) save(str(formData, 'rentId', 40), { name: str(formData, 'rentName', 80) || 'Rent', amount: -rent, cadence: 'monthly', date: day(formData, 'rentDate'), category: 'Housing' });
   for (const [prefix, fixed] of [['bill', null], ['sub', 'Subscriptions']] as const) {
     for (let i = 0; i < 40; i++) {
       const name = str(formData, `${prefix}Name${i}`, 80);
       const amount = cents(formData, `${prefix}Amount${i}`);
       const cadence = str(formData, `${prefix}Cadence${i}`, 12);
       if (!name || !amount) continue;
-      await save(str(formData, `${prefix}Id${i}`, 40), { name, amount: -amount, cadence: isCadence(cadence) ? cadence : 'monthly', date: day(formData, `${prefix}Date${i}`), category: fixed ?? recurringCategory(name, false) });
+      save(str(formData, `${prefix}Id${i}`, 40), { name, amount: -amount, cadence: isCadence(cadence) ? cadence : 'monthly', date: day(formData, `${prefix}Date${i}`), category: fixed ?? recurringCategory(name, false) });
     }
   }
-  for (const id of str(formData, 'shownRecurring', 4000).split(',').filter(Boolean)) {
-    if (!kept.has(id)) await db.orm.public.Recurring.where({ id, userId: me.id }).delete();
-  }
+  if (creates.length) writes.push(db.orm.public.Recurring.createAll(creates));
+  const gone = ids('shownRecurring').filter((id) => !kept.has(id));
+  if (gone.length) writes.push(db.orm.public.Recurring.where({ userId: me.id }).where((r) => r.id.in(gone)).deleteAll());
 
   // The balance restarts only when it was changed; otherwise what was logged
   // since keeps counting.
   const typed = negative ? -balance : balance;
   if (!editing || String(typed) !== str(formData, 'balanceWas', 20)) {
-    await db.orm.public.User.where({ id: me.id }).update({ balance: typed, balanceSetAt: new Date().toISOString(), currency });
+    writes.push(db.orm.public.User.where({ id: me.id }).update({ balance: typed, balanceSetAt: new Date().toISOString(), currency }));
   } else if (currency !== me.currency) {
-    await db.orm.public.User.where({ id: me.id }).update({ currency });
+    writes.push(db.orm.public.User.where({ id: me.id }).update({ currency }));
   }
 
   // Money you owe (owed rows) and money owed to you (lent rows). It is
   // already part of the balance, so nothing moves today. Dated debts you owe
   // count in the forecast; money owed to you counts once it is paid back.
   const keptDebts = new Set<string>();
-  const debtsBefore = editing ? await getDebts(me.id) : [];
+  const newDebts: Array<{ userId: string; person: string; party: string; direction: string; amount: number; dueDate: string | null }> = [];
   for (const [prefix, direction] of [['owed', 'borrowed'], ['lent', 'lent']] as const) {
     for (let i = 0; i < 30; i++) {
       const person = str(formData, `${prefix}Who${i}`, 60);
@@ -87,54 +99,58 @@ export async function completeSetupAction(formData: FormData) {
       const due = day(formData, `${prefix}Date${i}`);
       const dueDate = due && due > me.today ? due : null;
       const id = str(formData, `${prefix}Id${i}`, 40);
-      const existing = id ? debtsBefore.find((d) => d.id === id) : undefined;
-      if (existing) {
+      const was = id ? debtsBefore.find((d) => d.id === id) : undefined;
+      if (was) {
+        keptDebts.add(was.id);
         // The page shows what is left; paybacks so far are added back.
-        keptDebts.add(existing.id);
-        await db.orm.public.Debt.where({ id: existing.id, userId: me.id }).update({ person, party, amount: amount + existing.paid, dueDate });
+        const next = { person, party, amount: amount + was.paid, dueDate };
+        if (next.person !== was.person || next.party !== was.party || next.amount !== was.amount || next.dueDate !== was.dueDate) {
+          writes.push(db.orm.public.Debt.where({ id: was.id, userId: me.id }).update(next));
+        }
       } else {
-        await db.orm.public.Debt.create({ userId: me.id, person, party, direction, amount, dueDate });
+        newDebts.push({ userId: me.id, person, party, direction, amount, dueDate });
       }
     }
   }
-  for (const id of str(formData, 'shownDebts', 4000).split(',').filter(Boolean)) {
-    if (!keptDebts.has(id)) await db.orm.public.Debt.where({ id, userId: me.id }).delete();
-  }
+  if (newDebts.length) writes.push(db.orm.public.Debt.createAll(newDebts));
+  const goneDebts = ids('shownDebts').filter((id) => !keptDebts.has(id));
+  if (goneDebts.length) writes.push(db.orm.public.Debt.where({ userId: me.id }).where((d) => d.id.in(goneDebts)).deleteAll());
 
-  // Salary advances as rows: unchanged ones stay, changed ones are replaced,
-  // removed ones are taken back, new ones are added. The balance is set first
-  // so an advance arriving today counts on top of it.
-  const pay = await db.orm.public.Recurring.where({ userId: me.id, paused: false })
-    .where((r) => r.amount.gt(0))
-    .orderBy((r) => r.createdAt.asc())
-    .first();
-  const openAdvances = await db.orm.public.SalaryAdvance.where({ userId: me.id }).where((a) => a.settledAt.isNull()).all();
-  const problems: string[] = [];
+  await Promise.all(writes);
+
+  // Salary advances, only when they changed. They come after the rest so a
+  // new pay exists and the balance is set before money arriving today.
+  const advRows: Array<{ id: string; amount: number; date: string }> = [];
   for (let i = 0; i < 12; i++) {
     const amount = cents(formData, `advAmount${i}`);
-    if (!amount) continue;
-    const date = day(formData, `advDate${i}`) ?? me.today;
-    const was = openAdvances.find((a) => a.id === str(formData, `advId${i}`, 40));
-    if (was && was.amount === amount && was.takenOn === date) continue;
-    if (was) await removeAdvance(me.id, was.id);
-    if (!pay) {
-      problems.push('add your pay first');
-      continue;
-    }
-    const res = await addAdvance(me.id, pay, amount, date < me.today && was ? me.today : date, me.today, currency);
-    if ('error' in res) problems.push(res.error);
+    if (amount) advRows.push({ id: str(formData, `advId${i}`, 40), amount, date: day(formData, `advDate${i}`) ?? me.today });
   }
-  // Rows removed on the page are taken back.
-  for (const id of str(formData, 'shownAdvances', 2000).split(',').filter(Boolean)) {
-    if (!formDataHasId(formData, id)) await removeAdvance(me.id, id);
+  const sentIds = new Set(advRows.map((a) => a.id).filter(Boolean));
+  const removed = ids('shownAdvances').filter((id) => !sentIds.has(id));
+  const changed = advRows.filter((a) => {
+    const was = openAdvances.find((x) => x.id === a.id);
+    return !was || was.amount !== a.amount || was.takenOn !== a.date;
+  });
+  const problems: string[] = [];
+  if (changed.length || removed.length) {
+    await Promise.all([...removed, ...changed.filter((a) => a.id).map((a) => a.id)].map((id) => removeAdvance(me.id, id)));
+    const pay = changed.length
+      ? await db.orm.public.Recurring.where({ userId: me.id, paused: false })
+          .where((r) => r.amount.gt(0))
+          .orderBy((r) => r.createdAt.asc())
+          .first()
+      : null;
+    for (const a of changed) {
+      if (!pay) {
+        problems.push('add your pay first');
+        break;
+      }
+      const res = await addAdvance(me.id, pay, a.amount, a.date < me.today && a.id ? me.today : a.date, me.today, currency);
+      if ('error' in res) problems.push(res.error);
+    }
   }
   if (problems.length) done('/setup', `Saved, but an advance was not: ${problems[0]}`, 'error');
   done('/forecast?setup=saved', editing ? 'Setup saved · forecast updated' : 'Your forecast is ready');
-}
-
-function formDataHasId(formData: FormData, id: string): boolean {
-  for (let i = 0; i < 12; i++) if (str(formData, `advId${i}`, 40) === id) return true;
-  return false;
 }
 
 /* ---------- Entries ---------- */
@@ -278,30 +294,39 @@ const PALETTE = ['#0f7a63', '#f97316', '#8b5cf6', '#0ea5e9', '#ec4899', '#16a34a
 // Everyday budgets come as rows budgetName0 / budgetAmount0 and so on, added
 // one at a time. A new name becomes a category. With budgetsAll, everyday
 // categories left out were removed and go back to zero.
-async function applyBudgetRows(userId: string, formData: FormData): Promise<void> {
-  await ensureCategories(userId);
-  const cats = await db.orm.public.Category.where({ userId }).all();
+async function applyBudgetRows(userId: string, formData: FormData, loaded?: Awaited<ReturnType<typeof loadCats>>): Promise<void> {
+  const cats = loaded ?? (await loadCats(userId));
   const byName = new Map(cats.map((c) => [c.name.toLowerCase(), c]));
   let position = Math.max(0, ...cats.map((c) => c.position));
   const kept = new Set<string>();
+  const creates: Array<{ userId: string; name: string; kind: string; budget: number; color: string; position: number }> = [];
+  const writes: Array<PromiseLike<unknown>> = [];
   for (let i = 0; i < 40; i++) {
     const name = str(formData, `budgetName${i}`, 40);
     if (!name) continue;
     const amount = cents(formData, `budgetAmount${i}`) ?? 0;
-    let cat = byName.get(name.toLowerCase());
+    const cat = byName.get(name.toLowerCase());
     if (cat && cat.kind !== 'flex') continue;
     if (!cat) {
+      if (creates.some((c) => c.name.toLowerCase() === name.toLowerCase())) continue;
       position += 1;
-      cat = await db.orm.public.Category.create({ userId, name, kind: 'flex', budget: amount, color: PALETTE[position % PALETTE.length]!, position });
-      byName.set(name.toLowerCase(), cat);
-    } else if (cat.budget !== amount) {
-      await db.orm.public.Category.where({ id: cat.id, userId }).update({ budget: amount });
+      creates.push({ userId, name, kind: 'flex', budget: amount, color: PALETTE[position % PALETTE.length]!, position });
+      continue;
     }
     kept.add(cat.id);
+    if (cat.budget !== amount) writes.push(db.orm.public.Category.where({ id: cat.id, userId }).update({ budget: amount }));
   }
   if (formData.get('budgetsAll')) {
-    for (const c of cats) if (c.kind === 'flex' && c.budget && !kept.has(c.id)) await db.orm.public.Category.where({ id: c.id, userId }).update({ budget: 0 });
+    const cleared = cats.filter((c) => c.kind === 'flex' && c.budget && !kept.has(c.id)).map((c) => c.id);
+    if (cleared.length) writes.push(db.orm.public.Category.where({ userId }).where((c) => c.id.in(cleared)).updateAll({ budget: 0 }));
   }
+  if (creates.length) writes.push(db.orm.public.Category.createAll(creates));
+  await Promise.all(writes);
+}
+
+async function loadCats(userId: string) {
+  await ensureCategories(userId);
+  return db.orm.public.Category.where({ userId }).all();
 }
 
 export async function saveBudgetsAction(formData: FormData) {
