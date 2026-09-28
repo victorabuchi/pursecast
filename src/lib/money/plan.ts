@@ -22,7 +22,7 @@ const RULES: Array<{ re: RegExp; tag: string; items: (travel: boolean) => Array<
   { re: /dinner|restaurant|ravintola/i, tag: 'Fun', items: () => [['Dinner', 5000]] },
 ];
 
-export const TAGS = ['Wedding', 'Gift', 'Travel', 'Holidays', 'Health', 'Fun', 'Car', 'Home', 'Personal', 'Other'];
+export const TAGS = ['Wedding', 'Gift', 'Travel', 'Holidays', 'Health', 'Fun', 'Car', 'Home', 'Personal', 'Shopping', 'Other'];
 
 export function estimate(name: string, location = ''): Estimate | null {
   const rule = RULES.find((r) => r.re.test(name));

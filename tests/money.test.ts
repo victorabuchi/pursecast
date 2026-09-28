@@ -10,6 +10,7 @@ import { estimate, normalizeCalendarUrl, parseIcs } from '../src/lib/money/plan'
 import { personalInflation } from '../src/lib/money/inflation';
 import { guessCategory, parseQuick } from '../src/lib/money/categories';
 import { evaluate, isExpression, show } from '../src/lib/money/calc';
+import { affordableFrom } from '../src/lib/money/wish';
 import { paidBack, remaining } from '../src/lib/money/debts';
 import { noteFor, pauseFor, validAudio } from '../src/lib/money/notes';
 
@@ -295,4 +296,11 @@ test('sums in amount fields', () => {
   assert.deepEqual(parseQuick('12+8 lunch'), { amount: -2000, note: 'Lunch' });
   assert.equal(show(12.5), '12.5');
   assert.equal(show(255), '255');
+});
+
+test('want to buy: the first day it fits without a storm later', () => {
+  const fc = buildForecast({ today: '2026-09-28', balance: 50000, cushion: 0, recurring: [{ id: 's', name: 'Salary', amount: 100000, cadence: 'monthly', nextDate: '2026-10-09' }], budgets: [], events: [], days: 60 });
+  assert.equal(affordableFrom(fc, 40000), '2026-09-28');
+  assert.equal(affordableFrom(fc, 120000), '2026-10-09');
+  assert.equal(affordableFrom(fc, 500000), null);
 });

@@ -6,7 +6,7 @@ export async function GET() {
   const viewer = await getViewer();
   if (!viewer) return new Response('Sign in first', { status: 401 });
   const userId = viewer.id;
-  const [user, categories, entries, recurring, budgetMoves, forks, forkEffects, planEvents, planItems, debts, notes] = await Promise.all([
+  const [user, categories, entries, recurring, budgetMoves, forks, forkEffects, planEvents, planItems, debts, notes, wishes] = await Promise.all([
     db.orm.public.User.where({ id: userId }).first(),
     db.orm.public.Category.where({ userId }).all(),
     db.orm.public.Entry.where({ userId }).orderBy((e) => e.date.asc()).all(),
@@ -18,6 +18,7 @@ export async function GET() {
     db.orm.public.PlanItem.where({ userId }).all(),
     db.orm.public.Debt.where({ userId }).all(),
     db.orm.public.FutureNote.where({ userId }).all(),
+    db.orm.public.WishItem.where({ userId }).all(),
   ]);
   const { calendarUrl, ...profile } = user!;
   const body = {
@@ -32,6 +33,7 @@ export async function GET() {
     planEvents: planEvents.map((e) => ({ ...e, items: planItems.filter((i) => i.eventId === e.id) })),
     debts,
     futureNotes: notes,
+    wishList: wishes,
   };
   return new Response(JSON.stringify(body, null, 2), {
     headers: {

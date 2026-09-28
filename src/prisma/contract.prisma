@@ -36,6 +36,7 @@ model User {
   debts        Debt[]
   notes        FutureNote[]
   advances     SalaryAdvance[]
+  wishes       WishItem[]
 
   @@rls
   @@map("app_user")
@@ -307,4 +308,23 @@ model SalaryAdvance {
   @@index([userId])
   @@rls
   @@map("salary_advance")
+}
+
+// Something the person wants to buy. price is cents. priority 1 (want most)
+// to 3. When they start saving for it, eventId points at the plan event.
+model WishItem {
+  id        Uuid               @id @default(uuid())
+  user      User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    Uuid
+  name      String
+  price     Int
+  url       String?
+  priority  Int                @default(2)
+  eventId   Uuid?
+  boughtAt  TimestamptzString?
+  createdAt TimestamptzString  @default(now())
+
+  @@index([userId])
+  @@rls
+  @@map("wish_item")
 }

@@ -1,0 +1,161 @@
+[
+  {
+    "id": "table.wish_item",
+    "label": "Create table \"wish_item\"",
+    "summary": "Creates table \"wish_item\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "wish_item"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"wish_item\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"wish_item\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"wish_item\"",
+        "sql": "CREATE TABLE \"public\".\"wish_item\" (\n  \"boughtAt\" timestamptz,\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"eventId\" uuid,\n  \"id\" uuid NOT NULL,\n  \"name\" text NOT NULL,\n  \"price\" int4 NOT NULL,\n  \"priority\" int4 DEFAULT 2 NOT NULL,\n  \"url\" text,\n  \"userId\" uuid NOT NULL,\n  PRIMARY KEY (\"id\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"wish_item\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"wish_item\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.wish_item.wish_item_userId_idx_a489d58a",
+    "label": "Create index \"wish_item_userId_idx_a489d58a\" on \"wish_item\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "wish_item_userId_idx_a489d58a",
+        "table": "wish_item"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"wish_item_userId_idx_a489d58a\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"wish_item_userId_idx_a489d58a\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"wish_item_userId_idx_a489d58a\"",
+        "sql": "CREATE INDEX \"wish_item_userId_idx_a489d58a\" ON \"public\".\"wish_item\" (\"userId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"wish_item_userId_idx_a489d58a\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"wish_item_userId_idx_a489d58a\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.wish_item.wish_item_userId_fkey",
+    "label": "Add foreign key \"wish_item_userId_fkey\" on \"wish_item\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "wish_item_userId_fkey",
+        "table": "wish_item"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"wish_item_userId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "wish_item_userId_fkey",
+          "public",
+          "\"public\".\"wish_item\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"wish_item_userId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"wish_item\"\nADD CONSTRAINT \"wish_item_userId_fkey\"\nFOREIGN KEY (\"userId\")\nREFERENCES \"public\".\"app_user\" (\"id\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"wish_item_userId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "wish_item_userId_fkey",
+          "public",
+          "\"public\".\"wish_item\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "rowLevelSecurity.public.wish_item",
+    "label": "Enable row-level security on \"wish_item\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "rowLevelSecurity",
+        "name": "wish_item"
+      }
+    },
+    "precheck": [
+      {
+        "description": "check RLS is not already enabled on \"wish_item\"",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_class\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"relnamespace\" WHERE (\"n\".\"nspname\" = $1 AND \"c\".\"relname\" = $2 AND NOT (\"c\".\"relrowsecurity\"))) AS \"result\"",
+        "params": [
+          "public",
+          "wish_item"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "enable row-level security on \"wish_item\"",
+        "sql": "ALTER TABLE \"public\".\"wish_item\" ENABLE ROW LEVEL SECURITY"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify row-level security is enabled on \"wish_item\"",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_class\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"relnamespace\" WHERE (\"n\".\"nspname\" = $1 AND \"c\".\"relname\" = $2 AND \"c\".\"relrowsecurity\")) AS \"result\"",
+        "params": [
+          "public",
+          "wish_item"
+        ]
+      }
+    ]
+  }
+]

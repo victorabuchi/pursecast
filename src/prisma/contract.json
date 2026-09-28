@@ -59,6 +59,10 @@
     "salary_advance": {
       "model": "SalaryAdvance",
       "namespace": "public"
+    },
+    "wish_item": {
+      "model": "WishItem",
+      "namespace": "public"
     }
   },
   "domain": {
@@ -2042,6 +2046,21 @@
                   "model": "Recurring",
                   "namespace": "public"
                 }
+              },
+              "wishes": {
+                "cardinality": "1:N",
+                "on": {
+                  "localFields": [
+                    "id"
+                  ],
+                  "targetFields": [
+                    "userId"
+                  ]
+                },
+                "to": {
+                  "model": "WishItem",
+                  "namespace": "public"
+                }
               }
             },
             "storage": {
@@ -2091,6 +2110,124 @@
               },
               "namespaceId": "public",
               "table": "app_user"
+            }
+          },
+          "WishItem": {
+            "fields": {
+              "boughtAt": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              },
+              "createdAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              },
+              "eventId": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/uuid@1",
+                  "kind": "scalar"
+                }
+              },
+              "id": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/uuid@1",
+                  "kind": "scalar"
+                }
+              },
+              "name": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "price": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "priority": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "url": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "userId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/uuid@1",
+                  "kind": "scalar"
+                }
+              }
+            },
+            "relations": {
+              "user": {
+                "cardinality": "N:1",
+                "nullable": false,
+                "on": {
+                  "localFields": [
+                    "userId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
+                },
+                "to": {
+                  "model": "User",
+                  "namespace": "public"
+                }
+              }
+            },
+            "storage": {
+              "fields": {
+                "boughtAt": {
+                  "column": "boughtAt"
+                },
+                "createdAt": {
+                  "column": "createdAt"
+                },
+                "eventId": {
+                  "column": "eventId"
+                },
+                "id": {
+                  "column": "id"
+                },
+                "name": {
+                  "column": "name"
+                },
+                "price": {
+                  "column": "price"
+                },
+                "priority": {
+                  "column": "priority"
+                },
+                "url": {
+                  "column": "url"
+                },
+                "userId": {
+                  "column": "userId"
+                }
+              },
+              "namespaceId": "public",
+              "table": "wish_item"
             }
           }
         }
@@ -2171,6 +2308,11 @@
               "kind": "rls",
               "namespaceId": "public",
               "tableName": "salary_advance"
+            },
+            "wish_item": {
+              "kind": "rls",
+              "namespaceId": "public",
+              "tableName": "wish_item"
             }
           },
           "table": {
@@ -3674,6 +3816,98 @@
                 ]
               },
               "uniques": []
+            },
+            "wish_item": {
+              "columns": {
+                "boughtAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "nativeType": "timestamptz",
+                  "nullable": true
+                },
+                "createdAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "default": {
+                    "expression": "now()",
+                    "kind": "function"
+                  },
+                  "nativeType": "timestamptz",
+                  "nullable": false
+                },
+                "eventId": {
+                  "codecId": "pg/uuid@1",
+                  "nativeType": "uuid",
+                  "nullable": true
+                },
+                "id": {
+                  "codecId": "pg/uuid@1",
+                  "nativeType": "uuid",
+                  "nullable": false
+                },
+                "name": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "price": {
+                  "codecId": "pg/int4@1",
+                  "nativeType": "int4",
+                  "nullable": false
+                },
+                "priority": {
+                  "codecId": "pg/int4@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": 2
+                  },
+                  "nativeType": "int4",
+                  "nullable": false
+                },
+                "url": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
+                "userId": {
+                  "codecId": "pg/uuid@1",
+                  "nativeType": "uuid",
+                  "nullable": false
+                }
+              },
+              "foreignKeys": [
+                {
+                  "onDelete": "cascade",
+                  "source": {
+                    "columns": [
+                      "userId"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "wish_item"
+                  },
+                  "target": {
+                    "columns": [
+                      "id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "app_user"
+                  }
+                }
+              ],
+              "indexes": [
+                {
+                  "columns": [
+                    "userId"
+                  ],
+                  "name": "wish_item_userId_idx_a489d58a",
+                  "prefix": "wish_item_userId_idx",
+                  "unique": false
+                }
+              ],
+              "primaryKey": {
+                "columns": [
+                  "id"
+                ]
+              },
+              "uniques": []
             }
           }
         },
@@ -3681,10 +3915,10 @@
         "kind": "postgres-schema"
       }
     },
-    "storageHash": "342e0cddf05a7fba4b37a251a4f201879cab79de6656cdf9460e94d1c4bb241a"
+    "storageHash": "cd5ccc4e9c6e1ccbd2265d07ddebe5df9df235f223f3e105cfa56edd037aa4fa"
   },
   "execution": {
-    "executionHash": "a21b9b774f61f307afad29ca5342cb265b748fb75e2385ca7b9f248a5c24ba63",
+    "executionHash": "07d315918beef21e359af553ed65e17fb7ef9828546c0d3bc4344152e11ebb4f",
     "mutations": {
       "defaults": [
         {
@@ -3839,6 +4073,17 @@
             "column": "id",
             "namespace": "public",
             "table": "salary_advance"
+          }
+        },
+        {
+          "onCreate": {
+            "id": "uuidv4",
+            "kind": "generator"
+          },
+          "ref": {
+            "column": "id",
+            "namespace": "public",
+            "table": "wish_item"
           }
         }
       ]

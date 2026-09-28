@@ -26,8 +26,9 @@ export function backTo(f: FormData, fallback: string): string {
 
 // Redirect with a one-off toast (or error) message shown by <Toast />.
 export function done(path: string, toast: string, kind: 'toast' | 'error' = 'toast'): never {
-  const [p, q = ''] = path.split('?');
+  const [withoutHash, hash = ''] = path.split('#');
+  const [p, q = ''] = withoutHash!.split('?');
   const search = new URLSearchParams(q);
   search.set(kind, toast);
-  redirect(`${p}?${search.toString()}`);
+  redirect(`${p}?${search.toString()}${hash ? `#${hash}` : ''}`);
 }
