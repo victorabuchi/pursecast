@@ -8,6 +8,7 @@ import { MoneyInput } from '../../../components/app/Fields';
 import { CloseButton, SheetButton, UrlSheet } from '../../../components/app/Sheet';
 import { loadMoney, type EventRow } from '../../../lib/money/load';
 import WantToBuy from './WantToBuy';
+import MoneyLands from './MoneyLands';
 import { jarAccrued, saveSuggestion } from '../../../lib/money/forecast';
 import { monthLabel, monthName, monthOf, short, todayIn } from '../../../lib/money/dates';
 import { money } from '../../../lib/money/format';
@@ -24,7 +25,7 @@ const NATIONAL = Number(process.env['NATIONAL_INFLATION'] ?? '');
 export default async function PlanPage({ searchParams }: PageProps<'/plan'>) {
   const params = await searchParams;
   // A year ahead, so Want to buy can find the first day each thing fits.
-  const { me, events, entries, cats, forecast } = await loadMoney(366);
+  const { me, events, entries, cats, forecast, recurring } = await loadMoney(366);
   const cur = me.currency;
   const m = (n: number) => money(n, cur);
   const { to } = planWindow(me.today);
@@ -182,6 +183,8 @@ export default async function PlanPage({ searchParams }: PageProps<'/plan'>) {
           </div>
         </div>
       </div>
+
+      <MoneyLands me={me} recurring={recurring} />
 
       <WantToBuy me={me} fc={forecast} events={events} openNew={Boolean(params['wish'])} />
 

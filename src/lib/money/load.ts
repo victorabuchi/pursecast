@@ -26,6 +26,7 @@ export type Me = {
   calendarAt: string | null;
   notepad: string;
   notepadAt: string | null;
+  photo: string | null;
   today: string;
 };
 
@@ -67,6 +68,7 @@ export const getMe = cache(async (): Promise<Me> => {
     calendarAt: u.calendarAt,
     notepad: u.notepad,
     notepadAt: u.notepadAt,
+    photo: u.photo,
     today: todayIn(u.timezone),
   };
 });

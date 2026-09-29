@@ -156,13 +156,24 @@
   width: 36px;
   height: 36px;
   padding: 0;
-  border: none;
+  overflow: hidden;
+  border: 1px solid var(--line);
   border-radius: 50%;
-  background: linear-gradient(135deg, var(--b), var(--sun));
-  color: #fff !important;
-  font-size: 12px;
-  font-weight: 800;
+  background: #fff;
+  color: var(--muted);
   cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+}
+
+.avatar:hover {
+  border-color: var(--b);
+  color: var(--b);
+}
+
+.avatarImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 /* Popovers from the top bar */
@@ -2754,4 +2765,193 @@
   .priceBox[data-hint='true'] .input {
     padding-right: 12px;
   }
+}
+
+/* When money lands: a to-do list for payday, on Plan ahead. */
+.todo {
+  display: grid;
+  gap: 14px;
+}
+
+.todoAdd {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 0.8fr) minmax(0, 1.3fr) auto;
+  gap: 8px;
+  align-items: center;
+}
+
+@media (max-width: 760px) {
+  .todoAdd {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+
+  .todoAdd > :first-child {
+    grid-column: 1 / -1;
+  }
+
+  .todoAdd > button {
+    grid-column: 1 / -1;
+  }
+}
+
+.todoGroups {
+  display: grid;
+  align-items: start;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 12px;
+}
+
+.todoGroup {
+  display: grid;
+  gap: 10px;
+  align-content: start;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: #fff;
+  animation: rise 0.25s ease both;
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.todoGroup[data-landed='true'] {
+  border-color: color-mix(in srgb, var(--pos) 40%, var(--line));
+  background: color-mix(in srgb, var(--pos) 5%, #fff);
+}
+
+.todoGroup header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.todoGroup header > span:nth-child(2) {
+  display: grid;
+  flex: 1;
+  min-width: 0;
+}
+
+.todoGroup header small {
+  color: var(--muted);
+  font-size: 12.5px;
+}
+
+.todoGroup header em {
+  font-style: normal;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.todoGroup header em small {
+  font-weight: 500;
+}
+
+.todoBadge {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  background: var(--bt);
+  color: var(--b);
+}
+
+.todoGroup[data-landed='true'] .todoBadge {
+  background: #dcfce7;
+  color: var(--pos);
+}
+
+.todoGroup ul {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.todoGroup li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 38px;
+  padding: 2px 0;
+  border-top: 1px solid var(--line);
+  animation: rise 0.2s ease both;
+}
+
+.todoGroup li:first-child {
+  border-top: none;
+}
+
+.todoCheck {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: 2px solid #cbd5e1;
+  border-radius: 50%;
+  background: #fff;
+  color: transparent;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s, transform 0.15s;
+}
+
+.todoCheck:hover {
+  border-color: var(--b);
+}
+
+.todoCheck:active {
+  transform: scale(0.88);
+}
+
+.todoGroup li[data-done='true'] .todoCheck {
+  border-color: var(--pos);
+  background: var(--pos);
+  color: #fff;
+}
+
+.todoText {
+  flex: 1;
+  min-width: 0;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+  transition: color 0.2s;
+}
+
+.todoGroup li[data-done='true'] .todoText,
+.todoGroup li[data-done='true'] .todoAmt {
+  color: var(--muted);
+  text-decoration: line-through;
+}
+
+.todoAmt {
+  flex: none;
+  font-weight: 700;
+}
+
+.todoGroup .xBtn {
+  opacity: 0.4;
+}
+
+.todoGroup li:hover .xBtn,
+.todoGroup .xBtn:focus-visible {
+  opacity: 1;
+}
+
+/* The tick only shows once done; a faint one on hover invites the click. */
+.todoCheck svg {
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+.todoCheck:hover svg {
+  opacity: 0.35;
+  color: var(--b);
+}
+
+.todoGroup li[data-done='true'] .todoCheck svg {
+  opacity: 1;
+  color: #fff;
 }

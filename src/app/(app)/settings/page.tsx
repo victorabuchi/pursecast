@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import styles from '../../../components/app/app.module.css';
 import PageHead from '../../../components/app/PageHead';
 import Submit from '../../../components/app/Submit';
+import PhotoInput from '../../../components/app/PhotoInput';
 import PasswordField from '../../../components/auth/PasswordField';
 import { db } from '../../../prisma/db';
 import { getMe } from '../../../lib/money/load';
@@ -26,6 +27,7 @@ export default async function SettingsPage() {
         <div className={styles.stack}>
           <form action={updateProfileAction} className={styles.card}>
             <strong className={styles.cardTitle}>Profile</strong>
+            <PhotoInput current={me.photo} label="Profile picture" round max={240} />
             <label className={styles.field}>
               Name
               <input className={styles.input} name="name" defaultValue={me.name} required maxLength={80} />

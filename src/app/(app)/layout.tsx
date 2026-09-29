@@ -48,6 +48,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     { group: 'Go to', label: 'Money owed', hint: 'Lent and borrowed', href: '/spending?tab=owed' },
     { group: 'Go to', label: 'Future-self notes', href: '/worth-it' },
     { group: 'Go to', label: 'Want to buy', hint: 'Your wish list', href: '/plan#want' },
+    { group: 'Go to', label: 'When money lands', hint: 'To-do list for payday', href: '/plan#todo' },
     { group: 'Go to', label: 'Budgets', href: '/spending?tab=budgets' },
     { group: 'Go to', label: 'Settings', href: '/settings' },
     { group: 'Go to', label: 'Edit setup', hint: 'Balance, pay, bills, subscriptions, budgets', href: '/setup' },
@@ -55,6 +56,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     { group: 'Do', label: 'New fork', hint: 'Try a decision before you make it', href: '/forks?new=1' },
     { group: 'Do', label: 'Add a planned cost', href: '/plan?new=1' },
     { group: 'Do', label: 'Add something I want to buy', hint: 'See when it fits', href: '/plan?wish=1#want' },
+    { group: 'Do', label: 'Add a to-do for payday', hint: 'Things to do once money lands', href: '/plan#todo' },
     { group: 'Do', label: 'Add a bill or income', href: '/spending?tab=bills&new=1' },
     { group: 'Do', label: 'Add a salary advance', hint: 'Part of your pay early', href: '/spending?tab=bills&advance=1' },
     { group: 'Do', label: 'Add money owed', hint: 'Lent or borrowed', href: '/spending?tab=owed&new=1' },
@@ -74,7 +76,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   ];
 
   return (
-    <AppShell name={me.name} email={me.email} currency={me.currency} today={me.today} bell={bell} palette={palette} notepad={me.notepad} notepadAt={me.notepadAt}>
+    <AppShell name={me.name} email={me.email} currency={me.currency} today={me.today} bell={bell} palette={palette} notepad={me.notepad} notepadAt={me.notepadAt} photo={me.photo}>
       {children}
     </AppShell>
   );

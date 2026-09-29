@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { db } from '../../../prisma/db';
 import styles from '../../../components/app/app.module.css';
 import I from '../../../components/app/Icon';
 import PageHead from '../../../components/app/PageHead';
@@ -35,6 +36,10 @@ export default async function ForecastPage({ searchParams }: PageProps<'/forecas
   const params = await searchParams;
   const view = RANGES.find((r) => r.id === params['range']) ?? RANGES[1]!;
   const { me, forecast: fc, budgets, balance } = await loadMoney(view.days);
+  // Things waiting for a payday, shown on that pay in Coming up.
+  const todos = await db.orm.public.Todo.where({ userId: me.id }).where((t) => t.doneAt.isNull()).where((t) => t.incomeId.isNotNull()).select('incomeId', 'due').all();
+  const toDo = new Map<string, number>();
+  for (const t of todos) toDo.set(`${t.incomeId}|${t.due}`, (toDo.get(`${t.incomeId}|${t.due}`) ?? 0) + 1);
   // Links inside the page keep the chosen range.
   const q = (extra: string) => `/forecast?${view.id === '3m' ? '' : `range=${view.id}&`}${extra}`;
   const cur = me.currency;
@@ -216,6 +221,14 @@ export default async function ForecastPage({ searchParams }: PageProps<'/forecas
                   <small>
                     {short(f.date)}
                     {f.calendar ? ' · calendar' : ''}
+                    {toDo.get(`${f.ref}|${f.date}`) ? (
+                      <>
+                        {' · '}
+                        <Link href="/plan#todo" className={styles.linkBtn} style={{ fontSize: 12.5 }}>
+                          {toDo.get(`${f.ref}|${f.date}`)} to do when it lands
+                        </Link>
+                      </>
+                    ) : null}
                   </small>
                 </span>
                 <b className={f.amount > 0 ? styles.pos : undefined}>{m(f.amount, true)}</b>

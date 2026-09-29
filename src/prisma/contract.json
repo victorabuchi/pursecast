@@ -68,6 +68,10 @@
       "model": "StatementTxn",
       "namespace": "public"
     },
+    "todo": {
+      "model": "Todo",
+      "namespace": "public"
+    },
     "wish_item": {
       "model": "WishItem",
       "namespace": "public"
@@ -2010,6 +2014,114 @@
               "table": "statement_txn"
             }
           },
+          "Todo": {
+            "fields": {
+              "amount": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "createdAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              },
+              "doneAt": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              },
+              "due": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "id": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/uuid@1",
+                  "kind": "scalar"
+                }
+              },
+              "incomeId": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/uuid@1",
+                  "kind": "scalar"
+                }
+              },
+              "text": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "userId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/uuid@1",
+                  "kind": "scalar"
+                }
+              }
+            },
+            "relations": {
+              "user": {
+                "cardinality": "N:1",
+                "nullable": false,
+                "on": {
+                  "localFields": [
+                    "userId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
+                },
+                "to": {
+                  "model": "User",
+                  "namespace": "public"
+                }
+              }
+            },
+            "storage": {
+              "fields": {
+                "amount": {
+                  "column": "amount"
+                },
+                "createdAt": {
+                  "column": "createdAt"
+                },
+                "doneAt": {
+                  "column": "doneAt"
+                },
+                "due": {
+                  "column": "due"
+                },
+                "id": {
+                  "column": "id"
+                },
+                "incomeId": {
+                  "column": "incomeId"
+                },
+                "text": {
+                  "column": "text"
+                },
+                "userId": {
+                  "column": "userId"
+                }
+              },
+              "namespaceId": "public",
+              "table": "todo"
+            }
+          },
           "User": {
             "fields": {
               "balance": {
@@ -2100,6 +2212,13 @@
                 "nullable": true,
                 "type": {
                   "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              },
+              "photo": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
                   "kind": "scalar"
                 }
               },
@@ -2322,6 +2441,21 @@
                   "namespace": "public"
                 }
               },
+              "todos": {
+                "cardinality": "1:N",
+                "on": {
+                  "localFields": [
+                    "id"
+                  ],
+                  "targetFields": [
+                    "userId"
+                  ]
+                },
+                "to": {
+                  "model": "Todo",
+                  "namespace": "public"
+                }
+              },
               "wishes": {
                 "cardinality": "1:N",
                 "on": {
@@ -2378,6 +2512,9 @@
                 },
                 "notepadAt": {
                   "column": "notepadAt"
+                },
+                "photo": {
+                  "column": "photo"
                 },
                 "timezone": {
                   "column": "timezone"
@@ -2604,6 +2741,11 @@
               "namespaceId": "public",
               "tableName": "statement_txn"
             },
+            "todo": {
+              "kind": "rls",
+              "namespaceId": "public",
+              "tableName": "todo"
+            },
             "wish_item": {
               "kind": "rls",
               "namespaceId": "public",
@@ -2692,6 +2834,11 @@
                 "notepadAt": {
                   "codecId": "pg/timestamptz-string@1",
                   "nativeType": "timestamptz",
+                  "nullable": true
+                },
+                "photo": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
                   "nullable": true
                 },
                 "timezone": {
@@ -4303,6 +4450,89 @@
               },
               "uniques": []
             },
+            "todo": {
+              "columns": {
+                "amount": {
+                  "codecId": "pg/int4@1",
+                  "nativeType": "int4",
+                  "nullable": true
+                },
+                "createdAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "default": {
+                    "expression": "now()",
+                    "kind": "function"
+                  },
+                  "nativeType": "timestamptz",
+                  "nullable": false
+                },
+                "doneAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "nativeType": "timestamptz",
+                  "nullable": true
+                },
+                "due": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "id": {
+                  "codecId": "pg/uuid@1",
+                  "nativeType": "uuid",
+                  "nullable": false
+                },
+                "incomeId": {
+                  "codecId": "pg/uuid@1",
+                  "nativeType": "uuid",
+                  "nullable": true
+                },
+                "text": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "userId": {
+                  "codecId": "pg/uuid@1",
+                  "nativeType": "uuid",
+                  "nullable": false
+                }
+              },
+              "foreignKeys": [
+                {
+                  "onDelete": "cascade",
+                  "source": {
+                    "columns": [
+                      "userId"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "todo"
+                  },
+                  "target": {
+                    "columns": [
+                      "id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "app_user"
+                  }
+                }
+              ],
+              "indexes": [
+                {
+                  "columns": [
+                    "userId"
+                  ],
+                  "name": "todo_userId_idx_a489d58a",
+                  "prefix": "todo_userId_idx",
+                  "unique": false
+                }
+              ],
+              "primaryKey": {
+                "columns": [
+                  "id"
+                ]
+              },
+              "uniques": []
+            },
             "wish_item": {
               "columns": {
                 "boughtAt": {
@@ -4406,10 +4636,10 @@
         "kind": "postgres-schema"
       }
     },
-    "storageHash": "b07a4f40873679af01b8404f3f4b5144280de3319e7660f001371d66c190627d"
+    "storageHash": "17f94c4aa0a97029031804d17cb839da0dc7c8bfc59294d6c4a1f653558afa5e"
   },
   "execution": {
-    "executionHash": "ca6aad3b6e9428712d6ffa07d053a1311135f8c6396a2f7fcf76748ab3267ee3",
+    "executionHash": "8964dc95692ad06fe658537dceb13671f8f01be093c83d2ac1a05907ef03ffb7",
     "mutations": {
       "defaults": [
         {
@@ -4586,6 +4816,17 @@
             "column": "id",
             "namespace": "public",
             "table": "statement_txn"
+          }
+        },
+        {
+          "onCreate": {
+            "id": "uuidv4",
+            "kind": "generator"
+          },
+          "ref": {
+            "column": "id",
+            "namespace": "public",
+            "table": "todo"
           }
         },
         {

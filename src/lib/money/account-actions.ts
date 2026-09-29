@@ -8,6 +8,7 @@ import { done, str } from './act';
 import { getMe } from './load';
 import { normalizeCalendarUrl } from './plan';
 import { syncCalendar } from './calendar';
+import { photoChange } from './wish-icons';
 
 const CURRENCIES = new Set(['EUR', 'USD', 'GBP', 'SEK', 'NOK', 'DKK', 'CHF', 'PLN', 'CAD', 'AUD', 'NGN', 'INR', 'JPY']);
 
@@ -30,6 +31,7 @@ export async function updateProfileAction(formData: FormData) {
     name,
     currency: CURRENCIES.has(currency) ? currency : me.currency,
     timezone: validZone(timezone) ? timezone : me.timezone,
+    ...photoChange(formData),
   });
   done('/settings', 'Profile saved');
 }

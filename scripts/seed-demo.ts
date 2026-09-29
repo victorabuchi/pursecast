@@ -153,6 +153,17 @@ await db.orm.public.ForkEffect.createAll([
   { forkId: fork.id, userId, name: 'No car loan', monthly: 13000 },
 ]);
 
+// Things to do when the next salary lands.
+const pay = await db.orm.public.Recurring.where({ userId, name: 'Salary' }).first();
+if (pay) {
+  await db.orm.public.Todo.createAll([
+    { userId, text: 'Pay back Sam for the concert', amount: 12000, incomeId: pay.id, due: pay.nextDate },
+    { userId, text: 'Book the train to Tampere', amount: 4590, incomeId: pay.id, due: pay.nextDate },
+    { userId, text: 'Move €200 to the Porto jar', amount: 20000, incomeId: pay.id, due: pay.nextDate },
+  ]);
+}
+await db.orm.public.Todo.create({ userId, text: 'Cancel the unused Viaplay trial', due: today });
+
 // The balance is entered last so the history above does not move it.
 await db.orm.public.User.where({ id: userId }).update({ balance: Number(process.env['DEMO_BALANCE'] ?? 165000), balanceSetAt: new Date().toISOString(), calendarUrl: 'https://calendar.google.com/calendar/ical/demo/basic.ics', calendarAt: new Date().toISOString() });
 

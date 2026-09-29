@@ -1,0 +1,203 @@
+[
+  {
+    "id": "table.todo",
+    "label": "Create table \"todo\"",
+    "summary": "Creates table \"todo\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "todo"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"todo\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"todo\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"todo\"",
+        "sql": "CREATE TABLE \"public\".\"todo\" (\n  \"amount\" int4,\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"doneAt\" timestamptz,\n  \"due\" text NOT NULL,\n  \"id\" uuid NOT NULL,\n  \"incomeId\" uuid,\n  \"text\" text NOT NULL,\n  \"userId\" uuid NOT NULL,\n  PRIMARY KEY (\"id\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"todo\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"todo\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.public.app_user.photo",
+    "label": "Add column \"photo\" to \"app_user\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "photo",
+        "table": "app_user"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"photo\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "app_user",
+          "photo"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"photo\"",
+        "sql": "ALTER TABLE \"public\".\"app_user\" ADD COLUMN \"photo\" text"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"photo\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "app_user",
+          "photo"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.todo.todo_userId_idx_a489d58a",
+    "label": "Create index \"todo_userId_idx_a489d58a\" on \"todo\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "todo_userId_idx_a489d58a",
+        "table": "todo"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"todo_userId_idx_a489d58a\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"todo_userId_idx_a489d58a\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"todo_userId_idx_a489d58a\"",
+        "sql": "CREATE INDEX \"todo_userId_idx_a489d58a\" ON \"public\".\"todo\" (\"userId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"todo_userId_idx_a489d58a\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"todo_userId_idx_a489d58a\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.todo.todo_userId_fkey",
+    "label": "Add foreign key \"todo_userId_fkey\" on \"todo\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "todo_userId_fkey",
+        "table": "todo"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"todo_userId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "todo_userId_fkey",
+          "public",
+          "\"public\".\"todo\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"todo_userId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"todo\"\nADD CONSTRAINT \"todo_userId_fkey\"\nFOREIGN KEY (\"userId\")\nREFERENCES \"public\".\"app_user\" (\"id\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"todo_userId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "todo_userId_fkey",
+          "public",
+          "\"public\".\"todo\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "rowLevelSecurity.public.todo",
+    "label": "Enable row-level security on \"todo\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "rowLevelSecurity",
+        "name": "todo"
+      }
+    },
+    "precheck": [
+      {
+        "description": "check RLS is not already enabled on \"todo\"",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_class\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"relnamespace\" WHERE (\"n\".\"nspname\" = $1 AND \"c\".\"relname\" = $2 AND NOT (\"c\".\"relrowsecurity\"))) AS \"result\"",
+        "params": [
+          "public",
+          "todo"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "enable row-level security on \"todo\"",
+        "sql": "ALTER TABLE \"public\".\"todo\" ENABLE ROW LEVEL SECURITY"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify row-level security is enabled on \"todo\"",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_class\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"relnamespace\" WHERE (\"n\".\"nspname\" = $1 AND \"c\".\"relname\" = $2 AND \"c\".\"relrowsecurity\")) AS \"result\"",
+        "params": [
+          "public",
+          "todo"
+        ]
+      }
+    ]
+  }
+]

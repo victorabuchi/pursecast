@@ -11,7 +11,7 @@ import Tools from '../tools/Tools';
 import { ClearSetupDraft } from './FormDraft';
 import { Rail, SetupButton, Tabs } from './Nav';
 import { signOutAction } from '../../lib/auth/actions';
-import { exact, initials } from '../../lib/money/format';
+import { exact } from '../../lib/money/format';
 import { ago, possessive } from '../../lib/money/dates';
 
 export type BellItem = { id: string; note: string; amount: number; date: string; category: string | null };
@@ -27,10 +27,12 @@ export default function AppShell({
   palette,
   notepad,
   notepadAt,
+  photo,
   children,
 }: {
   notepad: string;
   notepadAt: string | null;
+  photo: string | null;
   name: string;
   email: string;
   currency: string;
@@ -92,7 +94,18 @@ export default function AppShell({
             )}
           </Popover>
           <Palette items={palette} />
-          <Popover label="Account" className={styles.avatar} button={initials(name)}>
+          <Popover
+            label="Account"
+            className={styles.avatar}
+            button={
+              photo ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img className={styles.avatarImg} src={photo} alt="" />
+              ) : (
+                <I d="user" size={17} />
+              )
+            }
+          >
             <div className={styles.popHead}>
               <b>{name}</b>
               <small>{email}</small>

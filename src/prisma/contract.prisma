@@ -22,6 +22,8 @@ model User {
   // The floating note, saved as it is typed.
   notepad      String             @default("")
   notepadAt    TimestamptzString?
+  // Profile picture, a small JPEG data: URL. Null shows an empty avatar.
+  photo        String?
   createdAt    TimestamptzString  @default(now())
   lastSignInAt TimestamptzString?
   identities   AuthIdentity[]
@@ -38,6 +40,7 @@ model User {
   advances     SalaryAdvance[]
   wishes       WishItem[]
   statements   Statement[]
+  todos        Todo[]
   statementTxns StatementTxn[]
 
   @@rls
@@ -375,4 +378,24 @@ model StatementTxn {
   @@index([statementId])
   @@rls
   @@map("statement_txn")
+}
+
+// Things to do once money lands: pay the plumber, buy the train ticket. Each
+// waits for one income's payday (due), or is for right now (due = the day
+// it was added). amount is what it will cost, when known.
+model Todo {
+  id        Uuid               @id @default(uuid())
+  user      User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    Uuid
+  text      String
+  amount    Int?
+  // The income it waits for; kept as a plain id so removing it leaves the task.
+  incomeId  Uuid?
+  due       String
+  doneAt    TimestamptzString?
+  createdAt TimestamptzString  @default(now())
+
+  @@index([userId])
+  @@rls
+  @@map("todo")
 }

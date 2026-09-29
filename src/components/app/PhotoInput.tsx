@@ -9,7 +9,7 @@ const MAX_SIDE = 480;
 // Shrinks a picked photo in the browser to a small JPEG, so uploads are quick
 // and the database stays light. Posts `photo` (a data: URL, or empty) and
 // `photoClear` when an existing photo was removed.
-export default function PhotoInput({ current, label = 'Photo', round }: { current?: string | null; label?: string; round?: boolean }) {
+export default function PhotoInput({ current, label = 'Photo', round, max = MAX_SIDE }: { current?: string | null; label?: string; round?: boolean; max?: number }) {
   const [photo, setPhoto] = useState(current ?? '');
   const [cleared, setCleared] = useState(false);
   const [error, setError] = useState('');
@@ -21,7 +21,7 @@ export default function PhotoInput({ current, label = 'Photo', round }: { curren
     if (!file.type.startsWith('image/')) return setError('Choose a picture.');
     try {
       const bitmap = await createImageBitmap(file);
-      const scale = Math.min(1, MAX_SIDE / Math.max(bitmap.width, bitmap.height));
+      const scale = Math.min(1, max / Math.max(bitmap.width, bitmap.height));
       const canvas = document.createElement('canvas');
       canvas.width = Math.round(bitmap.width * scale);
       canvas.height = Math.round(bitmap.height * scale);
