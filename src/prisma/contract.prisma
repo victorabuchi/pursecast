@@ -147,6 +147,11 @@ model Recurring {
   // Comma separated dates (YYYY-MM-DD) skipped once, like a month without
   // an electricity bill.
   skips      String            @default("")
+  // Priced in another currency (a dollar Render plan for a euro account):
+  // the price as billed, in cents of priceCurrency. amount is that price in
+  // the account currency at the latest rate.
+  priceCurrency String?
+  priceAmount   Int?
   createdAt  TimestamptzString @default(now())
   entries    Entry[]
   advances   SalaryAdvance[]

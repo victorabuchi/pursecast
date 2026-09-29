@@ -7,6 +7,8 @@ import { nextAfter, type Cadence } from './recurrence';
 import { DEFAULT_CATEGORIES } from './categories';
 import { buildForecast, type FcBudget, type FcEvent, type Forecast } from './forecast';
 import { paidBack, remaining } from './debts';
+import { convert, type Rates } from './currencies';
+import { getRates } from './fx';
 
 // Everything a signed-in page needs about the person's money, loaded once per
 // request. Every query is filtered by the signed-in user's id.
@@ -40,6 +42,9 @@ export type RecurringRow = {
   paused: boolean;
   variable: boolean;
   skips: string[];
+  // Billed in another currency: the price as billed, in its cents.
+  priceCurrency: string | null;
+  priceAmount: number | null;
   // pending: arrives on takenOn and is not in the balance yet.
   advances: Array<{ id: string; amount: number; payday: string; takenOn: string; pending: boolean }>;
 };
@@ -109,6 +114,23 @@ export async function postDueAdvances(userId: string, today: string): Promise<vo
 // Bills and income whose date has come are logged as entries, once each, and
 // move on to their next date. Skipped dates are passed over, paused items
 // wait, and salary advances come off the pay they were taken from.
+// Prices billed in another currency follow the latest rate, so a $25 plan
+// counts as what it costs in the account currency this week.
+export async function refreshForeignPrices(userId: string, currency: string): Promise<void> {
+  const rows = await db.orm.public.Recurring.where({ userId }).where((r) => r.priceCurrency.isNotNull()).all();
+  if (!rows.length) return;
+  const rates = await getRates();
+  const writes: Array<PromiseLike<unknown>> = [];
+  for (const r of rows) {
+    if (r.priceAmount === null || r.priceCurrency === null) continue;
+    const value = convert(r.priceAmount, r.priceCurrency, currency, rates);
+    if (value === null) continue;
+    const amount = r.amount > 0 ? value : -value;
+    if (amount !== r.amount) writes.push(db.orm.public.Recurring.where({ id: r.id, userId }).update({ amount }));
+  }
+  await Promise.all(writes);
+}
+
 export async function postDueRecurring(userId: string, today: string): Promise<void> {
   const due = await db.orm.public.Recurring.where({ userId, paused: false })
     .where((r) => r.nextDate.lte(today))
@@ -157,6 +179,8 @@ export const getRecurring = cache(async (userId: string): Promise<RecurringRow[]
     paused: r.paused,
     variable: r.variable,
     skips: splitSkips(r.skips),
+    priceCurrency: r.priceCurrency,
+    priceAmount: r.priceAmount,
     advances: advances.filter((a) => a.recurringId === r.id).map((a) => ({ id: a.id, amount: a.amount, payday: a.payday, takenOn: a.takenOn, pending: !a.entryId })),
   }));
 });
@@ -240,13 +264,15 @@ export type Money = {
   budgets: FcBudget[];
   balance: number;
   forecast: Forecast;
+  rates: Rates;
 };
 
 // The shared load for app pages: posts due bills, then builds the forecast.
 export async function loadMoney(days = 91, historyDays = 460): Promise<Money> {
   const me = await requireSetUp();
+  await refreshForeignPrices(me.id, me.currency);
   await Promise.all([postDueAdvances(me.id, me.today), postDueRecurring(me.id, me.today)]);
-  const [cats, recurring, entries, events, cuts, balance, debts] = await Promise.all([
+  const [cats, recurring, entries, events, cuts, balance, debts, rates] = await Promise.all([
     getCategories(me.id),
     getRecurring(me.id),
     getEntries(me.id, addDays(me.today, -historyDays)),
@@ -254,6 +280,7 @@ export async function loadMoney(days = 91, historyDays = 460): Promise<Money> {
     getCuts(me.id, monthOf(me.today)),
     getBalance(me),
     getDebts(me.id),
+    getRates(),
   ]);
   const month = monthOf(me.today);
   const budgets: FcBudget[] = cats
@@ -268,5 +295,5 @@ export async function loadMoney(days = 91, historyDays = 460): Promise<Money> {
   const fcEvents: FcEvent[] = events.filter((e) => !e.hidden && e.cost > 0).map((e) => ({ id: e.id, name: e.name, date: e.date, cost: e.cost, saveMonthly: e.saveMonthly, saveFrom: e.saveFrom, source: e.source }));
   const fcDebts = debts.filter((d) => d.direction === 'borrowed' && d.left > 0 && d.dueDate).map((d) => ({ id: d.id, person: d.person, remaining: d.left, dueDate: d.dueDate! }));
   const forecast = buildForecast({ today: me.today, balance, cushion: me.cushion, recurring: forForecast(recurring), budgets, events: fcEvents, debts: fcDebts, days });
-  return { me, cats, recurring, entries, events, debts, budgets, balance, forecast };
+  return { me, cats, recurring, entries, events, debts, budgets, balance, forecast, rates };
 }

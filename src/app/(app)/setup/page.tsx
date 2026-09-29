@@ -8,6 +8,7 @@ import Submit from '../../../components/app/Submit';
 import PageHead from '../../../components/app/PageHead';
 import { MoneyInput, SignToggle } from '../../../components/app/Fields';
 import RepeatRows from '../../../components/app/RepeatRows';
+import { getRates } from '../../../lib/money/fx';
 import BudgetPicker from '../../../components/app/BudgetPicker';
 import OwedRows from '../../../components/app/OwedRows';
 import Tools from '../../../components/tools/Tools';
@@ -66,12 +67,16 @@ export default async function SetupPage() {
   const cur = me.currency;
   const flex = DEFAULT_CATEGORIES.filter((c) => c.kind === 'flex');
 
-  const [cats, recurring, debts, balance] = editing ? await Promise.all([getCategories(me.id), getRecurring(me.id), getDebts(me.id), getBalance(me)]) : [[], [], [], 0];
+  const [[cats, recurring, debts, balance], rates] = await Promise.all([editing ? Promise.all([getCategories(me.id), getRecurring(me.id), getDebts(me.id), getBalance(me)]) : Promise.resolve([[], [], [], 0] as const), getRates()]);
   const catName = new Map(cats.map((c) => [c.id, c.name]));
   const salary = recurring.find((r) => r.amount > 0 && !r.paused);
   const rent = recurring.find((r) => r.amount < 0 && !r.paused && catName.get(r.categoryId ?? '') === 'Housing');
   const others = recurring.filter((r) => r.id !== salary?.id && r.id !== rent?.id && r.amount <= 0 && !r.paused);
-  const toRow = (r: RecurringRow, key: number) => ({ key, id: r.id, name: r.name, amount: r.amount ? String(-r.amount / 100) : '', cadence: r.cadence, date: r.nextDate });
+  // Prices billed in another currency come back as billed ($25, not €22).
+  const toRow = (r: RecurringRow, key: number) =>
+    r.priceCurrency && r.priceAmount !== null
+      ? { key, id: r.id, name: r.name, amount: String(r.priceAmount / 100), cur: r.priceCurrency, cadence: r.cadence, date: r.nextDate }
+      : { key, id: r.id, name: r.name, amount: r.amount ? String(-r.amount / 100) : '', cadence: r.cadence, date: r.nextDate };
   const subRows = others.filter((r) => catName.get(r.categoryId ?? '') === 'Subscriptions').map(toRow);
   const billRows = others.filter((r) => catName.get(r.categoryId ?? '') !== 'Subscriptions').map(toRow);
   const open = debts.filter((d) => !d.settledAt && d.left > 0);
@@ -168,13 +173,13 @@ export default async function SetupPage() {
           </label>
         </div>
         <p className={styles.note}>Phone, electricity, insurance. Add them one at a time. No date or price yet? Just the name is fine.</p>
-        <RepeatRows prefix="bill" presets={POPULAR_BILLS} currency={cur} today={me.today} addLabel="Add a bill" draftKey={k('bills')} initialRows={billRows} />
+        <RepeatRows prefix="bill" presets={POPULAR_BILLS} currency={cur} rates={rates} today={me.today} addLabel="Add a bill" draftKey={k('bills')} initialRows={billRows} />
       </section>
 
       <section id="subscriptions" className={styles.card}>
         <strong className={styles.cardTitle}>4. Subscriptions</strong>
         <p className={styles.note}>Streaming, apps, the gym. Yearly ones too, so they never surprise you. No fixed price or date (like Render or Supabase)? Just add the name.</p>
-        <RepeatRows prefix="sub" presets={POPULAR_SUBSCRIPTIONS} currency={cur} today={me.today} addLabel="Add a subscription" draftKey={k('subs')} initialRows={subRows} />
+        <RepeatRows prefix="sub" presets={POPULAR_SUBSCRIPTIONS} currency={cur} rates={rates} today={me.today} addLabel="Add a subscription" draftKey={k('subs')} initialRows={subRows} />
       </section>
 
       <section id="everyday" className={styles.card}>

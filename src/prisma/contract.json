@@ -1523,6 +1523,20 @@
                   "kind": "scalar"
                 }
               },
+              "priceAmount": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "priceCurrency": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
               "skips": {
                 "nullable": false,
                 "type": {
@@ -1634,6 +1648,12 @@
                 },
                 "paused": {
                   "column": "paused"
+                },
+                "priceAmount": {
+                  "column": "priceAmount"
+                },
+                "priceCurrency": {
+                  "column": "priceCurrency"
                 },
                 "skips": {
                   "column": "skips"
@@ -3899,6 +3919,16 @@
                   "nativeType": "bool",
                   "nullable": false
                 },
+                "priceAmount": {
+                  "codecId": "pg/int4@1",
+                  "nativeType": "int4",
+                  "nullable": true
+                },
+                "priceCurrency": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
                 "skips": {
                   "codecId": "pg/text@1",
                   "default": {
@@ -4376,7 +4406,7 @@
         "kind": "postgres-schema"
       }
     },
-    "storageHash": "ab7e90a716bcf7b0e8fae7756e9e5b1ddb33e39196be32b23800305d93cde93b"
+    "storageHash": "3b0824f9f584e220318288e602ed4dc31e7901152a2f86cfcfe6a07b606c2b7f"
   },
   "execution": {
     "executionHash": "ca6aad3b6e9428712d6ffa07d053a1311135f8c6396a2f7fcf76748ab3267ee3",

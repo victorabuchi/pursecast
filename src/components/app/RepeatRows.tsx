@@ -4,19 +4,20 @@ import styles from './app.module.css';
 import I from './Icon';
 import { useDraft } from './draft';
 import { CADENCES, type Cadence } from '../../lib/money/recurrence';
-import { currencySymbol } from '../../lib/money/format';
+import PriceInput from './PriceInput';
+import type { Rates } from '../../lib/money/currencies';
 
 export type Preset = { name: string; amount?: number; cadence?: Cadence };
-export type RepeatRow = { key: number; id?: string; name: string; amount: string; cadence: Cadence; date: string };
+// cur: the currency the price is billed in, when not the account's.
+export type RepeatRow = { key: number; id?: string; name: string; amount: string; cur?: string; cadence: Cadence; date: string };
 type Row = RepeatRow;
 
 // Bills or subscriptions added one at a time: pick a popular one from the
 // dropdown (its usual price filled in) or "Something else", and remove any
 // row with ×. Fields are named `${prefix}Name0`, `${prefix}Amount0` and so on.
-export default function RepeatRows({ prefix, presets, currency, today, addLabel, max = 20, draftKey, initialRows = [] }: { prefix: string; presets: Preset[]; currency: string; today: string; addLabel: string; max?: number; draftKey?: string; initialRows?: Row[] }) {
+export default function RepeatRows({ prefix, presets, currency, rates, today, addLabel, max = 20, draftKey, initialRows = [] }: { prefix: string; presets: Preset[]; currency: string; rates: Rates; today: string; addLabel: string; max?: number; draftKey?: string; initialRows?: Row[] }) {
   const [rows, setRows] = useDraft<Row[]>(draftKey, initialRows);
   const next = rows.reduce((m, r) => Math.max(m, r.key + 1), 0);
-  const sym = currencySymbol(currency);
   const taken = new Set(rows.map((r) => r.name.toLowerCase()));
   const left = presets.filter((p) => !taken.has(p.name.toLowerCase()));
 
@@ -31,10 +32,17 @@ export default function RepeatRows({ prefix, presets, currency, today, addLabel,
       {rows.map((r, i) => (
         <div key={r.key} className={styles.repeatRow}>
           <input className={styles.input} name={`${prefix}Name${i}`} value={r.name} placeholder="Name" autoFocus={!r.name} onChange={(e) => update(r.key, { name: e.target.value })} aria-label={`Name ${i + 1}`} maxLength={80} />
-          <span className={styles.money}>
-            <span>{sym}</span>
-            <input className={styles.input} name={`${prefix}Amount${i}`} inputMode="decimal" value={r.amount} placeholder="0" autoFocus={Boolean(r.name) && !r.amount} onChange={(e) => update(r.key, { amount: e.target.value })} aria-label={`${r.name || 'Amount'} amount`} />
-          </span>
+          <PriceInput
+            name={`${prefix}Amount${i}`}
+            account={currency}
+            rates={rates}
+            currency={r.cur}
+            onCurrency={(c) => update(r.key, { cur: c === currency ? undefined : c })}
+            value={r.amount}
+            onChange={(v) => update(r.key, { amount: v })}
+            autoFocus={Boolean(r.name) && !r.amount}
+            label={`${r.name || 'Amount'} amount`}
+          />
           <select name={`${prefix}Cadence${i}`} className={styles.select} value={r.cadence} onChange={(e) => update(r.key, { cadence: e.target.value as Cadence })} aria-label={`${r.name || 'Item'} how often`}>
             {CADENCES.map(([c, label]) => (
               <option key={c} value={c}>

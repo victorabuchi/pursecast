@@ -324,3 +324,13 @@ test('statements: bank CSV is read without AI and told as a story', () => {
   assert.equal(parseCsv('a,b\n"x, y",2')[1]![0], 'x, y');
   assert.equal(rowsToTxns([['foo', 'bar'], ['1', '2']]), null);
 });
+
+test('a price in another currency converts through the dollar rate', async () => {
+  const { convert } = await import('../src/lib/money/currencies');
+  const rates = { USD: 1, EUR: 0.88, GBP: 0.75 };
+  assert.equal(convert(2500, 'USD', 'EUR', rates), 2200);
+  assert.equal(convert(2200, 'EUR', 'USD', rates), 2500);
+  assert.equal(convert(1000, 'GBP', 'EUR', rates), 1173);
+  assert.equal(convert(1000, 'EUR', 'EUR', rates), 1000);
+  assert.equal(convert(1000, 'XYZ', 'EUR', rates), null);
+});

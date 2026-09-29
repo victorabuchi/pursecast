@@ -2674,3 +2674,84 @@
   .slash,
   .orgName { display: none; }
 }
+
+/* Price currency: the symbol inside a money field opens a currency list. */
+.curPick {
+  position: absolute;
+  left: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  height: 28px;
+  padding: 0 6px;
+  border-radius: 8px;
+  color: var(--muted);
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.curPick svg {
+  opacity: 0.55;
+}
+
+.curPick:hover,
+.curPick:focus-within {
+  background: var(--bt);
+  color: var(--b);
+}
+
+.curPick[data-foreign='true'] {
+  color: var(--b);
+  background: var(--bt);
+}
+
+/* The native list, invisible over the symbol: keyboard and phone friendly. */
+.curPick select {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  opacity: 0;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+.priceHint {
+  position: absolute;
+  right: 10px;
+  color: var(--muted);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+.billedAs {
+  display: block;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 500;
+  text-align: right;
+}
+
+.priceBox {
+  container-type: inline-size;
+}
+
+.priceBox[data-hint='true'] .input {
+  padding-right: 78px;
+}
+
+/* Too narrow for both: the typed price wins (the hint stays in the title). */
+@container (max-width: 200px) {
+  .priceHint {
+    display: none;
+  }
+
+  .priceBox[data-hint='true'] .input {
+    padding-right: 12px;
+  }
+}
