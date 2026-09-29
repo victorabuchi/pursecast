@@ -16,7 +16,7 @@ import { DraftJanitor, FormDraft } from '../../../components/app/FormDraft';
 import AdvanceRows from '../../../components/app/AdvanceRows';
 import { DRAFT_PREFIX } from '../../../lib/drafts';
 import { POPULAR_BILLS, POPULAR_SUBSCRIPTIONS } from '../../../lib/money/presets';
-import { getBalance, getCategories, getDebts, getMe, getRecurring, type RecurringRow } from '../../../lib/money/load';
+import { getAdvances, getBalance, getCategories, getDebts, getMe, getRecurring, type RecurringRow } from '../../../lib/money/load';
 import { addMonths, monthStart, short } from '../../../lib/money/dates';
 import { DEFAULT_CATEGORIES } from '../../../lib/money/categories';
 import { completeSetupAction } from '../../../lib/money/actions';
@@ -67,7 +67,7 @@ export default async function SetupPage() {
   const cur = me.currency;
   const flex = DEFAULT_CATEGORIES.filter((c) => c.kind === 'flex');
 
-  const [[cats, recurring, debts, balance], rates] = await Promise.all([editing ? Promise.all([getCategories(me.id), getRecurring(me.id), getDebts(me.id), getBalance(me)]) : Promise.resolve([[], [], [], 0] as const), getRates()]);
+  const [[cats, recurring, debts, balance, advances], rates] = await Promise.all([editing ? Promise.all([getCategories(me.id), getRecurring(me.id), getDebts(me.id), getBalance(me), getAdvances(me.id)]) : Promise.resolve([[], [], [], 0, []] as const), getRates()]);
   const catName = new Map(cats.map((c) => [c.id, c.name]));
   const salary = recurring.find((r) => r.amount > 0 && !r.paused);
   const rent = recurring.find((r) => r.amount < 0 && !r.paused && catName.get(r.categoryId ?? '') === 'Housing');
@@ -83,8 +83,8 @@ export default async function SetupPage() {
   const debtRow = (d: (typeof debts)[number], key: number) => ({ key, id: d.id, who: d.person, party: (d.party === 'institution' ? 'institution' : 'person') as 'person' | 'institution', amount: String(d.left / 100), date: d.dueDate ?? '' });
   const owedRows = open.filter((d) => d.direction === 'borrowed').map(debtRow);
   const lentRows = open.filter((d) => d.direction === 'lent').map(debtRow);
-  const advances = salary?.advances ?? [];
-  const advanceRows = advances.map((a, key) => ({ key, id: a.id, amount: String(a.amount / 100), date: a.takenOn, note: `${a.pending ? 'Arrives' : 'Arrived'} ${short(a.takenOn)} · comes off the ${short(a.payday)} pay` }));
+  // Every open advance, whichever pay it comes off (or none yet).
+  const advanceRows = advances.map((a, key) => ({ key, id: a.id, amount: String(a.amount / 100), date: a.takenOn, note: `${a.pending ? 'Arrives' : 'Arrived'} ${short(a.takenOn)}${a.recurringId ? ` · comes off the ${short(a.payday)} pay` : ''}` }));
   const suggested = new Map(flex.map((c) => [c.name, c.budget]));
   const budgetOptions = editing
     ? cats.filter((c) => c.kind === 'flex').map((c) => ({ name: c.name, amount: c.budget || (suggested.get(c.name) ?? 0) }))

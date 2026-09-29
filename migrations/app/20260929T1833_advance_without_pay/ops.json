@@ -1,0 +1,129 @@
+[
+  {
+    "id": "dropConstraint.salary_advance.salary_advance_recurringId_fkey",
+    "label": "Drop constraint \"salary_advance_recurringId_fkey\" on \"salary_advance\"",
+    "operationClass": "destructive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "salary_advance_recurringId_fkey",
+        "table": "salary_advance"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"salary_advance_recurringId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "salary_advance_recurringId_fkey",
+          "public",
+          "\"public\".\"salary_advance\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "drop constraint \"salary_advance_recurringId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"salary_advance\" DROP CONSTRAINT \"salary_advance_recurringId_fkey\""
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"salary_advance_recurringId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "salary_advance_recurringId_fkey",
+          "public",
+          "\"public\".\"salary_advance\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "alterNullability.dropNotNull.salary_advance.recurringId",
+    "label": "Drop NOT NULL on \"salary_advance\".\"recurringId\"",
+    "operationClass": "widening",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "recurringId",
+        "table": "salary_advance"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"recurringId\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "salary_advance",
+          "recurringId"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "drop NOT NULL on \"recurringId\"",
+        "sql": "ALTER TABLE \"public\".\"salary_advance\" ALTER COLUMN \"recurringId\" DROP NOT NULL"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"recurringId\" is nullable",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3 AND \"is_nullable\" = $4)) AS \"result\"",
+        "params": [
+          "public",
+          "salary_advance",
+          "recurringId",
+          "YES"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.salary_advance.salary_advance_recurringId_fkey",
+    "label": "Add foreign key \"salary_advance_recurringId_fkey\" on \"salary_advance\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "salary_advance_recurringId_fkey",
+        "table": "salary_advance"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"salary_advance_recurringId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "salary_advance_recurringId_fkey",
+          "public",
+          "\"public\".\"salary_advance\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"salary_advance_recurringId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"salary_advance\"\nADD CONSTRAINT \"salary_advance_recurringId_fkey\"\nFOREIGN KEY (\"recurringId\")\nREFERENCES \"public\".\"recurring\" (\"id\")\nON DELETE SET NULL"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"salary_advance_recurringId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "salary_advance_recurringId_fkey",
+          "public",
+          "\"public\".\"salary_advance\""
+        ]
+      }
+    ]
+  }
+]

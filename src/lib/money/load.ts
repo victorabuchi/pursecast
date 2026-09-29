@@ -102,13 +102,20 @@ export async function postDueAdvances(userId: string, today: string): Promise<vo
     .where((a) => a.takenOn.lte(today))
     .all();
   for (const a of due) {
-    const r = await db.orm.public.Recurring.where({ id: a.recurringId, userId }).first();
+    const r = a.recurringId ? await db.orm.public.Recurring.where({ id: a.recurringId, userId }).first() : null;
     await db.transaction(async (tx) => {
       const entry = await tx.orm.public.Entry.create({ userId, date: a.takenOn, amount: a.amount, note: `${r?.name ?? 'Salary'} advance`, categoryId: r?.categoryId ?? null });
       const claimed = await tx.orm.public.SalaryAdvance.where({ id: a.id, userId, entryId: null }).update({ entryId: entry.id });
       if (!claimed) throw new Error('already posted');
     }).catch(() => undefined);
   }
+  // An advance with no pay to come off is done once it has come in and its
+  // payday has passed.
+  await db.orm.public.SalaryAdvance.where({ userId, recurringId: null })
+    .where((a) => a.settledAt.isNull())
+    .where((a) => a.entryId.isNotNull())
+    .where((a) => a.payday.lt(today))
+    .updateAll({ settledAt: new Date().toISOString() });
 }
 
 // Bills and income whose date has come are logged as entries, once each, and
@@ -163,6 +170,14 @@ export async function postDueRecurring(userId: string, today: string): Promise<v
     for (const id of settled) await db.orm.public.SalaryAdvance.where({ id, userId }).update({ settledAt: new Date().toISOString() });
   }
 }
+
+export type AdvanceRow = { id: string; recurringId: string | null; amount: number; payday: string; takenOn: string; pending: boolean };
+
+// Every advance not yet taken off a pay, whichever pay (or none) it belongs to.
+export const getAdvances = cache(async (userId: string): Promise<AdvanceRow[]> => {
+  const rows = await db.orm.public.SalaryAdvance.where({ userId }).where((a) => a.settledAt.isNull()).orderBy((a) => a.takenOn.asc()).all();
+  return rows.map((a) => ({ id: a.id, recurringId: a.recurringId, amount: a.amount, payday: a.payday, takenOn: a.takenOn, pending: !a.entryId }));
+});
 
 export const getRecurring = cache(async (userId: string): Promise<RecurringRow[]> => {
   const [rows, advances] = await Promise.all([
@@ -248,10 +263,15 @@ export const getDebts = cache(async (userId: string): Promise<DebtRow[]> => {
 
 // Recurring items as the forecast wants them: paused ones left out, and
 // advances that have not arrived yet coming in on their day.
-export function forForecast(rows: RecurringRow[]) {
-  return rows
-    .filter((r) => !r.paused)
-    .map((r) => ({ ...r, advances: r.advances.map((a) => ({ payday: a.payday, amount: a.amount, arrivesOn: a.pending ? a.takenOn : undefined })) }));
+export function forForecast(rows: RecurringRow[], advances: AdvanceRow[] = []) {
+  const live = rows.filter((r) => !r.paused);
+  const ids = new Set(live.map((r) => r.id));
+  // Advances with no pay (or a paused one) still come in on their day.
+  const loose = advances.filter((a) => a.pending && !(a.recurringId && ids.has(a.recurringId)));
+  return [
+    ...live.map((r) => ({ ...r, advances: r.advances.map((a) => ({ payday: a.payday, amount: a.amount, arrivesOn: a.pending ? a.takenOn : undefined })) })),
+    ...(loose.length ? [{ id: 'advances', name: 'Salary', amount: 0, cadence: 'monthly' as Cadence, nextDate: '9999-12-01', advances: loose.map((a) => ({ payday: '9999-12-01', amount: a.amount, arrivesOn: a.takenOn })) }] : []),
+  ];
 }
 
 export type Money = {
@@ -265,6 +285,7 @@ export type Money = {
   balance: number;
   forecast: Forecast;
   rates: Rates;
+  advances: AdvanceRow[];
 };
 
 // The shared load for app pages: posts due bills, then builds the forecast.
@@ -272,7 +293,7 @@ export async function loadMoney(days = 91, historyDays = 460): Promise<Money> {
   const me = await requireSetUp();
   await refreshForeignPrices(me.id, me.currency);
   await Promise.all([postDueAdvances(me.id, me.today), postDueRecurring(me.id, me.today)]);
-  const [cats, recurring, entries, events, cuts, balance, debts, rates] = await Promise.all([
+  const [cats, recurring, entries, events, cuts, balance, debts, rates, advances] = await Promise.all([
     getCategories(me.id),
     getRecurring(me.id),
     getEntries(me.id, addDays(me.today, -historyDays)),
@@ -281,6 +302,7 @@ export async function loadMoney(days = 91, historyDays = 460): Promise<Money> {
     getBalance(me),
     getDebts(me.id),
     getRates(),
+    getAdvances(me.id),
   ]);
   const month = monthOf(me.today);
   const budgets: FcBudget[] = cats
@@ -294,6 +316,6 @@ export async function loadMoney(days = 91, historyDays = 460): Promise<Money> {
     }));
   const fcEvents: FcEvent[] = events.filter((e) => !e.hidden && e.cost > 0).map((e) => ({ id: e.id, name: e.name, date: e.date, cost: e.cost, saveMonthly: e.saveMonthly, saveFrom: e.saveFrom, source: e.source }));
   const fcDebts = debts.filter((d) => d.direction === 'borrowed' && d.left > 0 && d.dueDate).map((d) => ({ id: d.id, person: d.person, remaining: d.left, dueDate: d.dueDate! }));
-  const forecast = buildForecast({ today: me.today, balance, cushion: me.cushion, recurring: forForecast(recurring), budgets, events: fcEvents, debts: fcDebts, days });
-  return { me, cats, recurring, entries, events, debts, budgets, balance, forecast, rates };
+  const forecast = buildForecast({ today: me.today, balance, cushion: me.cushion, recurring: forForecast(recurring, advances), budgets, events: fcEvents, debts: fcDebts, days });
+  return { me, cats, recurring, entries, events, debts, budgets, balance, forecast, rates, advances };
 }

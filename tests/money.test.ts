@@ -334,3 +334,19 @@ test('a price in another currency converts through the dollar rate', async () =>
   assert.equal(convert(1000, 'EUR', 'EUR', rates), 1000);
   assert.equal(convert(1000, 'XYZ', 'EUR', rates), null);
 });
+
+test('an advance with no pay to come off still comes in on its day', () => {
+  const fc = buildForecast({
+    today: '2026-10-01',
+    balance: 10000,
+    cushion: 0,
+    recurring: [{ id: 'advances', name: 'Salary', amount: 0, cadence: 'monthly', nextDate: '9999-12-01', advances: [{ payday: '9999-12-01', amount: 50000, arrivesOn: '2026-10-20' }] }],
+    budgets: [],
+    events: [],
+    debts: [],
+    days: 40,
+  });
+  const day = fc.days.find((d) => d.date === '2026-10-20')!;
+  assert.ok(day.flows.some((i) => i.amount === 50000 && i.kind === 'income'));
+  assert.ok(!fc.days.some((d) => d.flows.some((i) => i.amount === 0)));
+});

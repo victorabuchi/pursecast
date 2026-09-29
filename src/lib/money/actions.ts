@@ -141,8 +141,7 @@ export async function completeSetupAction(formData: FormData) {
     const was = openAdvances.find((x) => x.id === a.id);
     return !was || was.amount !== a.amount || was.takenOn !== a.date;
   });
-  // An advance never stops the save. Without a pay to come off (or when it is
-  // more than the pay), money arriving today is simply logged as money in.
+  // An advance never stops the save.
   if (changed.length || removed.length) {
     await Promise.all([...removed, ...changed.filter((a) => a.id).map((a) => a.id)].map((id) => removeAdvance(me.id, id)));
     const pay = changed.length
@@ -151,11 +150,8 @@ export async function completeSetupAction(formData: FormData) {
           .orderBy((r) => r.createdAt.asc())
           .first()
       : null;
-    for (const a of changed) {
-      const date = a.date < me.today ? me.today : a.date;
-      const res = pay ? await addAdvance(me.id, pay, a.amount, date, me.today, currency) : { error: 'no pay' };
-      if ('error' in res && date === me.today) await db.orm.public.Entry.create({ userId: me.id, date, amount: a.amount, note: 'Salary advance' });
-    }
+    // Always kept, pay or no pay, so it is there next time setup opens.
+    for (const a of changed) await addAdvance(me.id, pay ?? null, a.amount, a.date < me.today ? me.today : a.date, me.today, currency, { keep: true });
   }
   done('/forecast?setup=saved', editing ? 'Setup saved · forecast updated' : 'Your forecast is ready');
 }
@@ -398,7 +394,7 @@ export async function fixStormAction(formData: FormData) {
   for (const [month, cut] of Object.entries(cuts)) merged[month] = (merged[month] ?? 0) + cut;
   const budgets = m.budgets.map((b) => (b.id === budget.id ? { ...b, cuts: merged } : b));
   const debts = m.debts.filter((d) => d.direction === 'borrowed' && d.left > 0 && d.dueDate).map((d) => ({ id: d.id, person: d.person, remaining: d.left, dueDate: d.dueDate! }));
-  const fc = buildForecast({ today: m.me.today, balance: m.balance, cushion: m.me.cushion, recurring: forForecast(m.recurring), budgets, events: eventsOf(m), debts, days: 91 });
+  const fc = buildForecast({ today: m.me.today, balance: m.balance, cushion: m.me.cushion, recurring: forForecast(m.recurring, m.advances), budgets, events: eventsOf(m), debts, days: 91 });
   done('/forecast', fc.low.amount >= 0 ? `Storm cleared · lowest point now ${money(fc.low.amount, m.me.currency)}` : `Better · lowest point now ${money(fc.low.amount, m.me.currency)} on ${short(fc.low.date)}`);
 }
 

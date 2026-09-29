@@ -305,8 +305,10 @@ model SalaryAdvance {
   id          Uuid               @id @default(uuid())
   user        User               @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId      Uuid
-  recurring   Recurring          @relation(fields: [recurringId], references: [id], onDelete: Cascade)
-  recurringId Uuid
+  // The pay it comes off. Null when there is no pay to tie it to (or the
+  // pay was removed): the advance is still kept and comes in on its day.
+  recurring   Recurring?         @relation(fields: [recurringId], references: [id], onDelete: SetNull)
+  recurringId Uuid?
   amount      Int
   takenOn     String
   payday      String

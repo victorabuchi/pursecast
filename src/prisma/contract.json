@@ -1707,7 +1707,7 @@
                 }
               },
               "recurringId": {
-                "nullable": false,
+                "nullable": true,
                 "type": {
                   "codecId": "pg/uuid@1",
                   "kind": "scalar"
@@ -1738,7 +1738,7 @@
             "relations": {
               "recurring": {
                 "cardinality": "N:1",
-                "nullable": false,
+                "nullable": true,
                 "on": {
                   "localFields": [
                     "recurringId"
@@ -4048,7 +4048,7 @@
                 "recurringId": {
                   "codecId": "pg/uuid@1",
                   "nativeType": "uuid",
-                  "nullable": false
+                  "nullable": true
                 },
                 "settledAt": {
                   "codecId": "pg/timestamptz-string@1",
@@ -4085,7 +4085,7 @@
                   }
                 },
                 {
-                  "onDelete": "cascade",
+                  "onDelete": "setNull",
                   "source": {
                     "columns": [
                       "recurringId"
@@ -4406,7 +4406,7 @@
         "kind": "postgres-schema"
       }
     },
-    "storageHash": "3b0824f9f584e220318288e602ed4dc31e7901152a2f86cfcfe6a07b606c2b7f"
+    "storageHash": "b07a4f40873679af01b8404f3f4b5144280de3319e7660f001371d66c190627d"
   },
   "execution": {
     "executionHash": "ca6aad3b6e9428712d6ffa07d053a1311135f8c6396a2f7fcf76748ab3267ee3",
