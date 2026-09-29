@@ -16,6 +16,8 @@ const clamp01 = (x: number) => Math.max(0, Math.min(1, x));
 const ease = (x: number) => 1 - Math.pow(1 - clamp01(x), 3);
 const within = (t: number, a: number, b: number) => t >= a && t < b;
 const prog = (t: number, a: number, b: number) => ease((t - a) / (b - a));
+// Text typed out between two times, one character at a time.
+const typed = (text: string, t: number, from: number, to: number) => text.slice(0, Math.floor(clamp01((t - from) / (to - from)) * text.length));
 const eur = (n: number) => `${n < 0 ? '−' : ''}€${Math.abs(Math.round(n)).toLocaleString('en-US')}`;
 
 const P = {
@@ -35,6 +37,11 @@ const P = {
   trend: 'M22 7l-8.5 8.5-5-5L2 17M16 7h6v6',
   jar: 'M8 2h8M9 2v3M15 2v3M6 8a3 3 0 0 1 3-3h6a3 3 0 0 1 3 3v11a3 3 0 0 1-3 3H9a3 3 0 0 1-3-3ZM6 12h12',
   arrow: 'M5 12h14M13 6l6 6-6 6',
+  file: 'M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9ZM14 3v6h6M8 13h8M8 17h5',
+  upload: 'M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12',
+  mic: 'M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3ZM19 10v2a7 7 0 0 1-14 0v-2M12 19v3',
+  play: 'M7 4l13 8-13 8Z',
+  cart: 'M3 4h2l2.4 11.2a2 2 0 0 0 2 1.6h8.2a2 2 0 0 0 2-1.6L21 8H6.2M10 20.5h.01M17 20.5h.01',
 };
 
 function I({ d, size = 16, stroke = 2 }: { d: string; size?: number; stroke?: number }) {
@@ -51,6 +58,7 @@ const NAV: Array<[keyof typeof P, string]> = [
   ['heart', 'Worth-It'],
   ['fork', 'Forks'],
   ['cal', 'Plan'],
+  ['file', 'Statements'],
 ];
 
 // The Pursecast app shell: top bar, icon rail (desktop) or tab bar (phone).
@@ -718,8 +726,339 @@ function PlanScene({ t, phone, brand }: SceneProps) {
   );
 }
 
+
+/* ---------- 5. Future you ---------- */
+
+const NOTE = "You're saving for Porto. Is this worth a night there?";
+const QUICK = '32 wolt pizza';
+const SKIP_AT = 6900;
+
+function FutureScene({ t, phone, brand }: SceneProps) {
+  const sheet = within(t, 2900, SKIP_AT + 200);
+  const kept = t >= SKIP_AT ? Math.round(99 + 32 * prog(t, SKIP_AT + 300, SKIP_AT + 1300)) : 99;
+  const words = NOTE.split(' ');
+  const spoken = Math.floor(clamp01((t - 3400) / 2400) * words.length);
+  return (
+    <AppFrame phone={phone} active={1} brand={brand}>
+      <PageHead title="Spending" sub="Log it in two seconds" icon="list" right={!phone && <b className={styles.pill}>Kept for Porto {eur(kept)}</b>} />
+      <div className={styles.quickBar}>
+        <span className={styles.quickText}>
+          {typed(QUICK, t, 700, 2000) || <em>12.50 lunch · +2900 salary</em>}
+          {within(t, 600, 2300) && <i className={styles.caret} />}
+        </span>
+        <span className={`${styles.btn} ${styles.btnSmall} ${within(t, 2350, 2650) ? styles.pressed : ''}`} data-target="add">
+          <I d={P.plus} size={14} stroke={2.6} /> Add
+        </span>
+      </div>
+      <div className={styles.card}>
+        <strong className={styles.cardTitle}>Today</strong>
+        {[
+          ['Coffee', 'Coffee', 4.2],
+          ['K-Market', 'Groceries', 23.5],
+          ['HSL ticket', 'Transport', 3.2],
+        ].map(([n, c, a]) => (
+          <div key={n as string} className={styles.bill}>
+            <span>
+              <b>{n}</b>
+              <small>{c}</small>
+            </span>
+            <b>−€{(a as number).toFixed(2)}</b>
+          </div>
+        ))}
+      </div>
+      {phone || (
+        <div className={styles.tipCard}>
+          <b>Future-self notes.</b> Record a note to yourself once. It plays back right before you spend where you have regretted it before.
+        </div>
+      )}
+      <Sheet phone={phone} open={sheet} title="Wait. A note from past you.">
+        <div className={styles.playback}>
+          <span className={styles.wave} aria-hidden="true">
+            {Array.from({ length: 28 }, (_, i) => {
+              const live = within(t, 3300, 6000);
+              const h = live ? 6 + Math.abs(Math.sin(t / 140 + i * 0.9)) * 22 * (0.5 + ((i * 7) % 5) / 8) : 5;
+              return <i key={i} style={{ height: h }} />;
+            })}
+          </span>
+          <q>
+            {words.map((w, i) => (
+              <span key={i} style={{ opacity: i < spoken ? 1 : 0.18, transition: 'opacity .25s' }}>
+                {w}{' '}
+              </span>
+            ))}
+          </q>
+          <small>
+            <I d={P.mic} size={11} /> Your voice · recorded Sep 12
+          </small>
+        </div>
+        <div className={styles.details}>
+          <span>
+            Wolt pizza <small>Takeaway</small> <b>€32</b>
+          </span>
+        </div>
+        <p className={styles.note}>You rated takeaway 😩 7 of your last 8 times.</p>
+        <div className={styles.sheetActions}>
+          <span className={styles.btnGhost}>Log it anyway</span>
+          <span className={`${styles.btn} ${within(t, SKIP_AT - 300, SKIP_AT) ? styles.pressed : ''}`} data-target="skip">
+            Skip it
+          </span>
+        </div>
+      </Sheet>
+      <Toast show={within(t, SKIP_AT + 300, 10600)} text="Skipped · €32 kept for future you" />
+    </AppFrame>
+  );
+}
+
+/* ---------- 6. Want to buy ---------- */
+
+const WISH_ADD = 3500;
+const WISH_SAVE = 7000;
+// Spendable over the next 12 months (euros) and the laptop's price.
+const AHEAD = [1650, 1240, 980, 1420, 1880, 2240, 2610, 2980, 3300, 3700, 4080, 4460];
+const LAPTOP = 1800;
+const FITS = 4; // February, the first month it fits for good
+
+function WishScene({ t, phone, brand }: SceneProps) {
+  const added = t >= WISH_ADD;
+  const saving = t >= WISH_SAVE;
+  const jar = saving ? Math.round(23 * prog(t, WISH_SAVE + 200, WISH_SAVE + 1400)) : 0;
+  const line = toPts(AHEAD, 0, 4600);
+  const reveal = prog(t, WISH_ADD + 300, WISH_ADD + 1700);
+  const marker = prog(t, WISH_ADD + 1500, WISH_ADD + 2600);
+  const fitX = (FITS / (AHEAD.length - 1)) * VB.w;
+  const priceY = VB.h - (LAPTOP / 4600) * VB.h;
+  const items: Array<{ name: string; price: string; state: string; ok?: boolean; target?: string }> = [
+    { name: 'Headphones', price: '€120', state: 'You can afford it now', ok: true },
+    { name: 'Weekend in Tallinn', price: '€260', state: 'Fits from Nov 12 · in 44 days' },
+  ];
+  return (
+    <AppFrame phone={phone} active={4} brand={brand}>
+      <PageHead
+        title="Want to buy"
+        sub="When it fits your forecast"
+        icon="cart"
+        right={
+          <span className={`${styles.btn} ${styles.btnSmall} ${within(t, 900, 1200) ? styles.pressed : ''}`} data-target="wadd">
+            <I d={P.plus} size={14} stroke={2.6} /> Add
+          </span>
+        }
+      />
+      <div className={phone ? styles.stack : styles.split}>
+        <div className={styles.card}>
+          {items.map((w) => (
+            <div key={w.name} className={styles.buy}>
+              <span>
+                <b>{w.name}</b>
+                <small className={w.ok ? styles.pos : undefined}>{w.state}</small>
+              </span>
+              <b className={styles.amount}>{w.price}</b>
+            </div>
+          ))}
+          {added && (
+            <motion.div className={`${styles.buy} ${styles.wishNew}`} initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}>
+              <span>
+                <b>New laptop</b>
+                <small className={saving ? undefined : marker >= 1 ? styles.warn : undefined}>
+                  {saving ? `Saving · ${jar}% · €300 a month` : marker >= 1 ? 'Fits from Feb 9 · in 134 days' : 'Checking your forecast…'}
+                </small>
+                {saving && (
+                  <span className={styles.meter} style={{ marginTop: 6 }}>
+                    <span style={{ width: `${jar}%`, background: SUN }} />
+                  </span>
+                )}
+              </span>
+              <b className={styles.amount}>€1,800</b>
+              {!saving && marker >= 1 && (
+                <span className={`${styles.btnGhost} ${styles.btnTiny} ${within(t, WISH_SAVE - 350, WISH_SAVE) ? styles.pressed : ''}`} data-target="wsave">
+                  Save for it
+                </span>
+              )}
+            </motion.div>
+          )}
+        </div>
+        <div className={`${styles.card} ${styles.chartCard}`}>
+          <strong className={styles.cardTitle}>Money left after buying it</strong>
+          <div className={styles.chart} style={{ height: phone ? 150 : 190 }}>
+            {added && (
+              <span className={styles.priceLine} style={{ top: pct([0, priceY]).top }}>
+                <em>€1,800</em>
+              </span>
+            )}
+            {added && marker > 0 && <span className={styles.fitZone} style={{ left: `${(fitX / VB.w) * 100}%`, opacity: marker }} />}
+            <svg viewBox={`0 0 ${VB.w} ${VB.h}`} preserveAspectRatio="none" className={styles.chartSvg}>
+              <clipPath id="wish-reveal">
+                <rect x={-10} y={-10} width={(VB.w + 20) * (added ? reveal : 1)} height={VB.h + 20} />
+              </clipPath>
+              <path d={smooth(line)} clipPath="url(#wish-reveal)" className={styles.lineMain} />
+            </svg>
+            {added && marker > 0 && (
+              <>
+                <i className={`${styles.dot} ${styles.dotSun}`} style={{ left: `${(fitX / VB.w) * 100 * marker}%`, top: pct(line[Math.round(FITS * marker)]!).top }} />
+                {marker >= 1 && (
+                  <motion.span className={styles.fitLabel} style={{ left: `${(fitX / VB.w) * 100}%` }} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }}>
+                    Fits from Feb 9
+                  </motion.span>
+                )}
+              </>
+            )}
+          </div>
+          <div className={styles.months}>
+            {['Oct', 'Nov', 'Dec', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep'].map((m, i) => (
+              <span key={m}>{phone && i % 2 ? '' : m}</span>
+            ))}
+          </div>
+        </div>
+      </div>
+      <Sheet phone={phone} open={within(t, 1300, WISH_ADD - 100)} title="Something you want to buy">
+        <div className={styles.input}>
+          <small>What is it</small>
+          <span>
+            {typed('New laptop', t, 1600, 2300)}
+            {within(t, 1500, 2350) && <i className={styles.caret} />}
+          </span>
+        </div>
+        <div className={styles.input}>
+          <small>Price</small>
+          <span>
+            {typed('€1,800', t, 2450, 2900)}
+            {within(t, 2400, 3000) && <i className={styles.caret} />}
+          </span>
+        </div>
+        <div className={styles.sheetActions}>
+          <span className={styles.btnGhost}>Cancel</span>
+          <span className={`${styles.btn} ${within(t, 3100, 3400) ? styles.pressed : ''}`} data-target="wlist">
+            Add to list
+          </span>
+        </div>
+      </Sheet>
+      <Toast show={within(t, WISH_SAVE + 200, 10600)} text="€300 a month set aside · laptop by Feb 9" />
+    </AppFrame>
+  );
+}
+
+/* ---------- 7. Statements ---------- */
+
+const READ_AT = 1500;
+const STORY_AT = 3700;
+const STREAM: Array<[string, string, number]> = [
+  ['Oct 1', 'Acme Oy · Salary', 2900],
+  ['Oct 3', 'Kiinteistö Oy · Rent', -950],
+  ['Oct 4', 'K-Market', -42.1],
+  ['Oct 5', 'Spotify', -12.99],
+  ['Oct 6', 'Wolt', -23.9],
+  ['Oct 9', 'HSL', -60],
+  ['Oct 12', 'Finnair', -320],
+];
+const MONTH_OUT = [1297, 1402, 1916, 1350, 1288, 2802, 1310, 1344, 1330, 1390, 1372, 1486];
+
+function StatementScene({ t, phone, brand }: SceneProps) {
+  const story = t >= STORY_AT;
+  const count = (to: number) => Math.round(to * prog(t, STORY_AT + 100, STORY_AT + 1500));
+  const read = Math.round(145 * prog(t, READ_AT, STORY_AT - 200));
+  const lines = [
+    'You spent the most in March (€2,802), when the laptop arrived.',
+    'Rent took 65% of everything you spent.',
+    '4 regular charges add up to €1,048 a month.',
+    'You kept €17,213, 49% of what came in.',
+  ];
+  const chip = prog(t, 300, 1300);
+  return (
+    <AppFrame phone={phone} active={5} brand={brand}>
+      <PageHead title="Statements" sub="Where your money went" icon="file" right={!phone && story && <b className={styles.pill}>Oct 2025 – Sep 2026</b>} />
+      {!story ? (
+        <div className={styles.drop} data-on={chip >= 1 || undefined}>
+          {t < READ_AT ? (
+            <>
+              <I d={P.upload} size={26} />
+              <b>Drop a bank statement, screenshots or an export</b>
+              <small>PDF · screenshot · Excel · CSV</small>
+            </>
+          ) : (
+            <>
+              <span className={styles.scanBar}>
+                <i style={{ width: `${(read / 145) * 100}%` }} />
+              </span>
+              <b>Reading nordea-2025-2026.pdf · {read} transactions</b>
+              <div className={styles.stream}>
+                {STREAM.slice(0, Math.floor(clamp01((t - READ_AT) / (STORY_AT - READ_AT - 300)) * STREAM.length)).map(([d, n, a]) => (
+                  <motion.span key={d + n} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }}>
+                    <small>{d}</small>
+                    {n}
+                    <b className={a > 0 ? styles.pos : undefined}>{(a > 0 ? '+' : '−') + '€' + Math.abs(a).toLocaleString('en-US', { minimumFractionDigits: a % 1 ? 2 : 0 })}</b>
+                  </motion.span>
+                ))}
+              </div>
+            </>
+          )}
+          {t < READ_AT && (
+            <span className={styles.fileChip} style={{ transform: `translate(${(1 - chip) * 220}px, ${(1 - chip) * -150}px) rotate(${(1 - chip) * 12}deg)`, opacity: chip > 0 ? 1 : 0 }}>
+              <I d={P.file} size={16} /> nordea-2025-2026.pdf
+            </span>
+          )}
+        </div>
+      ) : (
+        <>
+          <div className={styles.statRow}>
+            {[
+              ['Money in', count(34800), styles.pos],
+              ['Money out', count(17587), undefined],
+              ['You kept', count(17213), styles.pos],
+            ].map(([label, n, cls]) => (
+              <div key={label as string} className={styles.card}>
+                <small className={styles.statLabel}>{label}</small>
+                <strong className={`${styles.bigNum} ${cls ?? ''}`}>{eur(n as number)}</strong>
+              </div>
+            ))}
+          </div>
+          <div className={phone ? styles.stack : styles.split}>
+            <div className={`${styles.card} ${styles.chartCard}`}>
+              <strong className={styles.cardTitle}>Month by month</strong>
+              <div className={styles.bars}>
+                {MONTH_OUT.map((v, i) => (
+                  <span key={i}>
+                    <i style={{ height: `${(v / 3000) * 100 * prog(t, STORY_AT + 200 + i * 60, STORY_AT + 900 + i * 60)}%`, background: i === 5 ? SUN : brand }} />
+                    <small>{'ONDJFMAMJJAS'[i]}</small>
+                  </span>
+                ))}
+              </div>
+            </div>
+            {!phone && (
+              <div className={styles.card}>
+                <strong className={styles.cardTitle}>Where it went</strong>
+                {[
+                  ['Housing', 65, brand],
+                  ['Groceries', 14, '#16a34a'],
+                  ['Shopping', 8, '#ec4899'],
+                  ['Takeaway', 5, '#ef4444'],
+                ].map(([n, v, c], i) => (
+                  <div key={n as string} className={styles.barRow}>
+                    <span>
+                      {n}
+                      <b>{v}%</b>
+                    </span>
+                    <div className={styles.meter}>
+                      <span style={{ width: `${(v as number) * prog(t, STORY_AT + 600 + i * 150, STORY_AT + 1500 + i * 150)}%`, background: c as string }} />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+          <ul className={styles.storyList}>
+            {lines.slice(0, Math.floor(clamp01((t - STORY_AT - 1400) / 3200) * lines.length + (t >= STORY_AT + 1400 ? 1 : 0))).map((l) => (
+              <motion.li key={l} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
+                {l}
+              </motion.li>
+            ))}
+          </ul>
+        </>
+      )}
+    </AppFrame>
+  );
+}
+
 export type SceneDef = {
-  id: 'weather' | 'worth' | 'fork' | 'plan';
+  id: 'weather' | 'worth' | 'future' | 'fork' | 'plan' | 'wish' | 'statements';
   tab: string;
   title: string;
   caption: string;
@@ -780,6 +1119,26 @@ export const SCENES: SceneDef[] = [
     Scene: WorthScene,
   },
   {
+    id: 'future',
+    tab: 'Future you',
+    title: 'A word from past you.',
+    caption: 'Record a note once. It plays back in your own voice right before you spend where you have regretted it before.',
+    dur: 11000,
+    glow: '#8b5cf6',
+    url: 'app.pursecast.com/spending',
+    beats: [
+      [0, null],
+      [1900, 'add'],
+      [2350, 'add', 300],
+      [2800, null],
+      [5900, 'skip'],
+      [6600, 'skip', 300],
+      [7100, null],
+    ],
+    bursts: [7250],
+    Scene: FutureScene,
+  },
+  {
     id: 'fork',
     tab: 'Timeline Forks',
     title: 'Try a life before you live it.',
@@ -818,5 +1177,40 @@ export const SCENES: SceneDef[] = [
     ],
     bursts: [5950],
     Scene: PlanScene,
+  },
+  {
+    id: 'wish',
+    tab: 'Want to buy',
+    title: 'Know when you can buy it.',
+    caption: 'Add what you want and see the first day it fits your forecast without a storm after. Save for it a little each month.',
+    dur: 11000,
+    glow: '#f59e0b',
+    url: 'app.pursecast.com/plan#want',
+    beats: [
+      [0, null],
+      [400, 'wadd'],
+      [900, 'wadd', 300],
+      [1300, null],
+      [2800, 'wlist'],
+      [3100, 'wlist', 300],
+      [3500, null],
+      [6300, 'wsave'],
+      [6650, 'wsave', 350],
+      [7100, null],
+    ],
+    bursts: [7250],
+    Scene: WishScene,
+  },
+  {
+    id: 'statements',
+    tab: 'Statements',
+    title: 'Your year, told as a story.',
+    caption: 'Drop a bank statement, screenshots or an export. Pursecast reads every transaction and shows where your money came from and where it went.',
+    dur: 11500,
+    glow: '#22c55e',
+    url: 'app.pursecast.com/statements',
+    beats: [[0, null]],
+    bursts: [5300],
+    Scene: StatementScene,
   },
 ];

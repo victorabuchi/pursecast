@@ -195,7 +195,7 @@
 
 .panelGrid {
   display: grid;
-  grid-template-columns: 1fr 1fr 240px;
+  grid-template-columns: 1fr 1fr 1fr 220px;
 }
 
 .panelCol {

@@ -11,14 +11,18 @@ const CONTACT = 'hello@pursecast.com';
 
 // Each signature feature floats with its own colored glow.
 const FEATURES: Array<{ icon: string; color: string; title: string; desc: string }> = [
-  { icon: 'sun', color: '#f59e0b', title: 'Money Weather', desc: 'A 90-day forecast of your cash, shown as a weather report. Storm warnings come weeks early, with a fix attached.' },
+  { icon: 'sun', color: '#f59e0b', title: 'Money Weather', desc: 'A forecast of your cash for the next month, three months or a whole year, shown as a weather report. Storm warnings come early, with a fix attached.' },
   { icon: 'fork', color: '#0f7a63', title: 'Timeline Forks', desc: 'Split your finances into "what if" futures, such as a new city or a new job, and watch them update with every real purchase.' },
   { icon: 'cal', color: '#0ea5e9', title: 'Calendar planning', desc: 'Weddings, trips and birthdays on your calendar are priced ahead of time, and money is set aside a little each month.' },
   { icon: 'heart', color: '#f43f5e', title: 'Worth-It Score', desc: 'One tap, two days after you buy something. Your budget shifts toward what actually makes you happy.' },
-  { icon: 'trend', color: '#8b5cf6', title: 'Personal inflation', desc: 'Your own inflation rate from your own receipts, next to the national one, with the prices that drove it.' },
-  { icon: 'mic', color: '#14b8a6', title: 'Future-self notes', desc: 'Record a note to yourself. It plays back when you are about to overspend where you have regretted it before.' },
-  { icon: 'bolt', color: '#e0a526', title: 'Two-second logging', desc: 'Add an expense with an amount and a word. Pursecast fills in the category, the date and the forecast.' },
-  { icon: 'shield', color: '#c2255c', title: 'Private by design', desc: 'No bank login needed to start. Your data is yours, and you can export or delete it at any time.' },
+  { icon: 'mic', color: '#8b5cf6', title: 'Future-self notes', desc: 'Record a note to yourself, in your own voice. It plays back right before you spend where you have regretted it before.' },
+  { icon: 'file', color: '#22c55e', title: 'Statements, as a story', desc: 'Upload a year of bank statements, screenshots or an export. See where money came from, where it went, and every regular charge.' },
+  { icon: 'cart', color: '#e0a526', title: 'Want to buy', desc: 'Add what you want and see the first day it fits your forecast without a storm after. Save for it a little each month.' },
+  { icon: 'hand', color: '#0891b2', title: 'Money owed and advances', desc: 'Who owes you, who you owe, banks included, with due dates. Salary advances come off the right payday by themselves.' },
+  { icon: 'trend', color: '#6366f1', title: 'Personal inflation', desc: 'Your own inflation rate from your own receipts, next to the national one, with the prices that drove it.' },
+  { icon: 'bolt', color: '#f97316', title: 'Two-second logging', desc: 'Type "12.50 lunch" or even "200 + 10 + 45". Pursecast does the sum, picks the category and updates the forecast.' },
+  { icon: 'calc', color: '#64748b', title: 'Calculator and notes', desc: 'A calculator and a note pad float over every page. Drag them anywhere; they follow your light or dark theme.' },
+  { icon: 'shield', color: '#c2255c', title: 'Private by design', desc: 'No bank login needed. Bills that change every month, like cloud hosting, are fine too. Export or delete your data any time.' },
 ];
 
 function Icon({ name, size = 24 }: { name: string; size?: number }) {
@@ -54,7 +58,7 @@ export default function Landing() {
               {
                 heading: 'See ahead',
                 items: [
-                  { title: 'Money Weather', desc: 'Your next 90 days as a forecast', href: '#showcase', icon: 'sun' },
+                  { title: 'Money Weather', desc: 'A month, three months or a year ahead', href: '#showcase', icon: 'sun' },
                   { title: 'Timeline Forks', desc: 'Try a decision before you make it', href: '#showcase', icon: 'fork' },
                   { title: 'Calendar planning', desc: 'Costs priced before they arrive', href: '#showcase', icon: 'cal' },
                 ],
@@ -63,8 +67,16 @@ export default function Landing() {
                 heading: 'Spend wisely',
                 items: [
                   { title: 'Worth-It Score', desc: 'Budget by joy, not by category', href: '#showcase', icon: 'heart' },
-                  { title: 'Personal inflation', desc: 'Your cost of living, measured', href: '#features', icon: 'trend' },
-                  { title: 'Future-self notes', desc: 'A word from you, at the right moment', href: '#features', icon: 'mic' },
+                  { title: 'Future-self notes', desc: 'A word from you, at the right moment', href: '#showcase', icon: 'mic' },
+                  { title: 'Want to buy', desc: 'The first day it fits your forecast', href: '#showcase', icon: 'cart' },
+                ],
+              },
+              {
+                heading: 'Know your money',
+                items: [
+                  { title: 'Statements', desc: 'A year of spending, told as a story', href: '#showcase', icon: 'file' },
+                  { title: 'Money owed', desc: 'Lent, borrowed, advances, due dates', href: '#features', icon: 'hand' },
+                  { title: 'Calculator and notes', desc: 'Always at hand, on every page', href: '#features', icon: 'calc' },
                 ],
               },
             ],
@@ -109,7 +121,7 @@ export default function Landing() {
             Stop tracking the past. <span>Budget the future.</span>
           </h1>
           <p className={`${styles.heroLede} ${styles.fadeUp} ${styles.d2}`}>
-            Pursecast forecasts your money like the weather, lets you try big decisions before you make them, and learns which spending actually makes you happy.
+            Pursecast forecasts your money like the weather, tells you when you can afford what you want, turns a year of bank statements into a story, and learns which spending actually makes you happy.
           </p>
           <div className={`${styles.heroCtas} ${styles.fadeUp} ${styles.d3}`}>
             <Link href="/signup" className={`${styles.btnHero} ${styles.big}`}>
@@ -120,7 +132,7 @@ export default function Landing() {
             </a>
           </div>
           <div className={styles.glowRow} aria-hidden="true">
-            {FEATURES.slice(0, 6).map((f) => (
+            {FEATURES.slice(0, 8).map((f) => (
               <div key={f.icon} className={styles.glowTile} style={{ ['--glow' as string]: f.color }}>
                 <Icon name={f.icon} />
               </div>
@@ -155,8 +167,8 @@ export default function Landing() {
       <section className={styles.section}>
         <div className={styles.wrap}>
           <div className={styles.head}>
-            <h2>Look ahead. Spend on what matters.</h2>
-            <p>Two ideas behind every screen: know what is coming, and put your money where your happiness is.</p>
+            <h2>Look ahead. Spend on what matters. Know where it went.</h2>
+            <p>Three ideas behind every screen: know what is coming, put your money where your happiness is, and understand your past.</p>
           </div>
           <RoleCards
             cards={[
@@ -167,6 +179,7 @@ export default function Landing() {
                   { title: 'Storms with a fix', desc: 'When a tight week is coming, Pursecast says why and suggests where to find the money.' },
                   { title: 'Calendar costs, priced', desc: 'A wedding in March becomes flights, a hotel and a gift, saved for a little each month.' },
                   { title: 'Futures side by side', desc: 'Compare staying put with moving, a new job or a new car, using your real numbers.' },
+                  { title: 'When you can buy it', desc: 'Add something you want and see the first day it fits, then save for it a little each month.' },
                 ],
                 cta: 'See the forecast',
                 href: '#showcase',
@@ -186,6 +199,19 @@ export default function Landing() {
                 dark: true,
                 icon: ICONS['heart']!,
               },
+              {
+                title: 'Understand where it went',
+                items: [
+                  { title: 'A year in one upload', desc: 'Drop a bank statement, screenshots or an Excel export. Every transaction is read and sorted.' },
+                  { title: 'The story of your money', desc: 'Money in and out by month, where it went, where you paid most, and what you kept.' },
+                  { title: 'Charges you forgot', desc: 'Regular payments are found for you, with what they cost in a year, ready to track.' },
+                  { title: 'Owed and borrowed', desc: 'Friends, family or the bank: amounts, due dates and paybacks in one place.' },
+                ],
+                cta: 'Try it free',
+                href: '/signup',
+                dark: false,
+                icon: ICONS['file']!,
+              },
             ]}
           />
         </div>
@@ -203,7 +229,7 @@ export default function Landing() {
                 label: 'Getting started',
                 steps: [
                   { title: 'Add your balance', desc: 'Type today’s balance and your payday. That is enough for a first forecast.' },
-                  { title: 'List your bills', desc: 'Rent, subscriptions and insurance, each with a date. Pursecast repeats them for you.' },
+                  { title: 'List your bills', desc: 'Rent, subscriptions and insurance, picked from a list, and what you owe. Bills whose price changes are fine.' },
                   { title: 'Connect your calendar', desc: 'Optional. Upcoming events are priced and added to the forecast.' },
                   { title: 'Read the weather', desc: 'See the next 90 days, and fix any storm with one tap.' },
                 ],
@@ -217,6 +243,15 @@ export default function Landing() {
                   { title: 'Check your forks', desc: 'See how your "what if" futures moved this week.' },
                 ],
               },
+              {
+                label: 'Look back',
+                steps: [
+                  { title: 'Download a statement', desc: 'Any period from your bank, as a PDF, Excel or CSV. Screenshots work too.' },
+                  { title: 'Drop it in', desc: 'Pursecast reads every transaction and sorts it into categories.' },
+                  { title: 'Read your story', desc: 'Where money came from, where it went, and what you kept, month by month.' },
+                  { title: 'Track what repeats', desc: 'Turn regular charges into bills, so your forecast knows about them.' },
+                ],
+              },
             ]}
           />
         </div>
@@ -226,7 +261,7 @@ export default function Landing() {
         <div className={styles.wrap}>
           <div className={styles.band}>
             <h2>Your future self will thank you.</h2>
-            <p>Start with a forecast. It takes two minutes and no bank login.</p>
+            <p>Start with a forecast, or drop in last year&rsquo;s statement and see where it all went. Two minutes, no bank login.</p>
             <Link href="/signup" className={`${styles.btnLight} ${styles.big}`}>
               Start free
             </Link>
@@ -246,6 +281,8 @@ export default function Landing() {
               <a href="#showcase">See it work</a>
               <a href="#features">Features</a>
               <a href="#how">How it works</a>
+              <a href="#features">Statements</a>
+              <a href="#features">Want to buy</a>
             </div>
             <div className={styles.footerCol}>
               <span className={styles.footerTitle}>Company</span>

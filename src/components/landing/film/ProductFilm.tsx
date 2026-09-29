@@ -32,6 +32,7 @@ export default function ProductFilm() {
   const confettiCanvas = useRef<HTMLCanvasElement>(null);
   const shoot = useRef<confetti.CreateTypes | null>(null);
   const last = useRef({ scene: -1, t: 0 });
+  const tabs = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const el = outer.current;
@@ -58,6 +59,13 @@ export default function ProductFilm() {
     }, TICK);
     return () => window.clearInterval(id);
   }, [running]);
+
+  // Keep the current tab in view when the row scrolls (phones).
+  useEffect(() => {
+    const bar = tabs.current;
+    const tab = bar?.children[clock.scene] as HTMLElement | undefined;
+    if (bar && tab) bar.scrollTo({ left: tab.offsetLeft - (bar.clientWidth - tab.offsetWidth) / 2, behavior: 'smooth' });
+  }, [clock.scene]);
 
   const def = SCENES[clock.scene]!;
   const t = reduced ? def.dur - 1 : clock.t;
@@ -156,7 +164,7 @@ export default function ProductFilm() {
             )}
           </button>
         </div>
-        <div className={styles.tabBar} role="tablist">
+        <div ref={tabs} className={styles.tabBar} role="tablist">
           {SCENES.map((s, i) => (
             <button key={s.id} type="button" role="tab" aria-selected={i === clock.scene} className={styles.tab} onClick={() => select(i)}>
               {s.tab}
