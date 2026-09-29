@@ -2216,6 +2216,16 @@
     grid-row: 1;
     grid-column: 3;
   }
+
+  /* The date gets a full line of its own, and each row is set apart. */
+  .repeatRow > :nth-child(4) {
+    grid-column: 1 / 3;
+  }
+
+  .repeatRow {
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--line);
+  }
 }
 
 .more summary {
@@ -2478,4 +2488,136 @@
 
 .txnTable td:last-child {
   width: 30px;
+}
+
+/* Setup: section shortcuts and a save bar that stays in reach */
+.jump {
+  position: sticky;
+  top: 70px;
+  z-index: 5;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 6px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(8px);
+}
+
+.jump a {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 10px;
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.jump a:hover {
+  background: var(--bt);
+  color: var(--b);
+}
+
+.jump b {
+  display: grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--bt);
+  color: var(--b);
+  font-size: 11px;
+}
+
+.stack > section[id] {
+  scroll-margin-top: 130px;
+}
+
+.saveBar {
+  position: sticky;
+  bottom: calc(var(--tabs-h) + 12px);
+  z-index: 6;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 10px 10px 16px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.95);
+  box-shadow: 0 18px 40px -20px rgba(20, 24, 31, 0.45);
+  backdrop-filter: blur(8px);
+}
+
+@media (max-width: 760px) {
+  .jump {
+    top: 62px;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .jump a {
+    flex: none;
+  }
+
+  .saveBar .btn {
+    width: 100%;
+  }
+}
+
+/* Photos */
+.wishThumb {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  object-fit: cover;
+  background: #f1f5f9;
+}
+
+.photoRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.photoBox {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 64px;
+  height: 64px;
+  padding: 0;
+  overflow: hidden;
+  border: 1px dashed #cfd5dc;
+  border-radius: 14px;
+  background: var(--bg);
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.photoBox img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.photoRound {
+  border-radius: 50%;
+}
+
+.avatarPhoto {
+  flex: none;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  object-fit: cover;
 }

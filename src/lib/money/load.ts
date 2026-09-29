@@ -29,7 +29,7 @@ export type Me = {
 
 export type Cat = { id: string; name: string; kind: string; budget: number; color: string; position: number };
 export type EntryRow = { id: string; date: string; amount: number; note: string; categoryId: string | null; recurringId: string | null; debtId: string | null; mood: string | null; createdAt: string };
-export type DebtRow = { id: string; person: string; party: string; direction: string; amount: number; note: string | null; dueDate: string | null; settledAt: string | null; createdAt: string; paid: number; left: number };
+export type DebtRow = { id: string; person: string; party: string; photo: string | null; direction: string; amount: number; note: string | null; dueDate: string | null; settledAt: string | null; createdAt: string; paid: number; left: number };
 export type RecurringRow = {
   id: string;
   name: string;
@@ -218,7 +218,7 @@ export const getDebts = cache(async (userId: string): Promise<DebtRow[]> => {
     .all();
   return debts.map((d) => {
     const paid = paidBack(d, paybacks);
-    return { id: d.id, person: d.person, party: d.party, direction: d.direction, amount: d.amount, note: d.note, dueDate: d.dueDate, settledAt: d.settledAt, createdAt: d.createdAt, paid, left: remaining(d, paid) };
+    return { id: d.id, person: d.person, party: d.party, photo: d.photo, direction: d.direction, amount: d.amount, note: d.note, dueDate: d.dueDate, settledAt: d.settledAt, createdAt: d.createdAt, paid, left: remaining(d, paid) };
   });
 });
 

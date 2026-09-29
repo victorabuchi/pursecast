@@ -3,6 +3,7 @@ import I from '../../../components/app/Icon';
 import Submit from '../../../components/app/Submit';
 import { MoneyInput, SignToggle } from '../../../components/app/Fields';
 import { CloseButton, SheetButton } from '../../../components/app/Sheet';
+import PhotoInput from '../../../components/app/PhotoInput';
 import type { DebtRow, Money } from '../../../lib/money/load';
 import { diffDays, short } from '../../../lib/money/dates';
 import { exact, initials, money } from '../../../lib/money/format';
@@ -44,6 +45,7 @@ function DebtForm({ currency }: { currency: string }) {
           <input className={styles.input} name="note" placeholder="Concert tickets" maxLength={120} />
         </label>
       </div>
+      <PhotoInput label="Photo (optional)" round />
       <label className={styles.check}>
         <input type="checkbox" name="moved" defaultChecked />
         The money went through my account today
@@ -91,6 +93,7 @@ function EditDebt({ d, currency }: { d: DebtRow; currency: string }) {
           <input className={styles.input} name="note" defaultValue={d.note ?? ''} maxLength={120} />
         </label>
       </div>
+      <PhotoInput current={d.photo} label="Photo (optional)" round />
       {d.paid > 0 && <p className={styles.note}>{exact(d.paid, currency)} is already paid back.</p>}
       <div className={styles.sheetActions}>
         <CloseButton className={styles.btnGhost}>Cancel</CloseButton>
@@ -107,9 +110,14 @@ function Row({ d, currency, today }: { d: DebtRow; currency: string; today: stri
   const pctPaid = Math.round((d.paid / d.amount) * 100);
   return (
     <div className={styles.debtRow}>
-      <span className={styles.catDot} style={{ background: d.party === 'institution' ? '#e0e7ff' : lent ? '#dcfce7' : '#fee2e2', color: d.party === 'institution' ? '#4338ca' : lent ? '#15803d' : '#dc2626' }} aria-hidden="true">
-        {d.party === 'institution' ? <I d="bank" size={15} /> : initials(d.person)}
-      </span>
+      {d.photo ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img className={styles.avatarPhoto} src={d.photo} alt="" />
+      ) : (
+        <span className={styles.catDot} style={{ background: d.party === 'institution' ? '#e0e7ff' : lent ? '#dcfce7' : '#fee2e2', color: d.party === 'institution' ? '#4338ca' : lent ? '#15803d' : '#dc2626' }} aria-hidden="true">
+          {d.party === 'institution' ? <I d="bank" size={15} /> : initials(d.person)}
+        </span>
+      )}
       <span>
         <b>
           {d.person}

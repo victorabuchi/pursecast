@@ -1,0 +1,86 @@
+[
+  {
+    "id": "column.public.debt.photo",
+    "label": "Add column \"photo\" to \"debt\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "photo",
+        "table": "debt"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"photo\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "debt",
+          "photo"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"photo\"",
+        "sql": "ALTER TABLE \"public\".\"debt\" ADD COLUMN \"photo\" text"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"photo\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "debt",
+          "photo"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.public.wish_item.photo",
+    "label": "Add column \"photo\" to \"wish_item\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "photo",
+        "table": "wish_item"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"photo\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "wish_item",
+          "photo"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"photo\"",
+        "sql": "ALTER TABLE \"public\".\"wish_item\" ADD COLUMN \"photo\" text"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"photo\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "wish_item",
+          "photo"
+        ]
+      }
+    ]
+  }
+]

@@ -256,6 +256,8 @@ model Debt {
   person    String
   // 'person' or 'institution' (a bank, lender or the tax office).
   party     String             @default("person")
+  // A small photo of the person or a logo, as a data: URL.
+  photo     String?
   direction String
   amount    Int
   note      String?
@@ -321,6 +323,8 @@ model WishItem {
   name      String
   price     Int
   url       String?
+  // A small photo as a data: URL, resized in the browser before upload.
+  photo     String?
   priority  Int                @default(2)
   eventId   Uuid?
   boughtAt  TimestamptzString?

@@ -25,6 +25,10 @@ export function Rail() {
         </Link>
       ))}
       <span className={styles.railSpacer} />
+      <Link href="/setup" className={styles.railItem} data-active={path.startsWith('/setup')} aria-label="Your setup">
+        <I d="sliders" size={20} />
+        <span>Your setup</span>
+      </Link>
       <Link href="/settings" className={styles.railItem} data-active={path.startsWith('/settings')} aria-label="Settings">
         <I d="gear" size={20} />
         <span>Settings</span>

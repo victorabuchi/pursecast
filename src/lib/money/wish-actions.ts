@@ -6,6 +6,7 @@ import { addMonths, monthOf, short } from './dates';
 import { exact, money } from './format';
 import { saveSuggestion } from './forecast';
 import { getMe } from './load';
+import { photoChange } from './wish-icons';
 
 const BACK = '/plan#want';
 
@@ -24,8 +25,27 @@ export async function addWishAction(formData: FormData) {
   const price = cents(formData, 'price');
   if (!name || !price) done('/plan?wish=1', 'Add what it is and what it costs.', 'error');
   const priority = Math.min(3, Math.max(1, Number(str(formData, 'priority', 1)) || 2));
-  await db.orm.public.WishItem.create({ userId: me.id, name, price, priority, url: cleanUrl(str(formData, 'url', 500)) });
+  await db.orm.public.WishItem.create({ userId: me.id, name, price, priority, url: cleanUrl(str(formData, 'url', 500)), ...photoChange(formData) });
   done(BACK, `${name} added to your wish list`);
+}
+
+export async function updateWishAction(formData: FormData) {
+  const me = await getMe();
+  const item = await db.orm.public.WishItem.where({ id: str(formData, 'id', 40), userId: me.id }).first();
+  const name = str(formData, 'name', 80);
+  const price = cents(formData, 'price');
+  if (!item) done(BACK, 'That item is gone.', 'error');
+  if (!name || !price) done(BACK, 'Add what it is and what it costs.', 'error');
+  const priority = Math.min(3, Math.max(1, Number(str(formData, 'priority', 1)) || 2));
+  await db.orm.public.WishItem.where({ id: item.id, userId: me.id }).update({ name, price, priority, url: cleanUrl(str(formData, 'url', 500)), ...photoChange(formData) });
+  // Saving for it follows the new name and price.
+  if (item.eventId && (name !== item.name || price !== item.price)) {
+    await Promise.all([
+      db.orm.public.PlanEvent.where({ id: item.eventId, userId: me.id }).update({ name }),
+      db.orm.public.PlanItem.where({ eventId: item.eventId, userId: me.id }).updateAll({ name, amount: price }),
+    ]);
+  }
+  done(BACK, `${name} updated`);
 }
 
 export async function deleteWishAction(formData: FormData) {

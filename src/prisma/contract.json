@@ -525,6 +525,13 @@
                   "kind": "scalar"
                 }
               },
+              "photo": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
               "settledAt": {
                 "nullable": true,
                 "type": {
@@ -598,6 +605,9 @@
                 },
                 "person": {
                   "column": "person"
+                },
+                "photo": {
+                  "column": "photo"
                 },
                 "settledAt": {
                   "column": "settledAt"
@@ -2394,6 +2404,13 @@
                   "kind": "scalar"
                 }
               },
+              "photo": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
               "price": {
                 "nullable": false,
                 "type": {
@@ -2457,6 +2474,9 @@
                 },
                 "name": {
                   "column": "name"
+                },
+                "photo": {
+                  "column": "photo"
                 },
                 "price": {
                   "column": "price"
@@ -3027,6 +3047,11 @@
                   "codecId": "pg/text@1",
                   "nativeType": "text",
                   "nullable": false
+                },
+                "photo": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
                 },
                 "settledAt": {
                   "codecId": "pg/timestamptz-string@1",
@@ -4279,6 +4304,11 @@
                   "nativeType": "text",
                   "nullable": false
                 },
+                "photo": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
                 "price": {
                   "codecId": "pg/int4@1",
                   "nativeType": "int4",
@@ -4346,7 +4376,7 @@
         "kind": "postgres-schema"
       }
     },
-    "storageHash": "afc81ec2bf2204dc6755913318b5e1b958b2c2e198afd5dd413cdc65d62351ff"
+    "storageHash": "ab7e90a716bcf7b0e8fae7756e9e5b1ddb33e39196be32b23800305d93cde93b"
   },
   "execution": {
     "executionHash": "ca6aad3b6e9428712d6ffa07d053a1311135f8c6396a2f7fcf76748ab3267ee3",

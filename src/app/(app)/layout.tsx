@@ -10,6 +10,9 @@ import { getCategories, getMe } from '../../lib/money/load';
 // Worth-It rating; the palette searches pages and the person's own records.
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const me = await getMe();
+  // First-time setup has a quiet page of its own; every other page needs a
+  // balance and redirects there until one is set.
+  if (me.balance === null) return children;
   const cats = await getCategories(me.id);
   const catById = new Map(cats.map((c) => [c.id, c]));
   const recent = await db.orm.public.Entry.where({ userId: me.id })

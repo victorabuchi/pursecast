@@ -5,6 +5,7 @@ import { cents, day, done, str } from './act';
 import { exact } from './format';
 import { isDirection } from './debts';
 import { getDebts, getMe } from './load';
+import { photoChange } from './wish-icons';
 
 const BACK = '/spending?tab=owed';
 
@@ -21,7 +22,7 @@ export async function addDebtAction(formData: FormData) {
   if (!isDirection(direction) || !person || !amount) done(`${BACK}&new=1`, 'Add who it is with and how much.', 'error');
   await db.transaction(async (tx) => {
     const party = str(formData, 'party', 12) === 'institution' ? 'institution' : 'person';
-    const debt = await tx.orm.public.Debt.create({ userId: me.id, person, party, direction, amount, note: str(formData, 'note', 120) || null, dueDate });
+    const debt = await tx.orm.public.Debt.create({ userId: me.id, person, party, direction, amount, note: str(formData, 'note', 120) || null, dueDate, ...photoChange(formData) });
     if (formData.get('moved')) {
       await tx.orm.public.Entry.create({ userId: me.id, date: me.today, amount: direction === 'lent' ? -amount : amount, note: direction === 'lent' ? `Lent to ${person}` : `Borrowed from ${person}`, debtId: debt.id });
     }
@@ -85,6 +86,7 @@ export async function updateDebtAction(formData: FormData) {
     dueDate: day(formData, 'dueDate'),
     note: str(formData, 'note', 120) || null,
     settledAt: settledAfterEdit(debt, amount),
+    ...photoChange(formData),
   });
   done(BACK, `${person} updated`);
 }
