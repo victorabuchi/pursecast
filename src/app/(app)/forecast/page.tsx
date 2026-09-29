@@ -97,9 +97,6 @@ export default async function ForecastPage({ searchParams }: PageProps<'/forecas
         icon="sun"
         right={
           <>
-          <Link href="/setup" className={styles.pill}>
-            <I d="edit" size={14} /> Edit setup
-          </Link>
           <SheetButton className={styles.pill} label={<>Cushion {m(me.cushion)}</>} title="Your cushion" sub="Weeks that dip below it show as cloudy.">
             <form action={setCushionAction} className={styles.form}>
               <MoneyInput name="cushion" currency={cur} value={me.cushion} autoFocus label="Cushion" />

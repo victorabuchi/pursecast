@@ -50,3 +50,15 @@ export function Tabs() {
     </nav>
   );
 }
+
+// In the top bar on every page: back to setup in one click.
+export function SetupButton() {
+  const path = usePathname();
+  const here = path.startsWith('/setup');
+  return (
+    <Link href="/setup" className={styles.setupBtn} data-active={here} aria-current={here ? 'page' : undefined} title="Edit your balance, pay, bills, subscriptions and budgets">
+      <I d="sliders" size={16} />
+      <span>Edit setup</span>
+    </Link>
+  );
+}

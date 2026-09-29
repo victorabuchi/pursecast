@@ -2621,3 +2621,56 @@
   border-radius: 50%;
   object-fit: cover;
 }
+
+/* Edit setup, in the top bar of every page */
+.setupBtn {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 7px;
+  height: 36px;
+  padding: 0 12px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: #fff;
+  color: var(--ink);
+  font-size: 13.5px;
+  font-weight: 700;
+  text-decoration: none;
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease;
+}
+
+.setupBtn svg {
+  color: var(--b);
+}
+
+.setupBtn:hover {
+  border-color: var(--b);
+  background: var(--bt);
+}
+
+.setupBtn[data-active='true'] {
+  border-color: var(--b);
+  background: var(--bt);
+  color: var(--b);
+}
+
+@media (max-width: 760px) {
+  .setupBtn {
+    width: 36px;
+    padding: 0;
+    justify-content: center;
+  }
+
+  .setupBtn span {
+    display: none;
+  }
+}
+
+/* Phones: the top bar needs the room for its buttons. */
+@media (max-width: 480px) {
+  .slash,
+  .orgName { display: none; }
+}

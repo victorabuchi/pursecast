@@ -9,7 +9,7 @@ import Palette, { type PaletteItem } from './Palette';
 import Toast from './Toast';
 import Tools from '../tools/Tools';
 import { ClearSetupDraft } from './FormDraft';
-import { Rail, Tabs } from './Nav';
+import { Rail, SetupButton, Tabs } from './Nav';
 import { signOutAction } from '../../lib/auth/actions';
 import { exact, initials } from '../../lib/money/format';
 import { ago, possessive } from '../../lib/money/dates';
@@ -48,6 +48,7 @@ export default function AppShell({
         <span className={styles.slash}>/</span>
         <span className={styles.orgName}>Personal</span>
         <span className={styles.topRight}>
+          <SetupButton />
           <Tools notepad={notepad} notepadAt={notepadAt} buttonClass={styles.iconBtn} />
           <Popover
             label={bell.length ? `${bell.length} purchases to rate` : 'Notifications'}
