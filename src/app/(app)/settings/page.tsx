@@ -3,6 +3,7 @@ import styles from '../../../components/app/app.module.css';
 import PageHead from '../../../components/app/PageHead';
 import Submit from '../../../components/app/Submit';
 import PhotoInput from '../../../components/app/PhotoInput';
+import ThemePicker from '../../../components/app/ThemePicker';
 import PasswordField from '../../../components/auth/PasswordField';
 import { db } from '../../../prisma/db';
 import { getMe } from '../../../lib/money/load';
@@ -75,6 +76,11 @@ export default async function SettingsPage() {
 
         <div className={styles.stack}>
           <div className={styles.card}>
+            <strong className={styles.cardTitle}>Appearance</strong>
+            <p className={styles.note}>Automatic follows your phone or computer, light by day and dark at night if it switches.</p>
+            <ThemePicker />
+          </div>
+          <div className={styles.card}>
             <strong className={styles.cardTitle}>Your setup</strong>
             <p className={styles.note}>Balance, pay, rent, bills, subscriptions, money you owe and budgets, all on one page.</p>
             <a href="/setup" className={styles.btnGhost}>
@@ -116,7 +122,7 @@ export default async function SettingsPage() {
             </form>
           </div>
 
-          <form action={deleteAccountAction} className={styles.card} style={{ borderColor: '#fecaca' }}>
+          <form action={deleteAccountAction} className={styles.card} style={{ borderColor: 'var(--neg-line)' }}>
             <strong className={styles.cardTitle}>Delete account</strong>
             <p className={styles.note}>Deletes your account and everything in it right away. This cannot be undone.</p>
             <label className={styles.field}>

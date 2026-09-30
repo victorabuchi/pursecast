@@ -15,12 +15,21 @@ export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
   viewportFit: 'cover',
-  themeColor: '#0f7a63',
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#ffffff' },
+    { media: '(prefers-color-scheme: dark)', color: '#0d1015' },
+  ],
 };
+
+const THEME_SCRIPT = `try{var t=localStorage.getItem('pursecast:theme');if(t==='light'||t==='dark')document.documentElement.dataset.theme=t}catch(e){}`;
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={figtree.variable} data-scroll-behavior="smooth">
+    <html lang="en" className={figtree.variable} data-scroll-behavior="smooth" suppressHydrationWarning>
+      <head>
+        {/* Light or dark as picked in Settings, set before the first paint. */}
+        <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
+      </head>
       <body>{children}</body>
     </html>
   );

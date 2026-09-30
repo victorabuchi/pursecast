@@ -31,7 +31,7 @@ export default function AdvanceRows({ currency, today, draftKey, initialRows = [
       </div>
       {rows.map((r, i) => (
         <div key={r.key} className={styles.advRow}>
-          <span className={styles.catDot} style={{ background: '#dcfce7', color: '#15803d' }} aria-hidden="true">
+          <span className={styles.catDot} style={{ background: 'var(--pos-bg)', color: 'var(--pos)' }} aria-hidden="true">
             <I d="wallet" size={15} />
           </span>
           <span className={styles.money}>

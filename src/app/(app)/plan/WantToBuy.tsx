@@ -23,7 +23,7 @@ function Thumb({ w, ok }: { w: Wish; ok: boolean }) {
     return <img className={styles.wishThumb} src={w.photo} alt="" />;
   }
   return (
-    <span className={styles.wishThumb} style={{ background: ok ? '#dcfce7' : '#f1f5f9', color: ok ? '#15803d' : '#334155' }} aria-hidden="true">
+    <span className={styles.wishThumb} style={{ background: ok ? 'var(--pos-bg)' : 'var(--soft)', color: ok ? 'var(--pos)' : 'var(--ink2)' }} aria-hidden="true">
       <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
         <path d={WISH_PATHS[wishIcon(w.name)]} />
       </svg>

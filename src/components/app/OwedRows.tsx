@@ -34,7 +34,7 @@ export default function OwedRows({ currency, today, draftKey, initialRows = [], 
       </div>
       {rows.map((r, i) => (
         <div key={r.key} className={styles.owedRow}>
-          <span className={styles.catDot} style={{ background: r.party === 'institution' ? '#e0e7ff' : lent ? '#dcfce7' : '#fee2e2', color: r.party === 'institution' ? '#4338ca' : lent ? '#15803d' : '#dc2626' }} aria-hidden="true">
+          <span className={styles.catDot} style={{ background: r.party === 'institution' ? 'var(--indigo-bg)' : lent ? 'var(--pos-bg)' : 'var(--neg-bg2)', color: r.party === 'institution' ? 'var(--indigo)' : lent ? 'var(--pos)' : 'var(--neg)' }} aria-hidden="true">
             <I d={r.party === 'institution' ? 'bank' : 'user'} size={15} />
           </span>
           <input className={styles.input} name={`${prefix}Who${i}`} value={r.who} placeholder={r.party === 'institution' ? (lent ? 'Company' : 'Nordea car loan') : lent ? 'Sam' : 'Mom'} autoFocus={!r.who} onChange={(e) => update(r.key, { who: e.target.value })} aria-label={lent ? 'Who owes you' : 'Who you owe'} maxLength={60} />

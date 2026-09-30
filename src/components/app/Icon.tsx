@@ -40,6 +40,7 @@ export const P = {
   hand: 'M17 11V7a2 2 0 0 0-4 0v3M13 10V5a2 2 0 0 0-4 0v5M9 10V7a2 2 0 0 0-4 0v7a8 8 0 0 0 8 8h1a7 7 0 0 0 7-7v-3a2 2 0 0 0-4 0',
   play: 'M6 4l14 8-14 8Z',
   right: 'M9 18l6-6-6-6',
+  moon: 'M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z',
 };
 
 export type IconName = keyof typeof P;

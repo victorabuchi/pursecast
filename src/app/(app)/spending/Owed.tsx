@@ -114,7 +114,7 @@ function Row({ d, currency, today }: { d: DebtRow; currency: string; today: stri
         // eslint-disable-next-line @next/next/no-img-element
         <img className={styles.avatarPhoto} src={d.photo} alt="" />
       ) : (
-        <span className={styles.catDot} style={{ background: d.party === 'institution' ? '#e0e7ff' : lent ? '#dcfce7' : '#fee2e2', color: d.party === 'institution' ? '#4338ca' : lent ? '#15803d' : '#dc2626' }} aria-hidden="true">
+        <span className={styles.catDot} style={{ background: d.party === 'institution' ? 'var(--indigo-bg)' : lent ? 'var(--pos-bg)' : 'var(--neg-bg2)', color: d.party === 'institution' ? 'var(--indigo)' : lent ? 'var(--pos)' : 'var(--neg)' }} aria-hidden="true">
           {d.party === 'institution' ? <I d="bank" size={15} /> : initials(d.person)}
         </span>
       )}
