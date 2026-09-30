@@ -385,3 +385,26 @@ test('reminders: landed to-dos, tomorrow’s bills and pay, debts due soon, a st
   assert.equal(r[0]!.body, 'Pay back Sam and Book the train');
   assert.ok(new Set(r.map((x) => x.key)).size === r.length);
 });
+
+test('the Monday email lists the week and warns about a storm', async () => {
+  const { weeklyDigest } = await import('../src/lib/money/reminders');
+  const d = weeklyDigest({
+    name: 'Alex Lindqvist',
+    currency: 'EUR',
+    today: '2026-10-05',
+    balance: 165000,
+    week: [
+      { date: '2026-10-09', name: 'Salary', amount: 290000 },
+      { date: '2026-10-12', name: 'Electricity', amount: -4500 },
+    ],
+    todos: ['Pay back Sam'],
+    low: { date: '2026-11-08', amount: -20300 },
+    cushion: 0,
+    appUrl: 'https://pursecast.onrender.com',
+  });
+  assert.equal(d.subject, 'Your week: storm on Nov 8');
+  assert.match(d.text, /Hi Alex,/);
+  assert.match(d.text, /Oct 12 {2}Electricity {2}−€45/);
+  assert.match(d.text, /\+€2,900/);
+  assert.match(d.text, /• Pay back Sam/);
+});

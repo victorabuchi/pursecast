@@ -65,3 +65,39 @@ export function buildReminders(input: { today: string; currency: string; cushion
   }
   return out;
 }
+
+// The Monday email: balance, the week's bills and income, what waits for
+// payday, and the lowest point ahead.
+export function weeklyDigest(input: {
+  name: string;
+  currency: string;
+  today: string;
+  balance: number;
+  week: Array<{ date: string; name: string; amount: number }>;
+  todos: string[];
+  low: { date: string; amount: number };
+  cushion: number;
+  appUrl: string;
+}): { subject: string; text: string } {
+  const m = (c: number) => `${c < 0 ? '−' : ''}${exact(Math.abs(c), input.currency)}`;
+  const first = input.name.split(/\s+/)[0] || 'there';
+  const out = input.week.filter((w) => w.amount < 0);
+  const inc = input.week.filter((w) => w.amount > 0);
+  const stormy = input.low.amount < input.cushion;
+  const lines = [
+    `Hi ${first},`,
+    '',
+    `Your balance today: ${m(input.balance)}.`,
+    stormy ? `Heads up: it dips to ${m(input.low.amount)} on ${short(input.low.date)}. Open Money Weather for a fix.` : `Lowest point ahead: ${m(input.low.amount)} on ${short(input.low.date)}. Clear skies.`,
+    '',
+    out.length ? 'This week, going out:' : 'Nothing goes out this week.',
+    ...out.map((w) => `  ${short(w.date)}  ${w.name}  ${m(w.amount)}`),
+    ...(inc.length ? ['', 'Coming in:', ...inc.map((w) => `  ${short(w.date)}  ${w.name}  +${m(w.amount)}`)] : []),
+    ...(input.todos.length ? ['', 'Waiting for payday:', ...input.todos.slice(0, 8).map((t) => `  • ${t}`)] : []),
+    '',
+    `Open Pursecast: ${input.appUrl}/forecast`,
+    '',
+    `You get this because the Monday email is on. Turn it off in Settings: ${input.appUrl}/settings`,
+  ];
+  return { subject: stormy ? `Your week: storm on ${short(input.low.date)}` : `Your week: ${out.length} ${out.length === 1 ? 'bill' : 'bills'}, clear skies`, text: lines.join('\n') };
+}

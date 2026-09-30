@@ -8,7 +8,8 @@ export const metadata: Metadata = {
   title: { default: 'Pursecast | Budget the future', template: '%s | Pursecast' },
   description: 'Pursecast forecasts your money like the weather, lets you try big decisions before you make them, and learns which spending makes you happy.',
   applicationName: 'Pursecast',
-  icons: { icon: '/icon.svg' },
+  icons: { icon: '/icon.svg', apple: '/apple-touch-icon.png' },
+  appleWebApp: { capable: true, title: 'Pursecast', statusBarStyle: 'default' },
 };
 
 export const viewport: Viewport = {

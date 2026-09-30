@@ -1,0 +1,404 @@
+[
+  {
+    "id": "table.push_sub",
+    "label": "Create table \"push_sub\"",
+    "summary": "Creates table \"push_sub\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "push_sub"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"push_sub\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"push_sub\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"push_sub\"",
+        "sql": "CREATE TABLE \"public\".\"push_sub\" (\n  \"auth\" text NOT NULL,\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"endpoint\" text NOT NULL,\n  \"id\" uuid NOT NULL,\n  \"p256dh\" text NOT NULL,\n  \"userId\" uuid NOT NULL,\n  PRIMARY KEY (\"id\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"push_sub\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"push_sub\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.reminder_sent",
+    "label": "Create table \"reminder_sent\"",
+    "summary": "Creates table \"reminder_sent\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "reminder_sent"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"reminder_sent\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"reminder_sent\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"reminder_sent\"",
+        "sql": "CREATE TABLE \"public\".\"reminder_sent\" (\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"id\" uuid NOT NULL,\n  \"key\" text NOT NULL,\n  \"userId\" uuid NOT NULL,\n  PRIMARY KEY (\"id\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"reminder_sent\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"reminder_sent\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.public.app_user.weeklyAt",
+    "label": "Add column \"weeklyAt\" to \"app_user\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "weeklyAt",
+        "table": "app_user"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"weeklyAt\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "app_user",
+          "weeklyAt"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"weeklyAt\"",
+        "sql": "ALTER TABLE \"public\".\"app_user\" ADD COLUMN \"weeklyAt\" text"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"weeklyAt\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "app_user",
+          "weeklyAt"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.public.app_user.weeklyEmail",
+    "label": "Add column \"weeklyEmail\" to \"app_user\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "weeklyEmail",
+        "table": "app_user"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"weeklyEmail\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "app_user",
+          "weeklyEmail"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"weeklyEmail\"",
+        "sql": "ALTER TABLE \"public\".\"app_user\" ADD COLUMN \"weeklyEmail\" bool DEFAULT false NOT NULL"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"weeklyEmail\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "app_user",
+          "weeklyEmail"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.push_sub.push_sub_userId_idx_a489d58a",
+    "label": "Create index \"push_sub_userId_idx_a489d58a\" on \"push_sub\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "push_sub_userId_idx_a489d58a",
+        "table": "push_sub"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"push_sub_userId_idx_a489d58a\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"push_sub_userId_idx_a489d58a\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"push_sub_userId_idx_a489d58a\"",
+        "sql": "CREATE INDEX \"push_sub_userId_idx_a489d58a\" ON \"public\".\"push_sub\" (\"userId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"push_sub_userId_idx_a489d58a\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"push_sub_userId_idx_a489d58a\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.reminder_sent.reminder_sent_userId_idx_a489d58a",
+    "label": "Create index \"reminder_sent_userId_idx_a489d58a\" on \"reminder_sent\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "reminder_sent_userId_idx_a489d58a",
+        "table": "reminder_sent"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"reminder_sent_userId_idx_a489d58a\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"reminder_sent_userId_idx_a489d58a\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"reminder_sent_userId_idx_a489d58a\"",
+        "sql": "CREATE INDEX \"reminder_sent_userId_idx_a489d58a\" ON \"public\".\"reminder_sent\" (\"userId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"reminder_sent_userId_idx_a489d58a\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"reminder_sent_userId_idx_a489d58a\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.push_sub.push_sub_userId_fkey",
+    "label": "Add foreign key \"push_sub_userId_fkey\" on \"push_sub\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "push_sub_userId_fkey",
+        "table": "push_sub"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"push_sub_userId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "push_sub_userId_fkey",
+          "public",
+          "\"public\".\"push_sub\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"push_sub_userId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"push_sub\"\nADD CONSTRAINT \"push_sub_userId_fkey\"\nFOREIGN KEY (\"userId\")\nREFERENCES \"public\".\"app_user\" (\"id\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"push_sub_userId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "push_sub_userId_fkey",
+          "public",
+          "\"public\".\"push_sub\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.reminder_sent.reminder_sent_userId_fkey",
+    "label": "Add foreign key \"reminder_sent_userId_fkey\" on \"reminder_sent\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "reminder_sent_userId_fkey",
+        "table": "reminder_sent"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"reminder_sent_userId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "reminder_sent_userId_fkey",
+          "public",
+          "\"public\".\"reminder_sent\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"reminder_sent_userId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"reminder_sent\"\nADD CONSTRAINT \"reminder_sent_userId_fkey\"\nFOREIGN KEY (\"userId\")\nREFERENCES \"public\".\"app_user\" (\"id\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"reminder_sent_userId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "reminder_sent_userId_fkey",
+          "public",
+          "\"public\".\"reminder_sent\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "rowLevelSecurity.public.push_sub",
+    "label": "Enable row-level security on \"push_sub\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "rowLevelSecurity",
+        "name": "push_sub"
+      }
+    },
+    "precheck": [
+      {
+        "description": "check RLS is not already enabled on \"push_sub\"",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_class\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"relnamespace\" WHERE (\"n\".\"nspname\" = $1 AND \"c\".\"relname\" = $2 AND NOT (\"c\".\"relrowsecurity\"))) AS \"result\"",
+        "params": [
+          "public",
+          "push_sub"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "enable row-level security on \"push_sub\"",
+        "sql": "ALTER TABLE \"public\".\"push_sub\" ENABLE ROW LEVEL SECURITY"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify row-level security is enabled on \"push_sub\"",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_class\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"relnamespace\" WHERE (\"n\".\"nspname\" = $1 AND \"c\".\"relname\" = $2 AND \"c\".\"relrowsecurity\")) AS \"result\"",
+        "params": [
+          "public",
+          "push_sub"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "rowLevelSecurity.public.reminder_sent",
+    "label": "Enable row-level security on \"reminder_sent\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "rowLevelSecurity",
+        "name": "reminder_sent"
+      }
+    },
+    "precheck": [
+      {
+        "description": "check RLS is not already enabled on \"reminder_sent\"",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_class\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"relnamespace\" WHERE (\"n\".\"nspname\" = $1 AND \"c\".\"relname\" = $2 AND NOT (\"c\".\"relrowsecurity\"))) AS \"result\"",
+        "params": [
+          "public",
+          "reminder_sent"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "enable row-level security on \"reminder_sent\"",
+        "sql": "ALTER TABLE \"public\".\"reminder_sent\" ENABLE ROW LEVEL SECURITY"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify row-level security is enabled on \"reminder_sent\"",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_class\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"relnamespace\" WHERE (\"n\".\"nspname\" = $1 AND \"c\".\"relname\" = $2 AND \"c\".\"relrowsecurity\")) AS \"result\"",
+        "params": [
+          "public",
+          "reminder_sent"
+        ]
+      }
+    ]
+  }
+]

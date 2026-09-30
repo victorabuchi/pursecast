@@ -4,6 +4,9 @@ import PageHead from '../../../components/app/PageHead';
 import Submit from '../../../components/app/Submit';
 import PhotoInput from '../../../components/app/PhotoInput';
 import ThemePicker from '../../../components/app/ThemePicker';
+import NotifySettings from '../../../components/app/NotifySettings';
+import { pushPublicKey } from '../../../lib/push';
+import { emailConfigured } from '../../../lib/email';
 import PasswordField from '../../../components/auth/PasswordField';
 import { db } from '../../../prisma/db';
 import { getMe } from '../../../lib/money/load';
@@ -18,7 +21,10 @@ const ZONES = ['Europe/Helsinki', 'Europe/Stockholm', 'Europe/Oslo', 'Europe/Cop
 
 export default async function SettingsPage() {
   const me = await getMe();
-  const hasPassword = Boolean(await db.orm.public.AuthIdentity.where({ userId: me.id, provider: 'password' }).first());
+  const [hasPassword, user] = await Promise.all([
+    db.orm.public.AuthIdentity.where({ userId: me.id, provider: 'password' }).first().then(Boolean),
+    db.orm.public.User.where({ id: me.id }).select('weeklyEmail').first(),
+  ]);
   const zones = ZONES.includes(me.timezone) ? ZONES : [me.timezone, ...ZONES];
 
   return (
@@ -75,6 +81,11 @@ export default async function SettingsPage() {
         </div>
 
         <div className={styles.stack}>
+          <div className={styles.card}>
+            <strong className={styles.cardTitle}>Notifications</strong>
+            <p className={styles.note}>A nudge at 8 in the morning when pay lands with things to do, a bill or subscription is due tomorrow, a debt is due, or a storm is coming.</p>
+            <NotifySettings publicKey={pushPublicKey()} weeklyEmail={Boolean(user?.weeklyEmail)} emailReady={emailConfigured()} />
+          </div>
           <div className={styles.card}>
             <strong className={styles.cardTitle}>Appearance</strong>
             <p className={styles.note}>Automatic follows your phone or computer, and turns dark from 7 pm to 7 am.</p>

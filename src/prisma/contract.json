@@ -56,8 +56,16 @@
       "model": "PlanItem",
       "namespace": "public"
     },
+    "push_sub": {
+      "model": "PushSub",
+      "namespace": "public"
+    },
     "recurring": {
       "model": "Recurring",
+      "namespace": "public"
+    },
+    "reminder_sent": {
+      "model": "ReminderSent",
       "namespace": "public"
     },
     "salary_advance": {
@@ -1551,6 +1559,94 @@
               "table": "plan_item"
             }
           },
+          "PushSub": {
+            "fields": {
+              "auth": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "createdAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              },
+              "endpoint": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "id": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/uuid@1",
+                  "kind": "scalar"
+                }
+              },
+              "p256dh": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "userId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/uuid@1",
+                  "kind": "scalar"
+                }
+              }
+            },
+            "relations": {
+              "user": {
+                "cardinality": "N:1",
+                "nullable": false,
+                "on": {
+                  "localFields": [
+                    "userId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
+                },
+                "to": {
+                  "model": "User",
+                  "namespace": "public"
+                }
+              }
+            },
+            "storage": {
+              "fields": {
+                "auth": {
+                  "column": "auth"
+                },
+                "createdAt": {
+                  "column": "createdAt"
+                },
+                "endpoint": {
+                  "column": "endpoint"
+                },
+                "id": {
+                  "column": "id"
+                },
+                "p256dh": {
+                  "column": "p256dh"
+                },
+                "userId": {
+                  "column": "userId"
+                }
+              },
+              "namespaceId": "public",
+              "table": "push_sub"
+            }
+          },
           "Recurring": {
             "fields": {
               "amount": {
@@ -1753,6 +1849,74 @@
               },
               "namespaceId": "public",
               "table": "recurring"
+            }
+          },
+          "ReminderSent": {
+            "fields": {
+              "createdAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              },
+              "id": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/uuid@1",
+                  "kind": "scalar"
+                }
+              },
+              "key": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "userId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/uuid@1",
+                  "kind": "scalar"
+                }
+              }
+            },
+            "relations": {
+              "user": {
+                "cardinality": "N:1",
+                "nullable": false,
+                "on": {
+                  "localFields": [
+                    "userId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
+                },
+                "to": {
+                  "model": "User",
+                  "namespace": "public"
+                }
+              }
+            },
+            "storage": {
+              "fields": {
+                "createdAt": {
+                  "column": "createdAt"
+                },
+                "id": {
+                  "column": "id"
+                },
+                "key": {
+                  "column": "key"
+                },
+                "userId": {
+                  "column": "userId"
+                }
+              },
+              "namespaceId": "public",
+              "table": "reminder_sent"
             }
           },
           "SalaryAdvance": {
@@ -2320,6 +2484,20 @@
                   "codecId": "pg/text@1",
                   "kind": "scalar"
                 }
+              },
+              "weeklyAt": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "weeklyEmail": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/bool@1",
+                  "kind": "scalar"
+                }
               }
             },
             "relations": {
@@ -2503,6 +2681,21 @@
                   "namespace": "public"
                 }
               },
+              "pushSubs": {
+                "cardinality": "1:N",
+                "on": {
+                  "localFields": [
+                    "id"
+                  ],
+                  "targetFields": [
+                    "userId"
+                  ]
+                },
+                "to": {
+                  "model": "PushSub",
+                  "namespace": "public"
+                }
+              },
               "recurring": {
                 "cardinality": "1:N",
                 "on": {
@@ -2515,6 +2708,21 @@
                 },
                 "to": {
                   "model": "Recurring",
+                  "namespace": "public"
+                }
+              },
+              "remindersSent": {
+                "cardinality": "1:N",
+                "on": {
+                  "localFields": [
+                    "id"
+                  ],
+                  "targetFields": [
+                    "userId"
+                  ]
+                },
+                "to": {
+                  "model": "ReminderSent",
                   "namespace": "public"
                 }
               },
@@ -2625,6 +2833,12 @@
                 },
                 "timezone": {
                   "column": "timezone"
+                },
+                "weeklyAt": {
+                  "column": "weeklyAt"
+                },
+                "weeklyEmail": {
+                  "column": "weeklyEmail"
                 }
               },
               "namespaceId": "public",
@@ -2833,10 +3047,20 @@
               "namespaceId": "public",
               "tableName": "plan_item"
             },
+            "push_sub": {
+              "kind": "rls",
+              "namespaceId": "public",
+              "tableName": "push_sub"
+            },
             "recurring": {
               "kind": "rls",
               "namespaceId": "public",
               "tableName": "recurring"
+            },
+            "reminder_sent": {
+              "kind": "rls",
+              "namespaceId": "public",
+              "tableName": "reminder_sent"
             },
             "salary_advance": {
               "kind": "rls",
@@ -3032,6 +3256,20 @@
                     "value": "Europe/Helsinki"
                   },
                   "nativeType": "text",
+                  "nullable": false
+                },
+                "weeklyAt": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
+                "weeklyEmail": {
+                  "codecId": "pg/bool@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": false
+                  },
+                  "nativeType": "bool",
                   "nullable": false
                 }
               },
@@ -4196,6 +4434,79 @@
               },
               "uniques": []
             },
+            "push_sub": {
+              "columns": {
+                "auth": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "createdAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "default": {
+                    "expression": "now()",
+                    "kind": "function"
+                  },
+                  "nativeType": "timestamptz",
+                  "nullable": false
+                },
+                "endpoint": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "id": {
+                  "codecId": "pg/uuid@1",
+                  "nativeType": "uuid",
+                  "nullable": false
+                },
+                "p256dh": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "userId": {
+                  "codecId": "pg/uuid@1",
+                  "nativeType": "uuid",
+                  "nullable": false
+                }
+              },
+              "foreignKeys": [
+                {
+                  "onDelete": "cascade",
+                  "source": {
+                    "columns": [
+                      "userId"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "push_sub"
+                  },
+                  "target": {
+                    "columns": [
+                      "id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "app_user"
+                  }
+                }
+              ],
+              "indexes": [
+                {
+                  "columns": [
+                    "userId"
+                  ],
+                  "name": "push_sub_userId_idx_a489d58a",
+                  "prefix": "push_sub_userId_idx",
+                  "unique": false
+                }
+              ],
+              "primaryKey": {
+                "columns": [
+                  "id"
+                ]
+              },
+              "uniques": []
+            },
             "recurring": {
               "columns": {
                 "amount": {
@@ -4335,6 +4646,69 @@
                   ],
                   "name": "recurring_userId_idx_a489d58a",
                   "prefix": "recurring_userId_idx",
+                  "unique": false
+                }
+              ],
+              "primaryKey": {
+                "columns": [
+                  "id"
+                ]
+              },
+              "uniques": []
+            },
+            "reminder_sent": {
+              "columns": {
+                "createdAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "default": {
+                    "expression": "now()",
+                    "kind": "function"
+                  },
+                  "nativeType": "timestamptz",
+                  "nullable": false
+                },
+                "id": {
+                  "codecId": "pg/uuid@1",
+                  "nativeType": "uuid",
+                  "nullable": false
+                },
+                "key": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "userId": {
+                  "codecId": "pg/uuid@1",
+                  "nativeType": "uuid",
+                  "nullable": false
+                }
+              },
+              "foreignKeys": [
+                {
+                  "onDelete": "cascade",
+                  "source": {
+                    "columns": [
+                      "userId"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "reminder_sent"
+                  },
+                  "target": {
+                    "columns": [
+                      "id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "app_user"
+                  }
+                }
+              ],
+              "indexes": [
+                {
+                  "columns": [
+                    "userId"
+                  ],
+                  "name": "reminder_sent_userId_idx_a489d58a",
+                  "prefix": "reminder_sent_userId_idx",
                   "unique": false
                 }
               ],
@@ -4829,10 +5203,10 @@
         "kind": "postgres-schema"
       }
     },
-    "storageHash": "4a129ec21adb2c4448ad6cd60651ca811c5a4537c3a86fb335e82f6a95f0b36d"
+    "storageHash": "af3d4fc9abd2263afddaa59e9bce6b0148f3a28e589bcb92eb47fc1a751744af"
   },
   "execution": {
-    "executionHash": "72af1ea092a63e4d56bf923d55f8c3872b2829acb0f90f7df300f9d7e04b2f83",
+    "executionHash": "b40b287e705111bc1542a6fc46c765647e38516832b8248642016957f759267c",
     "mutations": {
       "defaults": [
         {
@@ -4986,7 +5360,29 @@
           "ref": {
             "column": "id",
             "namespace": "public",
+            "table": "push_sub"
+          }
+        },
+        {
+          "onCreate": {
+            "id": "uuidv4",
+            "kind": "generator"
+          },
+          "ref": {
+            "column": "id",
+            "namespace": "public",
             "table": "recurring"
+          }
+        },
+        {
+          "onCreate": {
+            "id": "uuidv4",
+            "kind": "generator"
+          },
+          "ref": {
+            "column": "id",
+            "namespace": "public",
+            "table": "reminder_sent"
           }
         },
         {

@@ -24,6 +24,9 @@ model User {
   notepadAt    TimestamptzString?
   // Profile picture, a small JPEG data: URL. Null shows an empty avatar.
   photo        String?
+  // A summary email each Monday morning (needs Resend on the server).
+  weeklyEmail  Boolean            @default(false)
+  weeklyAt     String?
   createdAt    TimestamptzString  @default(now())
   lastSignInAt TimestamptzString?
   identities   AuthIdentity[]
@@ -42,6 +45,8 @@ model User {
   statements   Statement[]
   todos        Todo[]
   aiUsage      AiUsage[]
+  pushSubs     PushSub[]
+  remindersSent ReminderSent[]
   statementTxns StatementTxn[]
 
   @@rls
@@ -416,4 +421,32 @@ model AiUsage {
   @@index([userId])
   @@rls
   @@map("ai_usage")
+}
+
+// A browser or phone that asked for notifications (web push).
+model PushSub {
+  id        Uuid              @id @default(uuid())
+  user      User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    Uuid
+  endpoint  String
+  p256dh    String
+  auth      String
+  createdAt TimestamptzString @default(now())
+
+  @@index([userId])
+  @@rls
+  @@map("push_sub")
+}
+
+// Reminders already pushed, by their key, so each goes out once.
+model ReminderSent {
+  id        Uuid              @id @default(uuid())
+  user      User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    Uuid
+  key       String
+  createdAt TimestamptzString @default(now())
+
+  @@index([userId])
+  @@rls
+  @@map("reminder_sent")
 }
