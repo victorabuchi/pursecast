@@ -31,6 +31,15 @@ export function bankSetupProblem(): string | null {
   return id ? 'The private key is missing: add a Secret File named enablebanking.pem, or ENABLE_BANKING_PRIVATE_KEY.' : 'ENABLE_BANKING_APP_ID is missing.';
 }
 
+export class BankError extends Error {
+  constructor(
+    message: string,
+    readonly status: number,
+  ) {
+    super(message);
+  }
+}
+
 let token: { jwt: string; until: number } | null = null;
 function jwt(): string {
   const now = Math.floor(Date.now() / 1000);
@@ -41,19 +50,16 @@ function jwt(): string {
   const b64 = (o: object) => Buffer.from(JSON.stringify(o)).toString('base64url');
   const head = b64({ typ: 'JWT', alg: 'RS256', kid: app });
   const body = b64({ iss: 'enablebanking.com', aud: 'api.enablebanking.com', iat: now, exp: now + 3600 });
-  const sig = createSign('RSA-SHA256').update(`${head}.${body}`).sign(key, 'base64url');
+  let sig: string;
+  try {
+    sig = createSign('RSA-SHA256').update(`${head}.${body}`).sign(key, 'base64url');
+  } catch {
+    throw new BankError('The private key on the server cannot be read. Paste the whole key again, from BEGIN to END.', 500);
+  }
   token = { jwt: `${head}.${body}.${sig}`, until: now + 3600 };
   return token.jwt;
 }
 
-export class BankError extends Error {
-  constructor(
-    message: string,
-    readonly status: number,
-  ) {
-    super(message);
-  }
-}
 
 async function call<T>(method: 'GET' | 'POST' | 'DELETE', path: string, body?: object): Promise<T> {
   const res = await fetch(API + path, {

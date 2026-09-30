@@ -33,6 +33,7 @@ const COUNTRIES: Array<[string, string]> = [
 export default function BankPicker({ country: initial }: { country: string }) {
   const [country, setCountry] = useState(initial);
   const [banks, setBanks] = useState<Bank[] | null>(null);
+  const [error, setError] = useState('');
   const [q, setQ] = useState('');
   const [picked, setPicked] = useState<Bank | null>(null);
   const [loading, start] = useTransition();
@@ -40,9 +41,10 @@ export default function BankPicker({ country: initial }: { country: string }) {
   useEffect(() => {
     let live = true;
     start(async () => {
-      const list = await banksAction(country);
+      const res = await banksAction(country);
       if (live) {
-        setBanks(list);
+        setBanks(res.banks);
+        setError(res.error ?? '');
         setPicked(null);
       }
     });
@@ -66,7 +68,9 @@ export default function BankPicker({ country: initial }: { country: string }) {
         <input className={styles.input} value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search for your bank" aria-label="Search banks" />
       </div>
       <div className={styles.bankGrid} aria-busy={loading}>
-        {banks === null || loading ? (
+        {error ? (
+          <p className={styles.neg}>The bank list could not load: {error}</p>
+        ) : banks === null || loading ? (
           <p className={styles.note}>Loading banks…</p>
         ) : shown.length === 0 ? (
           <p className={styles.note}>No bank by that name here.</p>

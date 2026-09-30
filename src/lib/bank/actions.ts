@@ -23,10 +23,15 @@ async function callbackUrl(): Promise<string> {
   return `${proto}://${host}/api/bank/callback`;
 }
 
-export async function banksAction(country: string): Promise<Array<{ name: string; country: string; logo: string; beta: boolean }>> {
+export async function banksAction(country: string): Promise<{ banks: Array<{ name: string; country: string; logo: string; beta: boolean }>; error?: string }> {
   await getMe();
-  if (!bankReady() || !/^[A-Z]{2}$/.test(country)) return [];
-  return (await banksIn(country)).map((a) => ({ name: a.name, country: a.country, logo: a.logo, beta: Boolean(a.beta) }));
+  if (!bankReady() || !/^[A-Z]{2}$/.test(country)) return { banks: [] };
+  try {
+    return { banks: (await banksIn(country)).map((a) => ({ name: a.name, country: a.country, logo: a.logo, beta: Boolean(a.beta) })) };
+  } catch (e) {
+    console.error('Bank list failed', e);
+    return { banks: [], error: e instanceof Error ? e.message : 'The bank list could not load.' };
+  }
 }
 
 export async function connectBankAction(formData: FormData) {
