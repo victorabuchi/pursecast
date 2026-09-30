@@ -10,7 +10,7 @@ import { db } from '../../../prisma/db';
 import { getMe } from '../../../lib/money/load';
 import { ago, short, todayIn } from '../../../lib/money/dates';
 import { exact } from '../../../lib/money/format';
-import { application, bankReady } from '../../../lib/bank/enable';
+import { application, bankReady, bankSetupProblem } from '../../../lib/bank/enable';
 import { disconnectBankAction, syncBankAction } from '../../../lib/bank/actions';
 
 export const metadata: Metadata = { title: 'Banks', robots: { index: false } };
@@ -62,7 +62,7 @@ export default async function BanksPage({ searchParams }: PageProps<'/banks'>) {
       {!ready && (
         <div className={styles.card}>
           <strong className={styles.cardTitle}>Bank connections are not set up yet</strong>
-          <p className={styles.note}>The server needs ENABLE_BANKING_APP_ID and the private key. Until then, upload statements or exports on the Statements page.</p>
+          <p className={styles.note}>{bankSetupProblem()} Until then, upload statements or exports on the Statements page.</p>
         </div>
       )}
 

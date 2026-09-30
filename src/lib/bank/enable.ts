@@ -22,6 +22,15 @@ function privateKey(): string | null {
 
 export const bankReady = () => Boolean(process.env['ENABLE_BANKING_APP_ID'] && privateKey());
 
+// What is missing on the server, for the Banks page.
+export function bankSetupProblem(): string | null {
+  const id = Boolean(process.env['ENABLE_BANKING_APP_ID']);
+  const key = Boolean(privateKey());
+  if (id && key) return null;
+  if (!id && !key) return 'Both ENABLE_BANKING_APP_ID and the private key are missing.';
+  return id ? 'The private key is missing: add a Secret File named enablebanking.pem, or ENABLE_BANKING_PRIVATE_KEY.' : 'ENABLE_BANKING_APP_ID is missing.';
+}
+
 let token: { jwt: string; until: number } | null = null;
 function jwt(): string {
   const now = Math.floor(Date.now() / 1000);
