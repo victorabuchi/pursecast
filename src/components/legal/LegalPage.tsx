@@ -2,7 +2,7 @@ import Link from 'next/link';
 import styles from './legal.module.css';
 import Mark from '../Mark';
 
-export const CONTACT = 'hello@pursecast.com';
+export const CONTACT = 'contact@victorabuchi.com';
 
 // The frame for the privacy notice and the terms.
 export default function LegalPage({ title, updated, children }: { title: string; updated: string; children: React.ReactNode }) {
