@@ -97,6 +97,17 @@ export default async function StatementsPage({ searchParams }: PageProps<'/state
         }
       />
 
+      <Link href="/banks" className={styles.bankPromo}>
+        <span className={styles.pageIcon} style={{ width: 40, height: 40 }}>
+          <I d="bank" size={19} />
+        </span>
+        <span>
+          <b>Connect your bank instead</b>
+          <small>S-Pankki, OP, Nordea, Revolut and most European banks. New transactions arrive by themselves.</small>
+        </span>
+        <I d="right" size={18} />
+      </Link>
+
       {!aiReady() && (
         <p className={styles.note}>
           Screenshots and PDFs need an Anthropic API key (ANTHROPIC_API_KEY) on the server. Excel and CSV exports from your bank work already.

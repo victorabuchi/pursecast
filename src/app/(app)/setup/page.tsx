@@ -126,7 +126,12 @@ export default async function SetupPage() {
       </nav>
       <section id="balance" className={styles.card}>
         <strong className={styles.cardTitle}>1. Money in your account today</strong>
-        <p className={styles.note}>{editing ? 'Your balance now, with everything logged so far. Change it only if your bank shows something else.' : 'Your main account, the one bills are paid from. No bank login needed.'}</p>
+        <p className={styles.note}>
+          {editing ? 'Your balance now, with everything logged so far. Change it only if your bank shows something else.' : 'Your main account, the one bills are paid from. No bank login needed.'}{' '}
+          <a href="/banks?add=1" className={styles.linkBtn}>
+            Or connect your bank
+          </a>
+        </p>
         <div className={styles.row}>
           <SignToggle name="balanceSign" value={balance < 0 ? '-' : '+'} label="Positive or overdrawn" />
           <MoneyInput name="balance" currency={cur} required autoFocus={!editing} placeholder="2,340" label="Balance today" value={editing ? balance : null} />

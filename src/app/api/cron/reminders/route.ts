@@ -5,6 +5,8 @@ import { weeklyDigest } from '../../../../lib/money/reminders';
 import { addDays } from '../../../../lib/money/dates';
 import { pushReady, pushTo } from '../../../../lib/push';
 import { emailConfigured, sendEmail } from '../../../../lib/email';
+import { bankReady } from '../../../../lib/bank/enable';
+import { syncLink } from '../../../../lib/bank/sync';
 
 export const maxDuration = 300;
 
@@ -27,6 +29,18 @@ export async function GET(request: Request) {
   const email = emailConfigured();
   let pushed = 0;
   let emailed = 0;
+
+  // Banks: new balances and transactions every 6 hours or so (banks allow
+  // about four reads a day without the person present).
+  let banksSynced = 0;
+  if (bankReady()) {
+    const since = new Date(Date.now() - 6 * 3_600_000).toISOString();
+    const due = (await db.orm.public.BankLink.where({ status: 'active' }).all()).filter((l) => !l.lastSyncAt || l.lastSyncAt < since);
+    for (const l of due) {
+      const res = await syncLink(l.userId, l.id).catch((e) => ({ added: 0, error: String(e) }));
+      if (!res.error) banksSynced++;
+    }
+  }
 
   for (const u of users) {
     const wantsPush = withPush.has(u.id);
@@ -62,5 +76,5 @@ export async function GET(request: Request) {
   }
   // Keys older than 45 days can go.
   await db.orm.public.ReminderSent.where((r) => r.createdAt.lt(new Date(Date.now() - 45 * 86_400_000).toISOString())).deleteAll();
-  return Response.json({ users: users.length, pushed, emailed });
+  return Response.json({ users: users.length, pushed, emailed, banksSynced });
 }

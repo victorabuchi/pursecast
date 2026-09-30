@@ -48,6 +48,11 @@ services:
       - key: APP_URL
         value: https://pursecast.onrender.com
 
+      # Bank connections (Enable Banking). Add the private key as a Secret File
+      # named enablebanking.pem (Environment > Secret Files).
+      - key: ENABLE_BANKING_APP_ID
+        sync: false
+
   # Every hour: push reminders (from 8:00 in each person's time zone) and the
   # Monday email. Set CRON_SECRET to the same value as on the web service.
   - type: cron

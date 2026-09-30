@@ -20,6 +20,14 @@
       "model": "AuthIdentity",
       "namespace": "public"
     },
+    "bank_account": {
+      "model": "BankAccount",
+      "namespace": "public"
+    },
+    "bank_link": {
+      "model": "BankLink",
+      "namespace": "public"
+    },
     "budget_move": {
       "model": "BudgetMove",
       "namespace": "public"
@@ -399,6 +407,343 @@
               },
               "namespaceId": "public",
               "table": "auth_identity"
+            }
+          },
+          "BankAccount": {
+            "fields": {
+              "accountId": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/uuid@1",
+                  "kind": "scalar"
+                }
+              },
+              "balance": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "balanceAt": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              },
+              "createdAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              },
+              "currency": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "iban": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "id": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/uuid@1",
+                  "kind": "scalar"
+                }
+              },
+              "linkId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/uuid@1",
+                  "kind": "scalar"
+                }
+              },
+              "name": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "role": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "statementId": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/uuid@1",
+                  "kind": "scalar"
+                }
+              },
+              "uid": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "userId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/uuid@1",
+                  "kind": "scalar"
+                }
+              }
+            },
+            "relations": {
+              "link": {
+                "cardinality": "N:1",
+                "nullable": false,
+                "on": {
+                  "localFields": [
+                    "linkId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
+                },
+                "to": {
+                  "model": "BankLink",
+                  "namespace": "public"
+                }
+              },
+              "user": {
+                "cardinality": "N:1",
+                "nullable": false,
+                "on": {
+                  "localFields": [
+                    "userId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
+                },
+                "to": {
+                  "model": "User",
+                  "namespace": "public"
+                }
+              }
+            },
+            "storage": {
+              "fields": {
+                "accountId": {
+                  "column": "accountId"
+                },
+                "balance": {
+                  "column": "balance"
+                },
+                "balanceAt": {
+                  "column": "balanceAt"
+                },
+                "createdAt": {
+                  "column": "createdAt"
+                },
+                "currency": {
+                  "column": "currency"
+                },
+                "iban": {
+                  "column": "iban"
+                },
+                "id": {
+                  "column": "id"
+                },
+                "linkId": {
+                  "column": "linkId"
+                },
+                "name": {
+                  "column": "name"
+                },
+                "role": {
+                  "column": "role"
+                },
+                "statementId": {
+                  "column": "statementId"
+                },
+                "uid": {
+                  "column": "uid"
+                },
+                "userId": {
+                  "column": "userId"
+                }
+              },
+              "namespaceId": "public",
+              "table": "bank_account"
+            }
+          },
+          "BankLink": {
+            "fields": {
+              "aspspCountry": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "aspspName": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "createdAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              },
+              "error": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "id": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/uuid@1",
+                  "kind": "scalar"
+                }
+              },
+              "lastSyncAt": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              },
+              "logo": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "sessionId": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "state": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "status": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "userId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/uuid@1",
+                  "kind": "scalar"
+                }
+              },
+              "validUntil": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              }
+            },
+            "relations": {
+              "accounts": {
+                "cardinality": "1:N",
+                "on": {
+                  "localFields": [
+                    "id"
+                  ],
+                  "targetFields": [
+                    "linkId"
+                  ]
+                },
+                "to": {
+                  "model": "BankAccount",
+                  "namespace": "public"
+                }
+              },
+              "user": {
+                "cardinality": "N:1",
+                "nullable": false,
+                "on": {
+                  "localFields": [
+                    "userId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
+                },
+                "to": {
+                  "model": "User",
+                  "namespace": "public"
+                }
+              }
+            },
+            "storage": {
+              "fields": {
+                "aspspCountry": {
+                  "column": "aspspCountry"
+                },
+                "aspspName": {
+                  "column": "aspspName"
+                },
+                "createdAt": {
+                  "column": "createdAt"
+                },
+                "error": {
+                  "column": "error"
+                },
+                "id": {
+                  "column": "id"
+                },
+                "lastSyncAt": {
+                  "column": "lastSyncAt"
+                },
+                "logo": {
+                  "column": "logo"
+                },
+                "sessionId": {
+                  "column": "sessionId"
+                },
+                "state": {
+                  "column": "state"
+                },
+                "status": {
+                  "column": "status"
+                },
+                "userId": {
+                  "column": "userId"
+                },
+                "validUntil": {
+                  "column": "validUntil"
+                }
+              },
+              "namespaceId": "public",
+              "table": "bank_link"
             }
           },
           "BudgetMove": {
@@ -2678,6 +3023,36 @@
                   "namespace": "public"
                 }
               },
+              "bankAccounts": {
+                "cardinality": "1:N",
+                "on": {
+                  "localFields": [
+                    "id"
+                  ],
+                  "targetFields": [
+                    "userId"
+                  ]
+                },
+                "to": {
+                  "model": "BankAccount",
+                  "namespace": "public"
+                }
+              },
+              "bankLinks": {
+                "cardinality": "1:N",
+                "on": {
+                  "localFields": [
+                    "id"
+                  ],
+                  "targetFields": [
+                    "userId"
+                  ]
+                },
+                "to": {
+                  "model": "BankLink",
+                  "namespace": "public"
+                }
+              },
               "budgetMoves": {
                 "cardinality": "1:N",
                 "on": {
@@ -3148,6 +3523,16 @@
               "kind": "rls",
               "namespaceId": "public",
               "tableName": "auth_identity"
+            },
+            "bank_account": {
+              "kind": "rls",
+              "namespaceId": "public",
+              "tableName": "bank_account"
+            },
+            "bank_link": {
+              "kind": "rls",
+              "namespaceId": "public",
+              "tableName": "bank_link"
             },
             "budget_move": {
               "kind": "rls",
@@ -3637,6 +4022,250 @@
                   ]
                 }
               ]
+            },
+            "bank_account": {
+              "columns": {
+                "accountId": {
+                  "codecId": "pg/uuid@1",
+                  "nativeType": "uuid",
+                  "nullable": true
+                },
+                "balance": {
+                  "codecId": "pg/int4@1",
+                  "nativeType": "int4",
+                  "nullable": true
+                },
+                "balanceAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "nativeType": "timestamptz",
+                  "nullable": true
+                },
+                "createdAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "default": {
+                    "expression": "now()",
+                    "kind": "function"
+                  },
+                  "nativeType": "timestamptz",
+                  "nullable": false
+                },
+                "currency": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "iban": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
+                "id": {
+                  "codecId": "pg/uuid@1",
+                  "nativeType": "uuid",
+                  "nullable": false
+                },
+                "linkId": {
+                  "codecId": "pg/uuid@1",
+                  "nativeType": "uuid",
+                  "nullable": false
+                },
+                "name": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "role": {
+                  "codecId": "pg/text@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": "other"
+                  },
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "statementId": {
+                  "codecId": "pg/uuid@1",
+                  "nativeType": "uuid",
+                  "nullable": true
+                },
+                "uid": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "userId": {
+                  "codecId": "pg/uuid@1",
+                  "nativeType": "uuid",
+                  "nullable": false
+                }
+              },
+              "foreignKeys": [
+                {
+                  "onDelete": "cascade",
+                  "source": {
+                    "columns": [
+                      "userId"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "bank_account"
+                  },
+                  "target": {
+                    "columns": [
+                      "id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "app_user"
+                  }
+                },
+                {
+                  "onDelete": "cascade",
+                  "source": {
+                    "columns": [
+                      "linkId"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "bank_account"
+                  },
+                  "target": {
+                    "columns": [
+                      "id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "bank_link"
+                  }
+                }
+              ],
+              "indexes": [
+                {
+                  "columns": [
+                    "linkId"
+                  ],
+                  "name": "bank_account_linkId_idx_09c902f6",
+                  "prefix": "bank_account_linkId_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "userId"
+                  ],
+                  "name": "bank_account_userId_idx_a489d58a",
+                  "prefix": "bank_account_userId_idx",
+                  "unique": false
+                }
+              ],
+              "primaryKey": {
+                "columns": [
+                  "id"
+                ]
+              },
+              "uniques": []
+            },
+            "bank_link": {
+              "columns": {
+                "aspspCountry": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "aspspName": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "createdAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "default": {
+                    "expression": "now()",
+                    "kind": "function"
+                  },
+                  "nativeType": "timestamptz",
+                  "nullable": false
+                },
+                "error": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
+                "id": {
+                  "codecId": "pg/uuid@1",
+                  "nativeType": "uuid",
+                  "nullable": false
+                },
+                "lastSyncAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "nativeType": "timestamptz",
+                  "nullable": true
+                },
+                "logo": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
+                "sessionId": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
+                "state": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "status": {
+                  "codecId": "pg/text@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": "pending"
+                  },
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "userId": {
+                  "codecId": "pg/uuid@1",
+                  "nativeType": "uuid",
+                  "nullable": false
+                },
+                "validUntil": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                }
+              },
+              "foreignKeys": [
+                {
+                  "onDelete": "cascade",
+                  "source": {
+                    "columns": [
+                      "userId"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "bank_link"
+                  },
+                  "target": {
+                    "columns": [
+                      "id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "app_user"
+                  }
+                }
+              ],
+              "indexes": [
+                {
+                  "columns": [
+                    "userId"
+                  ],
+                  "name": "bank_link_userId_idx_a489d58a",
+                  "prefix": "bank_link_userId_idx",
+                  "unique": false
+                }
+              ],
+              "primaryKey": {
+                "columns": [
+                  "id"
+                ]
+              },
+              "uniques": []
             },
             "budget_move": {
               "columns": {
@@ -5468,10 +6097,10 @@
         "kind": "postgres-schema"
       }
     },
-    "storageHash": "78ceb85bd9ffb5e65603db3520ee63f97aaf7635d96fc55ec811ff526619547b"
+    "storageHash": "a2a68aa60601c5dd3a084f88a05a7cec2ff2b35d99ae09ed024be7eb424e2266"
   },
   "execution": {
-    "executionHash": "485386cc7e13c3a64eeab4a0ab5103512692f44c7c67737aa433a56807605e00",
+    "executionHash": "ae73c0a452ebd8684a4e5d62c76ccdfebb8a53efdc5ed17c0459b6cac4c9cd31",
     "mutations": {
       "defaults": [
         {
@@ -5516,6 +6145,28 @@
             "column": "id",
             "namespace": "public",
             "table": "auth_identity"
+          }
+        },
+        {
+          "onCreate": {
+            "id": "uuidv4",
+            "kind": "generator"
+          },
+          "ref": {
+            "column": "id",
+            "namespace": "public",
+            "table": "bank_account"
+          }
+        },
+        {
+          "onCreate": {
+            "id": "uuidv4",
+            "kind": "generator"
+          },
+          "ref": {
+            "column": "id",
+            "namespace": "public",
+            "table": "bank_link"
           }
         },
         {

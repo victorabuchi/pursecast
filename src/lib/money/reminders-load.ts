@@ -5,10 +5,11 @@ import { buildReminders, type Reminder } from './reminders';
 // Reminders for one person. The storm needs the forecast, so callers that
 // have one pass its low point.
 export async function remindersFor(me: Me, low?: { date: string; amount: number } | null): Promise<Reminder[]> {
-  const [todos, bills, debts] = await Promise.all([
+  const [todos, bills, debts, banks] = await Promise.all([
     db.orm.public.Todo.where({ userId: me.id }).where((t) => t.doneAt.isNull()).all(),
     getRecurring(me.id),
     getDebts(me.id),
+    db.orm.public.BankLink.where({ userId: me.id, status: 'active' }).select('id', 'aspspName', 'validUntil').all(),
   ]);
   return buildReminders({
     today: me.today,
@@ -18,5 +19,6 @@ export async function remindersFor(me: Me, low?: { date: string; amount: number 
     bills: bills.map((b) => ({ id: b.id, name: b.name, amount: b.amount, nextDate: b.nextDate, paused: b.paused, variable: b.variable })),
     debts: debts.filter((d) => !d.settledAt).map((d) => ({ id: d.id, person: d.person, direction: d.direction, left: d.left, dueDate: d.dueDate })),
     low,
+    banks: banks.map((b) => ({ id: b.id, name: b.aspspName, validUntil: b.validUntil })),
   });
 }

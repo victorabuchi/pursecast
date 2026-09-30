@@ -343,6 +343,8 @@ export default function Landing() {
               <Link href="/signup">Start free</Link>
               <Link href="/login">Log in</Link>
               <a href={`mailto:${CONTACT}`}>Contact</a>
+              <Link href="/privacy">Privacy</Link>
+              <Link href="/terms">Terms</Link>
             </div>
           </div>
           <div className={styles.footerBottom}>

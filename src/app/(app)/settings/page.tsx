@@ -92,6 +92,13 @@ export default async function SettingsPage() {
             <ThemePicker />
           </div>
           <div className={styles.card}>
+            <strong className={styles.cardTitle}>Connected banks</strong>
+            <p className={styles.note}>Your balance and transactions, updated by themselves. Read-only.</p>
+            <a href="/banks" className={styles.btnGhost}>
+              Manage banks
+            </a>
+          </div>
+          <div className={styles.card}>
             <strong className={styles.cardTitle}>Your setup</strong>
             <p className={styles.note}>Balance, pay, rent, bills, subscriptions, money you owe and budgets, all on one page.</p>
             <a href="/setup" className={styles.btnGhost}>

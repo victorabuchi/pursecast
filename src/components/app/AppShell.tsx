@@ -15,7 +15,7 @@ import { exact } from '../../lib/money/format';
 import type { Reminder } from '../../lib/money/reminders';
 import { ago, possessive } from '../../lib/money/dates';
 
-const REMINDER_ICON = { todo: 'check', bill: 'repeat', debt: 'user', storm: 'storm', pay: 'wallet' } as const;
+const REMINDER_ICON = { todo: 'check', bill: 'repeat', debt: 'user', storm: 'storm', pay: 'wallet', bank: 'bank' } as const;
 
 export type BellItem = { id: string; note: string; amount: number; date: string; category: string | null };
 

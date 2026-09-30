@@ -47,6 +47,8 @@ model User {
   aiUsage      AiUsage[]
   pushSubs     PushSub[]
   accounts     Account[]
+  bankLinks    BankLink[]
+  bankAccounts BankAccount[]
   remindersSent ReminderSent[]
   statementTxns StatementTxn[]
 
@@ -471,4 +473,55 @@ model Account {
   @@index([userId])
   @@rls
   @@map("account")
+}
+
+// A connection to a bank through Enable Banking (open banking). The person
+// approves it in their bank; it lasts until validUntil, then needs renewing.
+model BankLink {
+  id           Uuid               @id @default(uuid())
+  user         User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId       Uuid
+  aspspName    String
+  aspspCountry String
+  logo         String?
+  // Random value that ties the bank's redirect back to this link.
+  state        String
+  sessionId    String?
+  // pending (sent to the bank), active, expired, error
+  status       String             @default("pending")
+  validUntil   String?
+  lastSyncAt   TimestamptzString?
+  error        String?
+  createdAt    TimestamptzString  @default(now())
+  accounts     BankAccount[]
+
+  @@index([userId])
+  @@rls
+  @@map("bank_link")
+}
+
+// An account at a linked bank. role: main (sets the balance Money Weather
+// starts from), counted or other (an Account row next to the main one), or
+// off. Transactions go to a Statement of its own.
+model BankAccount {
+  id          Uuid               @id @default(uuid())
+  user        User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId      Uuid
+  link        BankLink           @relation(fields: [linkId], references: [id], onDelete: Cascade)
+  linkId      Uuid
+  uid         String
+  name        String
+  iban        String?
+  currency    String
+  balance     Int?
+  balanceAt   TimestamptzString?
+  role        String             @default("other")
+  accountId   Uuid?
+  statementId Uuid?
+  createdAt   TimestamptzString  @default(now())
+
+  @@index([userId])
+  @@index([linkId])
+  @@rls
+  @@map("bank_account")
 }

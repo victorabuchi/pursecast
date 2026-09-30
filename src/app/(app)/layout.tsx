@@ -53,6 +53,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     { group: 'Go to', label: 'When money lands', hint: 'To-do list for payday', href: '/plan#todo' },
     { group: 'Go to', label: 'Budgets', href: '/spending?tab=budgets' },
     { group: 'Go to', label: 'Settings', href: '/settings' },
+    { group: 'Go to', label: 'Banks', hint: 'Connect your bank', href: '/banks' },
     { group: 'Go to', label: 'Edit setup', hint: 'Balance, pay, bills, subscriptions, budgets', href: '/setup' },
     { group: 'Do', label: 'Log an expense', hint: 'Like "12.50 lunch"', href: '/spending?add=1' },
     { group: 'Do', label: 'New fork', hint: 'Try a decision before you make it', href: '/forks?new=1' },
@@ -64,6 +65,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     { group: 'Do', label: 'Add money owed', hint: 'Lent or borrowed', href: '/spending?tab=owed&new=1' },
     { group: 'Do', label: 'Write a note to future me', href: '/worth-it?note=1' },
     { group: 'Do', label: 'Update my balance', href: '/forecast?balance=1' },
+    { group: 'Do', label: 'Connect my bank', hint: 'Balance and transactions by themselves', href: '/banks?add=1' },
     ...recent.slice(0, 80).map((e) => ({
       group: 'Spending',
       label: e.note,
