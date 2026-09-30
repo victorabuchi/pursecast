@@ -16,7 +16,8 @@ import { DraftJanitor, FormDraft } from '../../../components/app/FormDraft';
 import AdvanceRows from '../../../components/app/AdvanceRows';
 import { DRAFT_PREFIX } from '../../../lib/drafts';
 import { POPULAR_BILLS, POPULAR_SUBSCRIPTIONS } from '../../../lib/money/presets';
-import { getAdvances, getBalance, getCategories, getDebts, getMe, getRecurring, type RecurringRow } from '../../../lib/money/load';
+import { getAccounts, getAdvances, getBalance, getCategories, getDebts, getMe, getRecurring, type RecurringRow } from '../../../lib/money/load';
+import AccountRows from '../../../components/app/AccountRows';
 import { addMonths, monthStart, short } from '../../../lib/money/dates';
 import { DEFAULT_CATEGORIES } from '../../../lib/money/categories';
 import { completeSetupAction } from '../../../lib/money/actions';
@@ -67,7 +68,8 @@ export default async function SetupPage() {
   const cur = me.currency;
   const flex = DEFAULT_CATEGORIES.filter((c) => c.kind === 'flex');
 
-  const [[cats, recurring, debts, balance, advances], rates] = await Promise.all([editing ? Promise.all([getCategories(me.id), getRecurring(me.id), getDebts(me.id), getBalance(me), getAdvances(me.id)]) : Promise.resolve([[], [], [], 0, []] as const), getRates()]);
+  const [[cats, recurring, debts, balance, advances, accounts], rates] = await Promise.all([editing ? Promise.all([getCategories(me.id), getRecurring(me.id), getDebts(me.id), getBalance(me), getAdvances(me.id), getAccounts(me.id)]) : Promise.resolve([[], [], [], 0, [], []] as const), getRates()]);
+  const accountRows = accounts.map((a, key) => ({ key, id: a.id, name: a.name, kind: a.kind, amount: String(a.balance / 100), cur: a.currency === cur ? undefined : a.currency, count: a.inForecast }));
   const catName = new Map(cats.map((c) => [c.id, c.name]));
   const salary = recurring.find((r) => r.amount > 0 && !r.paused);
   const rent = recurring.find((r) => r.amount < 0 && !r.paused && catName.get(r.categoryId ?? '') === 'Housing');
@@ -95,7 +97,7 @@ export default async function SetupPage() {
   // the page loses nothing. When editing, the draft belongs to the data as it
   // was; if that changed since (a bill added elsewhere), the old draft is
   // left unused rather than undoing the change.
-  const version = editing ? fingerprint([balance, cur, salary, rent, others, open, advances, budgetInitial, cats.map((c) => c.budget)]) : 'new';
+  const version = editing ? fingerprint([balance, cur, salary, rent, others, open, advances, accounts, budgetInitial, cats.map((c) => c.budget)]) : 'new';
   const draft = `${DRAFT_PREFIX}${me.id}:${version}:`;
   const k = (name: string) => `${draft}${name}`;
 
@@ -109,6 +111,7 @@ export default async function SetupPage() {
           <input type="hidden" name="shownRecurring" value={[salary, rent, ...others].filter(Boolean).map((r) => r!.id).join(',')} />
           <input type="hidden" name="shownDebts" value={open.map((d) => d.id).join(',')} />
           <input type="hidden" name="shownAdvances" value={advances.map((a) => a.id).join(',')} />
+          <input type="hidden" name="shownAccounts" value={accounts.map((a) => a.id).join(',')} />
           {salary && <input type="hidden" name="salaryId" value={salary.id} />}
           {rent && <input type="hidden" name="rentId" value={rent.id} />}
           {rent && <input type="hidden" name="rentName" value={rent.name} />}
@@ -135,6 +138,7 @@ export default async function SetupPage() {
             ))}
           </select>
         </div>
+        <AccountRows currency={cur} rates={rates} draftKey={k('accounts')} initialRows={accountRows} />
         <OwedRows currency={cur} today={me.today} draftKey={k('owed')} initialRows={owedRows} />
         <OwedRows currency={cur} today={me.today} draftKey={k('lent')} initialRows={lentRows} lent />
       </section>

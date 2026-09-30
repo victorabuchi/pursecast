@@ -46,6 +46,7 @@ model User {
   todos        Todo[]
   aiUsage      AiUsage[]
   pushSubs     PushSub[]
+  accounts     Account[]
   remindersSent ReminderSent[]
   statementTxns StatementTxn[]
 
@@ -449,4 +450,25 @@ model ReminderSent {
   @@index([userId])
   @@rls
   @@map("reminder_sent")
+}
+
+// Accounts next to the main one (User.balance): savings, a card in another
+// currency, cash. balance is in the account's own currency. Ones that count
+// add to the balance Money Weather starts from.
+model Account {
+  id         Uuid              @id @default(uuid())
+  user       User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId     Uuid
+  name       String
+  kind       String            @default("savings")
+  currency   String
+  balance    Int               @default(0)
+  inForecast Boolean           @default(false)
+  position   Int               @default(0)
+  updatedAt  TimestamptzString @default(now())
+  createdAt  TimestamptzString @default(now())
+
+  @@index([userId])
+  @@rls
+  @@map("account")
 }

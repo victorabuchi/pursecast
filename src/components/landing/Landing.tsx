@@ -24,7 +24,7 @@ const FEATURES: Array<{ icon: string; color: string; title: string; desc: string
   { icon: 'calc', color: '#64748b', title: 'Calculator and notes', desc: 'A calculator and a note pad float over every page. Drag them anywhere; they follow your light or dark theme.' },
   { icon: 'wallet', color: '#10b981', title: 'When money lands', desc: 'A to-do list for payday: pay someone back, book the train, fill a jar. Must-dos first, and what it all costs next to your pay.' },
   { icon: 'bell', color: '#ef4444', title: 'Reminders that matter', desc: 'A nudge at 8 when pay lands, a subscription renews tomorrow, a debt is due or a storm is coming. On your phone, or a Monday email.' },
-  { icon: 'globe', color: '#0ea5e9', title: 'Priced in any currency', desc: 'Your Render plan is in dollars and your rent in euros? Pick the currency per bill. The forecast uses today’s rate.' },
+  { icon: 'globe', color: '#0ea5e9', title: 'Every account, any currency', desc: 'Savings, a dollar card, cash, and bills priced in dollars next to euro rent. Pick what counts; the forecast uses today’s rate.' },
   { icon: 'moon', color: '#475569', title: 'Light by day, dark at night', desc: 'Follows your phone, or turns dark from 7 pm. Install it on your home screen and it opens like an app.' },
   { icon: 'shield', color: '#c2255c', title: 'Private by design', desc: 'No bank login needed. Bills that change every month, like cloud hosting, are fine too. Export or delete your data any time.' },
 ];

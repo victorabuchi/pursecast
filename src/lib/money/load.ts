@@ -180,6 +180,12 @@ export async function postDueRecurring(userId: string, today: string): Promise<v
   }
 }
 
+export type AccountRow = { id: string; name: string; kind: string; currency: string; balance: number; inForecast: boolean; updatedAt: string; value: number };
+
+export const getAccounts = cache(async (userId: string) =>
+  db.orm.public.Account.where({ userId }).orderBy([(a) => a.position.asc(), (a) => a.createdAt.asc()]).select('id', 'name', 'kind', 'currency', 'balance', 'inForecast', 'updatedAt').all(),
+);
+
 export type AdvanceRow = { id: string; recurringId: string | null; amount: number; payday: string; takenOn: string; pending: boolean };
 
 // Every advance not yet taken off a pay, whichever pay (or none) it belongs to.
@@ -295,6 +301,10 @@ export type Money = {
   forecast: Forecast;
   rates: Rates;
   advances: AdvanceRow[];
+  // The main account alone, and the other accounts with their value in the
+  // main currency. balance above is main plus the ones that count.
+  mainBalance: number;
+  accounts: AccountRow[];
 };
 
 // The shared load for app pages: posts due bills, then builds the forecast.
@@ -306,7 +316,7 @@ export async function loadMoney(days = 91, historyDays = 460): Promise<Money> {
 export async function moneyFor(me: Me & { balance: number; balanceSetAt: string }, days = 91, historyDays = 460): Promise<Money> {
   await refreshForeignPrices(me.id, me.currency);
   await Promise.all([postDueAdvances(me.id, me.today), postDueRecurring(me.id, me.today)]);
-  const [cats, recurring, entries, events, cuts, balance, debts, rates, advances] = await Promise.all([
+  const [cats, recurring, entries, events, cuts, mainBalance, debts, rates, advances, accountRows] = await Promise.all([
     getCategories(me.id),
     getRecurring(me.id),
     getEntries(me.id, addDays(me.today, -historyDays)),
@@ -316,7 +326,10 @@ export async function moneyFor(me: Me & { balance: number; balanceSetAt: string 
     getDebts(me.id),
     getRates(),
     getAdvances(me.id),
+    getAccounts(me.id),
   ]);
+  const accounts = accountRows.map((a) => ({ ...a, value: convert(a.balance, a.currency, me.currency, rates) ?? 0 }));
+  const balance = mainBalance + accounts.filter((a) => a.inForecast).reduce((s, a) => s + a.value, 0);
   const month = monthOf(me.today);
   const budgets: FcBudget[] = cats
     .filter((c) => c.kind === 'flex')
@@ -330,5 +343,5 @@ export async function moneyFor(me: Me & { balance: number; balanceSetAt: string 
   const fcEvents: FcEvent[] = events.filter((e) => !e.hidden && e.cost > 0).map((e) => ({ id: e.id, name: e.name, date: e.date, cost: e.cost, saveMonthly: e.saveMonthly, saveFrom: e.saveFrom, source: e.source }));
   const fcDebts = debts.filter((d) => d.direction === 'borrowed' && d.left > 0 && d.dueDate).map((d) => ({ id: d.id, person: d.person, remaining: d.left, dueDate: d.dueDate! }));
   const forecast = buildForecast({ today: me.today, balance, cushion: me.cushion, recurring: forForecast(recurring, advances), budgets, events: fcEvents, debts: fcDebts, days });
-  return { me, cats, recurring, entries, events, debts, budgets, balance, forecast, rates, advances };
+  return { me, cats, recurring, entries, events, debts, budgets, balance, forecast, rates, advances, mainBalance, accounts };
 }

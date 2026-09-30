@@ -4,9 +4,10 @@ import { redirect } from 'next/navigation';
 import { db } from '../../prisma/db';
 import { getRates } from './fx';
 import { priced } from './price';
+import { isCurrency } from './currencies';
 import { backTo, cents, day, done, str } from './act';
 import { addMonths, monthOf, monthStart, short } from './dates';
-import { exact, money } from './format';
+import { exact, money, parseAmount } from './format';
 import { CADENCES, isCadence, rollForward, type Cadence } from './recurrence';
 import { guessCategory, isKind, parseQuick, recurringCategory } from './categories';
 import { buildForecast, spreadCut } from './forecast';
@@ -127,6 +128,31 @@ export async function completeSetupAction(formData: FormData) {
   if (goneDebts.length) writes.push(db.orm.public.Debt.where({ userId: me.id }).where((d) => d.id.in(goneDebts)).deleteAll());
 
   await Promise.all(writes);
+
+  // Other accounts: savings, cards, cash, each in its own currency.
+  const accountsBefore = editing ? await db.orm.public.Account.where({ userId: me.id }).all() : [];
+  const keptAccounts = new Set<string>();
+  const accountWrites: Array<PromiseLike<unknown>> = [];
+  for (let i = 0; i < 12; i++) {
+    const name = str(formData, `accName${i}`, 60);
+    if (!name) continue;
+    const billed = str(formData, `accAmount${i}Currency`, 3);
+    const accCurrency = isCurrency(billed) ? billed : currency;
+    const kind = ['savings', 'everyday', 'card', 'cash'].includes(str(formData, `accKind${i}`, 12)) ? str(formData, `accKind${i}`, 12) : 'savings';
+    const raw = str(formData, `accAmount${i}`, 40);
+    const value = parseAmount(raw) ?? 0;
+    const row = { name, kind, currency: accCurrency, balance: value, inForecast: Boolean(formData.get(`accCount${i}`)), position: i };
+    const was = accountsBefore.find((a) => a.id === str(formData, `accId${i}`, 40));
+    if (was) {
+      keptAccounts.add(was.id);
+      if (was.name !== row.name || was.kind !== row.kind || was.currency !== row.currency || was.balance !== row.balance || was.inForecast !== row.inForecast || was.position !== row.position) {
+        accountWrites.push(db.orm.public.Account.where({ id: was.id, userId: me.id }).update({ ...row, ...(was.balance !== row.balance ? { updatedAt: new Date().toISOString() } : {}) }));
+      }
+    } else accountWrites.push(db.orm.public.Account.create({ userId: me.id, ...row }));
+  }
+  const goneAccounts = ids('shownAccounts').filter((id) => !keptAccounts.has(id));
+  if (goneAccounts.length) accountWrites.push(db.orm.public.Account.where({ userId: me.id }).where((a) => a.id.in(goneAccounts)).deleteAll());
+  await Promise.all(accountWrites);
 
   // Salary advances, only when they changed. They come after the rest so a
   // new pay exists and the balance is set before money arriving today.

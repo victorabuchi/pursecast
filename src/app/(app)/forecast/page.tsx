@@ -11,7 +11,7 @@ import { VB, pct, smooth, type Pt } from '../../../components/app/chart';
 import { loadMoney } from '../../../lib/money/load';
 import { conditionOf, everyday, monthsOfForecast, nextIncomeAfter, suggestFix, sunnyUntil, weekFlows, weeksOf, worstWeek, type FcBudget, type Forecast, type Sky, type Week } from '../../../lib/money/forecast';
 import { countWord, diffDays, monthName, monthOf, range, short } from '../../../lib/money/dates';
-import { money } from '../../../lib/money/format';
+import { exact, money } from '../../../lib/money/format';
 import { fixStormAction, setBalanceAction, setCushionAction } from '../../../lib/money/actions';
 
 export const metadata: Metadata = { title: 'Money Weather', robots: { index: false } };
@@ -35,7 +35,7 @@ function list(names: string[]): string {
 export default async function ForecastPage({ searchParams }: PageProps<'/forecast'>) {
   const params = await searchParams;
   const view = RANGES.find((r) => r.id === params['range']) ?? RANGES[1]!;
-  const { me, forecast: fc, budgets, balance } = await loadMoney(view.days);
+  const { me, forecast: fc, budgets, balance, mainBalance, accounts } = await loadMoney(view.days);
   // Things waiting for a payday, shown on that pay in Coming up.
   const todos = await db.orm.public.Todo.where({ userId: me.id }).where((t) => t.doneAt.isNull()).where((t) => t.incomeId.isNotNull()).select('incomeId', 'due').all();
   const toDo = new Map<string, number>();
@@ -118,8 +118,20 @@ export default async function ForecastPage({ searchParams }: PageProps<'/forecas
         <div className={styles.stack}>
           <div className={`${styles.card} ${styles.today}`}>
             <div>
-              <small>Balance today</small>
+              <small>{accounts.some((a) => a.inForecast) ? 'Balance today, all counted accounts' : 'Balance today'}</small>
               <strong className={styles.bigNum}>{m(balance)}</strong>
+              {accounts.length > 0 && (
+                <span className={styles.accLine}>
+                  <span>Main {m(mainBalance)}</span>
+                  {accounts.map((a) => (
+                    <span key={a.id} data-off={!a.inForecast || undefined} title={a.inForecast ? 'Counted in the forecast' : 'Not counted in the forecast'}>
+                      {a.name} {exact(a.balance, a.currency)}
+                      {a.currency !== me.currency ? ` ≈ ${m(a.value)}` : ''}
+                      {a.inForecast ? '' : ' (not counted)'}
+                    </span>
+                  ))}
+                </span>
+              )}
               <small>
                 {fc.reserved > 0 && <>{m(fc.reserved)} set aside for plans · </>}
                 <Link href={q('balance=1')} scroll={false} className={styles.linkBtn}>
