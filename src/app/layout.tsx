@@ -21,7 +21,10 @@ export const viewport: Viewport = {
   ],
 };
 
-const THEME_SCRIPT = `try{var t=localStorage.getItem('pursecast:theme');if(t==='light'||t==='dark')document.documentElement.dataset.theme=t}catch(e){}`;
+// Light or dark as picked in Settings. Automatic follows the device, and is
+// dark from 7 pm to 7 am even on devices that stay light; checked again every
+// few minutes so it turns at 7 without a reload.
+const THEME_SCRIPT = `(function(){function a(){var t=null;try{t=localStorage.getItem('pursecast:theme')}catch(e){}var r=document.documentElement;if(t==='light'||t==='dark'){r.setAttribute('data-theme',t);return}var h=new Date().getHours();if(h>=19||h<7)r.setAttribute('data-theme','dark');else r.removeAttribute('data-theme')}a();setInterval(a,300000);window.__pursecastTheme=a})()`;
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (

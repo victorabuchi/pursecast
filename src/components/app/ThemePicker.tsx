@@ -31,9 +31,8 @@ function pick(t: Theme) {
     if (t === 'system') localStorage.removeItem(KEY);
     else localStorage.setItem(KEY, t);
   } catch {}
-  const root = document.documentElement;
-  if (t === 'system') root.removeAttribute('data-theme');
-  else root.setAttribute('data-theme', t);
+  // The same rule as the script in the root layout.
+  (window as unknown as { __pursecastTheme?: () => void }).__pursecastTheme?.();
   listeners.forEach((fn) => fn());
 }
 

@@ -77,7 +77,7 @@ export default async function SettingsPage() {
         <div className={styles.stack}>
           <div className={styles.card}>
             <strong className={styles.cardTitle}>Appearance</strong>
-            <p className={styles.note}>Automatic follows your phone or computer, light by day and dark at night if it switches.</p>
+            <p className={styles.note}>Automatic follows your phone or computer, and turns dark from 7 pm to 7 am.</p>
             <ThemePicker />
           </div>
           <div className={styles.card}>
