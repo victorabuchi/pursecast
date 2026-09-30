@@ -350,3 +350,12 @@ test('an advance with no pay to come off still comes in on its day', () => {
   assert.ok(day.flows.some((i) => i.amount === 50000 && i.kind === 'income'));
   assert.ok(!fc.days.some((d) => d.flows.some((i) => i.amount === 0)));
 });
+
+test('bank names for regular charges read like people say them', async () => {
+  const { tidyName } = await import('../src/lib/statements/analysis');
+  assert.equal(tidyName('NETFLIX.COM'), 'Netflix');
+  assert.equal(tidyName('SPOTIFY P1A2B3C4'), 'Spotify');
+  assert.equal(tidyName('www.render.com/billing'), 'Render');
+  assert.equal(tidyName('Sats Gym'), 'Sats Gym');
+  assert.equal(tidyName('PAYPAL *STEAM'), 'Paypal');
+});

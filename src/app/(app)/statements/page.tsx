@@ -9,10 +9,11 @@ import { db } from '../../../prisma/db';
 import { getMe } from '../../../lib/money/load';
 import { diffDays, monthName, short } from '../../../lib/money/dates';
 import { exact, money } from '../../../lib/money/format';
-import { story } from '../../../lib/statements/analysis';
+import { story, tidyName } from '../../../lib/statements/analysis';
 import { aiReady } from '../../../lib/statements/read';
 import { STATEMENT_CATEGORIES, type Txn } from '../../../lib/statements/types';
-import { deleteStatementAction, deleteTxnAction } from '../../../lib/statements/actions';
+import { deleteStatementAction, deleteTxnAction, trackChargeAction } from '../../../lib/statements/actions';
+import Submit from '../../../components/app/Submit';
 
 export const metadata: Metadata = { title: 'Statements', robots: { index: false } };
 
@@ -53,6 +54,8 @@ export default async function StatementsPage({ searchParams }: PageProps<'/state
   const txns: Array<Txn & { id: string }> = rows.map((t) => ({ id: t.id, date: t.date, description: t.description, place: t.place, amount: t.amount, category: t.category }));
   const monthLabel = (month: string) => `${monthName(month, true)} ${month.slice(0, 4)}`;
   const s = story(txns, m, monthLabel);
+  // Charges already set up as bills or subscriptions.
+  const tracked = new Set((await db.orm.public.Recurring.where({ userId: me.id }).select('name').all()).map((r) => r.name.toLowerCase()));
 
   // The list: search and category filter, newest first.
   const q = one('q').toLowerCase();
@@ -235,14 +238,26 @@ export default async function StatementsPage({ searchParams }: PageProps<'/state
               {s.recurring.map((r) => (
                 <div key={r.name} className={styles.bill}>
                   <span>
-                    <b>{r.name}</b>
+                    <b>{tidyName(r.name)}</b>
                     <small>
                       ~{m(r.typical)} a month · seen in {r.months} months · {m(r.yearly)} a year
                     </small>
                   </span>
-                  <Link href="/spending?tab=bills&new=1" className={styles.linkBtn} style={{ fontSize: 12.5 }}>
-                    Track it
-                  </Link>
+                  {tracked.has(tidyName(r.name).toLowerCase()) ? (
+                    <span className={styles.pos} style={{ fontSize: 12.5, fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                      <I d="check" size={13} stroke={2.6} /> Tracked
+                    </span>
+                  ) : (
+                    <form action={trackChargeAction}>
+                      <input type="hidden" name="name" value={tidyName(r.name)} />
+                      <input type="hidden" name="amount" value={(r.typical / 100).toFixed(2)} />
+                      <input type="hidden" name="last" value={r.last} />
+                      <input type="hidden" name="category" value={r.category} />
+                      <Submit className={`${styles.btnGhost} ${styles.btnSmall}`} pending="Adding…">
+                        <I d="plus" size={13} stroke={2.6} /> Add · {exact(r.typical, cur)} a month
+                      </Submit>
+                    </form>
+                  )}
                 </div>
               ))}
             </section>

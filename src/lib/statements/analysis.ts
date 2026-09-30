@@ -13,7 +13,7 @@ export type Story = {
   places: Array<{ name: string; out: number; count: number }>;
   sources: Array<{ name: string; in: number; count: number }>;
   biggest: Txn[];
-  recurring: Array<{ name: string; typical: number; months: number; yearly: number }>;
+  recurring: Array<{ name: string; typical: number; months: number; yearly: number; last: string; category: string }>;
   highlights: string[];
 };
 
@@ -68,12 +68,13 @@ export function story(all: Txn[], fmt: (cents: number) => string, monthName: (mo
       const typical = median(ts.map((t) => -t.amount));
       const similar = ts.filter((t) => Math.abs(-t.amount - typical) <= Math.max(200, typical * 0.15));
       const months = new Set(similar.map((t) => t.date.slice(0, 7))).size;
-      return { key, name: ts[0]!.place, typical, months, perMonth: ts.length / Math.max(1, months), yearly: typical * 12 };
+      const last = ts.reduce((d, t) => (t.date > d ? t.date : d), '');
+      return { key, name: ts[0]!.place, typical, months, perMonth: ts.length / Math.max(1, months), yearly: typical * 12, last, category: ts[0]!.category };
     })
     .filter((r) => r.months >= 3 && r.months >= monthKeys.length * 0.6 && r.perMonth <= 1.5)
     .sort((a, b) => b.yearly - a.yearly);
   const regular = new Set(recurringAll.map((r) => r.key));
-  const recurring = recurringAll.slice(0, 12).map(({ name, typical, months, yearly }) => ({ name, typical, months, yearly }));
+  const recurring = recurringAll.slice(0, 12).map(({ name, typical, months, yearly, last, category }) => ({ name, typical, months, yearly, last, category }));
 
   // One-off purchases, not the monthly charges above.
   const biggest = out
@@ -99,3 +100,17 @@ export function story(all: Txn[], fmt: (cents: number) => string, monthName: (mo
 // A transaction already imported from an earlier upload: same day, amount
 // and place. Two identical coffees in one upload are both kept.
 export const txnKey = (t: Pick<Txn, 'date' | 'amount' | 'place'>) => `${t.date}|${t.amount}|${t.place.toLowerCase().replace(/[^a-z0-9äöå]+/g, '')}`;
+
+// A bank's name for a charge as people say it: "NETFLIX.COM" → "Netflix",
+// "SPOTIFY P1A2B3C4" → "Spotify".
+export function tidyName(place: string): string {
+  let s = place
+    .replace(/\b(www\.)/i, '')
+    .replace(/\.(com|net|org|io|co|fi|de|eu|uk|se)\b.*$/i, '')
+    .replace(/\s+[A-Z0-9]*\d[A-Z0-9]{3,}$/i, '')
+    .replace(/[*#].*$/, '')
+    .trim();
+  if (s === s.toUpperCase()) s = s.toLowerCase().replace(/\b\p{L}/gu, (c) => c.toUpperCase());
+  s = s.charAt(0).toUpperCase() + s.slice(1);
+  return s || place;
+}
