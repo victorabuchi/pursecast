@@ -12,7 +12,10 @@ import { ClearSetupDraft } from './FormDraft';
 import { Rail, SetupButton, Tabs } from './Nav';
 import { signOutAction } from '../../lib/auth/actions';
 import { exact } from '../../lib/money/format';
+import type { Reminder } from '../../lib/money/reminders';
 import { ago, possessive } from '../../lib/money/dates';
+
+const REMINDER_ICON = { todo: 'check', bill: 'repeat', debt: 'user', storm: 'storm', pay: 'wallet' } as const;
 
 export type BellItem = { id: string; note: string; amount: number; date: string; category: string | null };
 
@@ -28,11 +31,13 @@ export default function AppShell({
   notepad,
   notepadAt,
   photo,
+  reminders,
   children,
 }: {
   notepad: string;
   notepadAt: string | null;
   photo: string | null;
+  reminders: Reminder[];
   name: string;
   email: string;
   currency: string;
@@ -53,16 +58,35 @@ export default function AppShell({
           <SetupButton />
           <Tools notepad={notepad} notepadAt={notepadAt} buttonClass={styles.iconBtn} />
           <Popover
-            label={bell.length ? `${bell.length} purchases to rate` : 'Notifications'}
-            className={`${styles.iconBtn} ${bell.length ? styles.bellRing : ''}`}
+            label={reminders.length || bell.length ? `${reminders.length + bell.length} notifications` : 'Notifications'}
+            className={`${styles.iconBtn} ${bell.length || reminders.length ? styles.bellRing : ''}`}
             wide
             button={
               <>
                 <I d="bell" />
-                {bell.length > 0 && <i className={styles.bellDot} />}
+                {(bell.length > 0 || reminders.length > 0) && <i className={styles.bellDot} />}
               </>
             }
           >
+            {reminders.length > 0 && (
+              <>
+                <div className={styles.popHead}>
+                  <b>Reminders</b>
+                  <small>For today and the next few days.</small>
+                </div>
+                {reminders.map((r) => (
+                  <Link key={r.key} href={r.href} className={`${styles.notifRow} ${styles.notifLink}`}>
+                    <span className={styles.notifIcon} data-kind={r.kind}>
+                      <I d={REMINDER_ICON[r.kind]} size={16} />
+                    </span>
+                    <div>
+                      <b>{r.title}</b>
+                      <small>{r.body}</small>
+                    </div>
+                  </Link>
+                ))}
+              </>
+            )}
             <div className={styles.popHead}>
               <b>Was it worth it?</b>
               <small>{bell.length ? 'Rate a purchase with one tap.' : 'Nothing to rate right now.'}</small>

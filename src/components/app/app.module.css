@@ -3093,3 +3093,40 @@
   --ink2: #cbd5e1;
   color-scheme: dark;
 }
+
+/* Reminders in the bell */
+.notifLink {
+  color: inherit;
+  text-decoration: none;
+  transition: background 0.15s;
+}
+
+.notifLink:hover {
+  background: var(--soft);
+}
+
+.notifLink small {
+  display: block;
+  color: var(--muted);
+}
+
+.notifIcon[data-kind='bill'] {
+  background: var(--soft);
+  color: var(--ink2);
+}
+
+.notifIcon[data-kind='debt'] {
+  background: var(--neg-bg2);
+  color: var(--neg);
+}
+
+.notifIcon[data-kind='storm'] {
+  background: var(--violet-bg);
+  color: #7c3aed;
+}
+
+.notifIcon[data-kind='pay'],
+.notifIcon[data-kind='todo'] {
+  background: var(--pos-bg);
+  color: var(--pos);
+}

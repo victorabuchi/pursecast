@@ -359,3 +359,29 @@ test('bank names for regular charges read like people say them', async () => {
   assert.equal(tidyName('Sats Gym'), 'Sats Gym');
   assert.equal(tidyName('PAYPAL *STEAM'), 'Paypal');
 });
+
+test('reminders: landed to-dos, tomorrow’s bills and pay, debts due soon, a storm', async () => {
+  const { buildReminders } = await import('../src/lib/money/reminders');
+  const r = buildReminders({
+    today: '2026-10-09',
+    currency: 'EUR',
+    cushion: 0,
+    todos: [
+      { text: 'Pay back Sam', incomeId: 'pay', due: '2026-10-09', doneAt: null, priority: 1 },
+      { text: 'Book the train', incomeId: 'pay', due: '2026-10-09', doneAt: null, priority: 2 },
+      { text: 'Done already', incomeId: 'pay', due: '2026-10-09', doneAt: '2026-10-09T08:00:00Z', priority: 2 },
+      { text: 'Later', incomeId: null, due: '2026-10-20', doneAt: null, priority: 2 },
+    ],
+    bills: [
+      { id: 'pay', name: 'Salary', amount: 290000, nextDate: '2026-11-09', paused: false, variable: false },
+      { id: 'nf', name: 'Netflix', amount: -1399, nextDate: '2026-10-10', paused: false, variable: false },
+      { id: 'gym', name: 'Gym', amount: -3900, nextDate: '2026-10-10', paused: true, variable: false },
+    ],
+    debts: [{ id: 'd', person: 'Mom', direction: 'borrowed', left: 30000, dueDate: '2026-10-11' }],
+    low: { date: '2026-10-20', amount: -20300 },
+  });
+  const titles = r.map((x) => x.title);
+  assert.deepEqual(titles, ['Salary landed · 2 things to do', 'Netflix renews tomorrow', 'Pay Mom back by Oct 11', 'Storm next week']);
+  assert.equal(r[0]!.body, 'Pay back Sam and Book the train');
+  assert.ok(new Set(r.map((x) => x.key)).size === r.length);
+});

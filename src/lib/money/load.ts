@@ -55,6 +55,12 @@ export const getMe = cache(async (): Promise<Me> => {
   const viewer = await requireViewer();
   const u = await db.orm.public.User.where({ id: viewer.id }).first();
   if (!u) redirect('/login');
+  return meFrom(u);
+});
+
+// A person as the app pages see them, from their row.
+type UserRow = NonNullable<Awaited<ReturnType<ReturnType<typeof db.orm.public.User.where>['first']>>>;
+export function meFrom(u: UserRow): Me {
   return {
     id: u.id,
     name: u.name,
@@ -71,7 +77,7 @@ export const getMe = cache(async (): Promise<Me> => {
     photo: u.photo,
     today: todayIn(u.timezone),
   };
-});
+}
 
 // Pages other than setup need a balance to forecast from.
 export async function requireSetUp(): Promise<Me & { balance: number; balanceSetAt: string }> {
@@ -292,7 +298,11 @@ export type Money = {
 
 // The shared load for app pages: posts due bills, then builds the forecast.
 export async function loadMoney(days = 91, historyDays = 460): Promise<Money> {
-  const me = await requireSetUp();
+  return moneyFor(await requireSetUp(), days, historyDays);
+}
+
+// The same for any set-up person, signed in or not (reminders run on a timer).
+export async function moneyFor(me: Me & { balance: number; balanceSetAt: string }, days = 91, historyDays = 460): Promise<Money> {
   await refreshForeignPrices(me.id, me.currency);
   await Promise.all([postDueAdvances(me.id, me.today), postDueRecurring(me.id, me.today)]);
   const [cats, recurring, entries, events, cuts, balance, debts, rates, advances] = await Promise.all([

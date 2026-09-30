@@ -5,6 +5,7 @@ import { addDays, short } from '../../lib/money/dates';
 import { exact, money } from '../../lib/money/format';
 import { RATE_AFTER_DAYS } from '../../lib/money/worth';
 import { getCategories, getMe } from '../../lib/money/load';
+import { remindersFor } from '../../lib/money/reminders-load';
 
 // Signed-in pages share the app frame. The bell lists purchases ready for a
 // Worth-It rating; the palette searches pages and the person's own records.
@@ -27,13 +28,14 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     .slice(0, 5)
     .map((e) => ({ id: e.id, note: e.note, amount: e.amount, date: e.date, category: e.categoryId ? (catById.get(e.categoryId)?.name ?? null) : null }));
 
-  const [forks, events, debts, notes] = await Promise.all([
+  const [forks, events, debts, notes, reminders] = await Promise.all([
     db.orm.public.Fork.where({ userId: me.id }).all(),
     db.orm.public.PlanEvent.where({ userId: me.id, hidden: false })
       .where((e) => e.date.gte(me.today))
       .all(),
     db.orm.public.Debt.where({ userId: me.id }).where((d) => d.settledAt.isNull()).all(),
     db.orm.public.FutureNote.where({ userId: me.id }).select('id', 'text').all(),
+    remindersFor(me),
   ]);
 
   const palette: PaletteItem[] = [
@@ -76,7 +78,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   ];
 
   return (
-    <AppShell name={me.name} email={me.email} currency={me.currency} today={me.today} bell={bell} palette={palette} notepad={me.notepad} notepadAt={me.notepadAt} photo={me.photo}>
+    <AppShell name={me.name} email={me.email} currency={me.currency} today={me.today} bell={bell} palette={palette} notepad={me.notepad} notepadAt={me.notepadAt} photo={me.photo} reminders={reminders}>
       {children}
     </AppShell>
   );
