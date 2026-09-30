@@ -8,6 +8,7 @@ import { DEFAULT_CATEGORIES } from './categories';
 import { buildForecast, type FcBudget, type FcEvent, type Forecast } from './forecast';
 import { paidBack, remaining } from './debts';
 import { convert, type Rates } from './currencies';
+import { photoUrl } from '../photo-url';
 import { getRates } from './fx';
 
 // Everything a signed-in page needs about the person's money, loaded once per
@@ -74,7 +75,7 @@ export function meFrom(u: UserRow): Me {
     calendarAt: u.calendarAt,
     notepad: u.notepad,
     notepadAt: u.notepadAt,
-    photo: u.photo,
+    photo: photoUrl('user', u.id, u.photo),
     today: todayIn(u.timezone),
   };
 }
@@ -265,7 +266,7 @@ export const getDebts = cache(async (userId: string): Promise<DebtRow[]> => {
     .all();
   return debts.map((d) => {
     const paid = paidBack(d, paybacks);
-    return { id: d.id, person: d.person, party: d.party, photo: d.photo, direction: d.direction, amount: d.amount, note: d.note, dueDate: d.dueDate, settledAt: d.settledAt, createdAt: d.createdAt, paid, left: remaining(d, paid) };
+    return { id: d.id, person: d.person, party: d.party, photo: photoUrl('debt', d.id, d.photo), direction: d.direction, amount: d.amount, note: d.note, dueDate: d.dueDate, settledAt: d.settledAt, createdAt: d.createdAt, paid, left: remaining(d, paid) };
   });
 });
 

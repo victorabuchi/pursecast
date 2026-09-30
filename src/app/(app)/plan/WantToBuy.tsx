@@ -12,6 +12,7 @@ import { exact, money } from '../../../lib/money/format';
 import { jarAccrued, type Forecast } from '../../../lib/money/forecast';
 import { affordableFrom, PRIORITIES } from '../../../lib/money/wish';
 import { WISH_PATHS, wishIcon } from '../../../lib/money/wish-icons';
+import { photoUrl } from '../../../lib/photo-url';
 import { addWishAction, boughtWishAction, deleteWishAction, saveForWishAction, updateWishAction } from '../../../lib/money/wish-actions';
 
 type Wish = { id: string; name: string; price: number; url: string | null; photo: string | null; priority: number };
@@ -72,7 +73,7 @@ function WishForm({ w, currency }: { w?: Wish; currency: string }) {
 // forecast without a storm afterwards.
 export default async function WantToBuy({ me, fc, events, openNew }: { me: Me; fc: Forecast; events: EventRow[]; openNew: boolean }) {
   const cur = me.currency;
-  const items = await db.orm.public.WishItem.where({ userId: me.id }).orderBy([(w) => w.priority.asc(), (w) => w.createdAt.asc()]).all();
+  const items = (await db.orm.public.WishItem.where({ userId: me.id }).orderBy([(w) => w.priority.asc(), (w) => w.createdAt.asc()]).all()).map((w) => ({ ...w, photo: photoUrl('wish', w.id, w.photo) }));
   const wanted = items.filter((w) => !w.boughtAt);
   const bought = items.filter((w) => w.boughtAt).slice(-5);
   const total = wanted.reduce((s, w) => s + w.price, 0);
