@@ -2,27 +2,36 @@
 
 import { refresh } from 'next/cache';
 import { db } from '../../prisma/db';
-import { cents, str } from './act';
+import { cents, day, str } from './act';
 import { isDay } from './dates';
 import { getMe } from './load';
 
-// Things to do once money lands. `when` is "now" or "<incomeId>|<payday>".
+// Things to do once money lands. `when` is "now", "date|<day>" (this weekend,
+// next month), "pick" with a `date` field, or "<incomeId>|<payday>".
 export async function addTodoAction(formData: FormData): Promise<{ error?: string }> {
   const me = await getMe();
   const text = str(formData, 'text', 140);
   if (!text) return { error: 'Write what to do.' };
   const when = str(formData, 'when', 80);
-  const [incomeId, payday] = when.split('|');
+  const [head, tail] = when.split('|');
   let due = me.today;
-  let income: string | null = null;
-  if (incomeId && payday && isDay(payday)) {
-    const row = await db.orm.public.Recurring.where({ id: incomeId, userId: me.id }).first();
+  let incomeId: string | null = null;
+  if (when === 'pick') {
+    const picked = day(formData, 'date');
+    if (!picked) return { error: 'Pick a date.' };
+    due = picked;
+  } else if (head === 'date' && tail && isDay(tail)) {
+    due = tail;
+  } else if (head && tail && isDay(tail)) {
+    const row = await db.orm.public.Recurring.where({ id: head, userId: me.id }).first();
     if (row && row.amount > 0) {
-      income = row.id;
-      due = payday < me.today ? me.today : payday;
+      incomeId = row.id;
+      due = tail;
     }
   }
-  await db.orm.public.Todo.create({ userId: me.id, text, amount: cents(formData, 'amount') || null, incomeId: income, due });
+  if (due < me.today) due = me.today;
+  const priority = Math.min(3, Math.max(1, Number(str(formData, 'priority', 1)) || 2));
+  await db.orm.public.Todo.create({ userId: me.id, text, amount: cents(formData, 'amount') || null, incomeId, due, priority });
   refresh();
   return {};
 }

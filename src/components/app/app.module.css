@@ -2790,7 +2790,7 @@
   }
 
   .todoAdd > button {
-    grid-column: 1 / -1;
+    grid-column: auto;
   }
 }
 
@@ -2954,4 +2954,44 @@
 .todoGroup li[data-done='true'] .todoCheck svg {
   opacity: 1;
   color: #fff;
+}
+
+.todoAdd {
+  grid-template-columns: minmax(0, 2fr) minmax(0, 0.8fr) minmax(0, 1.3fr) minmax(0, 0.9fr) auto;
+}
+
+.todoDate {
+  grid-column: 3 / 4;
+  animation: rise 0.2s ease both;
+}
+
+@media (max-width: 760px) {
+  .todoAdd {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+
+  .todoDate {
+    grid-column: 1 / -1;
+  }
+}
+
+.todoPri {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 1px 7px;
+  border-radius: 99px;
+  font-size: 11px;
+  font-style: normal;
+  font-weight: 700;
+  vertical-align: 1px;
+}
+
+.todoPri[data-p='1'] {
+  background: #fee2e2;
+  color: var(--neg);
+}
+
+.todoPri[data-p='3'] {
+  background: #f1f5f9;
+  color: var(--muted);
 }

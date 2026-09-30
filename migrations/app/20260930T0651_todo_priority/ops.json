@@ -1,0 +1,44 @@
+[
+  {
+    "id": "column.public.todo.priority",
+    "label": "Add column \"priority\" to \"todo\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "priority",
+        "table": "todo"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"priority\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "todo",
+          "priority"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"priority\"",
+        "sql": "ALTER TABLE \"public\".\"todo\" ADD COLUMN \"priority\" int4 DEFAULT 2 NOT NULL"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"priority\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "todo",
+          "priority"
+        ]
+      }
+    ]
+  }
+]

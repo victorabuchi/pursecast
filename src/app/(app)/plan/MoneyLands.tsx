@@ -3,7 +3,9 @@ import I from '../../../components/app/Icon';
 import TodoBoard, { type TodoGroup, type TodoOption } from '../../../components/app/TodoBoard';
 import { db } from '../../../prisma/db';
 import type { Me, RecurringRow } from '../../../lib/money/load';
-import { addDays, diffDays, short } from '../../../lib/money/dates';
+import { addDays, addMonths, diffDays, monthStart, short } from '../../../lib/money/dates';
+
+const weekday = (d: string) => new Date(`${d}T00:00:00Z`).toLocaleDateString('en-US', { weekday: 'short', timeZone: 'UTC' });
 
 // Done tasks stay visible (ticked) for a few days, then drop off.
 const KEEP_DONE_DAYS = 3;
@@ -18,7 +20,7 @@ export default async function MoneyLands({ me, recurring }: { me: Me; recurring:
   const groups = new Map<string, TodoGroup & { due: string }>();
   for (const t of todos) {
     const income = t.incomeId ? byId.get(t.incomeId) : undefined;
-    const key = income ? `${income.id}|${t.due}` : 'now';
+    const key = income ? `${income.id}|${t.due}` : t.due <= me.today ? 'now' : `date|${t.due}`;
     let g = groups.get(key);
     if (!g) {
       const landed = t.due <= me.today;
@@ -34,17 +36,25 @@ export default async function MoneyLands({ me, recurring }: { me: Me; recurring:
             sub: landed ? `Landed ${short(t.due)} · time to do these` : `${short(t.due)} · ${days === 1 ? 'tomorrow' : `in ${days} days`}`,
             items: [],
           }
-        : { key, due: '', landed: true, pay: null, title: 'Right now', sub: 'Money that is already here', items: [] };
+        : key === 'now'
+          ? { key, due: '', landed: true, pay: null, title: 'Right now', sub: 'Money that is already here', items: [] }
+          : { key, due: t.due, landed: false, pay: null, title: `By ${weekday(t.due)} ${short(t.due)}`, sub: days === 1 ? 'Tomorrow' : `In ${days} days`, items: [] };
       groups.set(key, g);
     }
-    g.items.push({ id: t.id, text: t.text, amount: t.amount, done: Boolean(t.doneAt) });
+    g.items.push({ id: t.id, text: t.text, amount: t.amount, done: Boolean(t.doneAt), priority: t.priority });
   }
   // Money that has landed first, then the next paydays in order.
   const list = [...groups.values()].sort((a, b) => Number(b.landed) - Number(a.landed) || a.due.localeCompare(b.due));
 
+  // Paydays first, then plain dates; "On a date…" is added by the list.
+  const dow = new Date(`${me.today}T00:00:00Z`).getUTCDay();
+  const weekend = dow === 0 || dow === 6 ? me.today : addDays(me.today, 6 - dow);
+  const nextMonth = monthStart(addMonths(me.today, 1));
   const options: TodoOption[] = [
     ...incomes.map((r) => ({ value: `${r.id}|${r.nextDate}`, label: `When ${r.name} lands · ${short(r.nextDate)}` })),
     { value: 'now', label: 'Right now' },
+    { value: `date|${weekend}`, label: `This weekend · ${weekday(weekend)} ${short(weekend)}` },
+    { value: `date|${nextMonth}`, label: `Next month · ${short(nextMonth)}` },
   ];
   const waiting = list.filter((g) => !g.landed).reduce((s, g) => s + g.items.filter((i) => !i.done).length, 0);
 
@@ -56,12 +66,12 @@ export default async function MoneyLands({ me, recurring }: { me: Me; recurring:
             <I d="wallet" size={16} /> When money lands
           </strong>
           <span className={styles.cardSub} style={{ display: 'block' }}>
-            A to-do list for payday. {waiting ? `${waiting} waiting · ` : ''}
+            A to-do list for payday and the days ahead. {waiting ? `${waiting} waiting · ` : ''}
             {incomes[0] ? `Next pay ${short(incomes[0].nextDate)}` : 'Add your pay in setup to plan for it.'}
           </span>
         </span>
       </div>
-      <TodoBoard groups={list} options={options} currency={me.currency} />
+      <TodoBoard groups={list} options={options} currency={me.currency} today={me.today} />
     </section>
   );
 }

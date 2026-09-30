@@ -2058,6 +2058,13 @@
                   "kind": "scalar"
                 }
               },
+              "priority": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
               "text": {
                 "nullable": false,
                 "type": {
@@ -2110,6 +2117,9 @@
                 },
                 "incomeId": {
                   "column": "incomeId"
+                },
+                "priority": {
+                  "column": "priority"
                 },
                 "text": {
                   "column": "text"
@@ -4486,6 +4496,15 @@
                   "nativeType": "uuid",
                   "nullable": true
                 },
+                "priority": {
+                  "codecId": "pg/int4@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": 2
+                  },
+                  "nativeType": "int4",
+                  "nullable": false
+                },
                 "text": {
                   "codecId": "pg/text@1",
                   "nativeType": "text",
@@ -4636,7 +4655,7 @@
         "kind": "postgres-schema"
       }
     },
-    "storageHash": "17f94c4aa0a97029031804d17cb839da0dc7c8bfc59294d6c4a1f653558afa5e"
+    "storageHash": "0e0376e0ccd8a79d4ac773fcbad1065b608811741d0d285896bfd610f077e902"
   },
   "execution": {
     "executionHash": "8964dc95692ad06fe658537dceb13671f8f01be093c83d2ac1a05907ef03ffb7",

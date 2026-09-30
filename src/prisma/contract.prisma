@@ -392,6 +392,8 @@ model Todo {
   // The income it waits for; kept as a plain id so removing it leaves the task.
   incomeId  Uuid?
   due       String
+  // 1 must do, 2 should do, 3 nice to do.
+  priority  Int                @default(2)
   doneAt    TimestamptzString?
   createdAt TimestamptzString  @default(now())
 
