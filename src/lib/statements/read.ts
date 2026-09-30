@@ -42,7 +42,11 @@ async function excelRows(bytes: Buffer): Promise<string[][]> {
   return rows;
 }
 
-export async function readUpload(file: Upload, today: string): Promise<ReadResult> {
+// Asked before every call to Claude; false when today's limit is used up.
+export type Allow = () => Promise<boolean>;
+export const LIMIT_NOTE = 'You have read a lot of statements today. Screenshots and PDFs work again tomorrow; Excel and CSV exports still work now.';
+
+export async function readUpload(file: Upload, today: string, allow: Allow = async () => true): Promise<ReadResult> {
   const k = kind(file);
   if (k === 'unknown') return { txns: [], note: `${file.name}: use a screenshot, PDF, Excel (.xlsx) or CSV file.` };
   if (k === 'csv' || k === 'excel') {
@@ -57,11 +61,13 @@ export async function readUpload(file: Upload, today: string): Promise<ReadResul
         .slice(i, i + 300)
         .map((r) => r.join(' | '))
         .join('\n');
+      if (!(await allow())) return { txns: out, note: LIMIT_NOTE };
       out.push(...(await extract([{ type: 'text', text: `Rows ${i + 1}-${i + 300} of a bank export:\n${text}` }], today)).txns);
     }
     return { txns: out };
   }
   if (!aiReady()) return { txns: [], note: `${file.name}: reading screenshots and PDFs needs ANTHROPIC_API_KEY.` };
+  if (!(await allow())) return { txns: [], note: LIMIT_NOTE };
   const data = file.bytes.toString('base64');
   const block: Anthropic.Beta.BetaContentBlockParam =
     k === 'pdf'

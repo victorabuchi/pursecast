@@ -26,3 +26,12 @@ services:
         sync: false
       - key: ANTHROPIC_API_KEY
         sync: false
+      # Optional: where server errors are reported (a Slack/Discord webhook
+      # and/or an email address; email needs the RESEND_* keys).
+      - key: ALERT_WEBHOOK_URL
+        sync: false
+      - key: ALERT_EMAIL
+        sync: false
+      # Claude calls per person per day for reading screenshots and PDFs.
+      - key: STATEMENT_AI_DAILY_LIMIT
+        value: "20"

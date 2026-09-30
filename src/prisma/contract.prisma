@@ -41,6 +41,7 @@ model User {
   wishes       WishItem[]
   statements   Statement[]
   todos        Todo[]
+  aiUsage      AiUsage[]
   statementTxns StatementTxn[]
 
   @@rls
@@ -400,4 +401,19 @@ model Todo {
   @@index([userId])
   @@rls
   @@map("todo")
+}
+
+// Calls to Claude per person per day (reading screenshots, PDFs and unusual
+// exports), so one account cannot run up the bill.
+model AiUsage {
+  id        Uuid              @id @default(uuid())
+  user      User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    Uuid
+  day       String
+  calls     Int               @default(0)
+  createdAt TimestamptzString @default(now())
+
+  @@index([userId])
+  @@rls
+  @@map("ai_usage")
 }

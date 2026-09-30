@@ -11,6 +11,8 @@ export const maxDuration = 300;
 
 const MAX_FILES = 10;
 const MAX_BYTES = 20 * 1024 * 1024;
+// Calls to Claude per person per day; set STATEMENT_AI_DAILY_LIMIT to change.
+const DAILY_AI_CALLS = Number(process.env['STATEMENT_AI_DAILY_LIMIT'] ?? 20);
 
 // Upload statements, screenshots or exports. Adds to an existing set when
 // statementId is given, else starts a new one. Transactions already imported
@@ -29,13 +31,21 @@ export async function POST(request: Request) {
   if (tooBig) return Response.json({ error: `${tooBig.name} is over 20 MB. Split it into smaller files.` }, { status: 400 });
 
   const today = todayIn(user.timezone);
+  // Each call to Claude counts against today's limit.
+  const allow = async () => {
+    const usage = await db.orm.public.AiUsage.where({ userId: user.id, day: today }).first();
+    if ((usage?.calls ?? 0) >= DAILY_AI_CALLS) return false;
+    if (usage) await db.orm.public.AiUsage.where({ id: usage.id, userId: user.id }).update({ calls: usage.calls + 1 });
+    else await db.orm.public.AiUsage.create({ userId: user.id, day: today, calls: 1 });
+    return true;
+  };
   const notes: string[] = [];
   const read: Txn[] = [];
   for (const file of files) {
     try {
-      const res = await readUpload({ name: file.name, type: file.type, bytes: Buffer.from(await file.arrayBuffer()) }, today);
+      const res = await readUpload({ name: file.name, type: file.type, bytes: Buffer.from(await file.arrayBuffer()) }, today, allow);
       read.push(...res.txns);
-      if (res.note) notes.push(res.note);
+      if (res.note && !notes.includes(res.note)) notes.push(res.note);
     } catch (error) {
       console.error('Statement upload failed', file.name, error);
       // A problem with the reading service itself (billing, key, outage) is

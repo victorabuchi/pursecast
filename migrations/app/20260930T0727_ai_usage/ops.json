@@ -1,0 +1,161 @@
+[
+  {
+    "id": "table.ai_usage",
+    "label": "Create table \"ai_usage\"",
+    "summary": "Creates table \"ai_usage\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "ai_usage"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"ai_usage\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"ai_usage\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"ai_usage\"",
+        "sql": "CREATE TABLE \"public\".\"ai_usage\" (\n  \"calls\" int4 DEFAULT 0 NOT NULL,\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"day\" text NOT NULL,\n  \"id\" uuid NOT NULL,\n  \"userId\" uuid NOT NULL,\n  PRIMARY KEY (\"id\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"ai_usage\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"ai_usage\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.ai_usage.ai_usage_userId_idx_a489d58a",
+    "label": "Create index \"ai_usage_userId_idx_a489d58a\" on \"ai_usage\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "ai_usage_userId_idx_a489d58a",
+        "table": "ai_usage"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"ai_usage_userId_idx_a489d58a\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"ai_usage_userId_idx_a489d58a\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"ai_usage_userId_idx_a489d58a\"",
+        "sql": "CREATE INDEX \"ai_usage_userId_idx_a489d58a\" ON \"public\".\"ai_usage\" (\"userId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"ai_usage_userId_idx_a489d58a\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"ai_usage_userId_idx_a489d58a\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.ai_usage.ai_usage_userId_fkey",
+    "label": "Add foreign key \"ai_usage_userId_fkey\" on \"ai_usage\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "ai_usage_userId_fkey",
+        "table": "ai_usage"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"ai_usage_userId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "ai_usage_userId_fkey",
+          "public",
+          "\"public\".\"ai_usage\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"ai_usage_userId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"ai_usage\"\nADD CONSTRAINT \"ai_usage_userId_fkey\"\nFOREIGN KEY (\"userId\")\nREFERENCES \"public\".\"app_user\" (\"id\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"ai_usage_userId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "ai_usage_userId_fkey",
+          "public",
+          "\"public\".\"ai_usage\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "rowLevelSecurity.public.ai_usage",
+    "label": "Enable row-level security on \"ai_usage\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "rowLevelSecurity",
+        "name": "ai_usage"
+      }
+    },
+    "precheck": [
+      {
+        "description": "check RLS is not already enabled on \"ai_usage\"",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_class\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"relnamespace\" WHERE (\"n\".\"nspname\" = $1 AND \"c\".\"relname\" = $2 AND NOT (\"c\".\"relrowsecurity\"))) AS \"result\"",
+        "params": [
+          "public",
+          "ai_usage"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "enable row-level security on \"ai_usage\"",
+        "sql": "ALTER TABLE \"public\".\"ai_usage\" ENABLE ROW LEVEL SECURITY"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify row-level security is enabled on \"ai_usage\"",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_class\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"relnamespace\" WHERE (\"n\".\"nspname\" = $1 AND \"c\".\"relname\" = $2 AND \"c\".\"relrowsecurity\")) AS \"result\"",
+        "params": [
+          "public",
+          "ai_usage"
+        ]
+      }
+    ]
+  }
+]
