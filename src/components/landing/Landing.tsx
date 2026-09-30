@@ -22,6 +22,10 @@ const FEATURES: Array<{ icon: string; color: string; title: string; desc: string
   { icon: 'trend', color: '#6366f1', title: 'Personal inflation', desc: 'Your own inflation rate from your own receipts, next to the national one, with the prices that drove it.' },
   { icon: 'bolt', color: '#f97316', title: 'Two-second logging', desc: 'Type "12.50 lunch" or even "200 + 10 + 45". Pursecast does the sum, picks the category and updates the forecast.' },
   { icon: 'calc', color: '#64748b', title: 'Calculator and notes', desc: 'A calculator and a note pad float over every page. Drag them anywhere; they follow your light or dark theme.' },
+  { icon: 'wallet', color: '#10b981', title: 'When money lands', desc: 'A to-do list for payday: pay someone back, book the train, fill a jar. Must-dos first, and what it all costs next to your pay.' },
+  { icon: 'bell', color: '#ef4444', title: 'Reminders that matter', desc: 'A nudge at 8 when pay lands, a subscription renews tomorrow, a debt is due or a storm is coming. On your phone, or a Monday email.' },
+  { icon: 'globe', color: '#0ea5e9', title: 'Priced in any currency', desc: 'Your Render plan is in dollars and your rent in euros? Pick the currency per bill. The forecast uses today’s rate.' },
+  { icon: 'moon', color: '#475569', title: 'Light by day, dark at night', desc: 'Follows your phone, or turns dark from 7 pm. Install it on your home screen and it opens like an app.' },
   { icon: 'shield', color: '#c2255c', title: 'Private by design', desc: 'No bank login needed. Bills that change every month, like cloud hosting, are fine too. Export or delete your data any time.' },
 ];
 
@@ -61,6 +65,7 @@ export default function Landing() {
                   { title: 'Money Weather', desc: 'A month, three months or a year ahead', href: '#showcase', icon: 'sun' },
                   { title: 'Timeline Forks', desc: 'Try a decision before you make it', href: '#showcase', icon: 'fork' },
                   { title: 'Calendar planning', desc: 'Costs priced before they arrive', href: '#showcase', icon: 'cal' },
+                  { title: 'When money lands', desc: 'A to-do list for payday', href: '#showcase', icon: 'wallet' },
                 ],
               },
               {
@@ -69,6 +74,7 @@ export default function Landing() {
                   { title: 'Worth-It Score', desc: 'Budget by joy, not by category', href: '#showcase', icon: 'heart' },
                   { title: 'Future-self notes', desc: 'A word from you, at the right moment', href: '#showcase', icon: 'mic' },
                   { title: 'Want to buy', desc: 'The first day it fits your forecast', href: '#showcase', icon: 'cart' },
+                  { title: 'Any currency', desc: 'A dollar plan next to euro rent', href: '#features', icon: 'globe' },
                 ],
               },
               {
@@ -76,6 +82,7 @@ export default function Landing() {
                 items: [
                   { title: 'Statements', desc: 'A year of spending, told as a story', href: '#showcase', icon: 'file' },
                   { title: 'Money owed', desc: 'Lent, borrowed, advances, due dates', href: '#features', icon: 'hand' },
+                  { title: 'Reminders', desc: 'On your phone, or a Monday email', href: '#features', icon: 'bell' },
                   { title: 'Calculator and notes', desc: 'Always at hand, on every page', href: '#features', icon: 'calc' },
                 ],
               },
@@ -121,7 +128,7 @@ export default function Landing() {
             Stop tracking the past. <span>Budget the future.</span>
           </h1>
           <p className={`${styles.heroLede} ${styles.fadeUp} ${styles.d2}`}>
-            Pursecast forecasts your money like the weather, tells you when you can afford what you want, turns a year of bank statements into a story, and learns which spending actually makes you happy.
+            Pursecast forecasts your money like the weather, tells you when you can afford what you want, reminds you what to do when pay lands, turns a year of bank statements into a story, and learns which spending actually makes you happy.
           </p>
           <div className={`${styles.heroCtas} ${styles.fadeUp} ${styles.d3}`}>
             <Link href="/signup" className={`${styles.btnHero} ${styles.big}`}>
@@ -180,6 +187,7 @@ export default function Landing() {
                   { title: 'Calendar costs, priced', desc: 'A wedding in March becomes flights, a hotel and a gift, saved for a little each month.' },
                   { title: 'Futures side by side', desc: 'Compare staying put with moving, a new job or a new car, using your real numbers.' },
                   { title: 'When you can buy it', desc: 'Add something you want and see the first day it fits, then save for it a little each month.' },
+                  { title: 'A plan for payday', desc: 'Jot down what waits for the money, then get a nudge the morning it lands.' },
                 ],
                 cta: 'See the forecast',
                 href: '#showcase',
@@ -204,7 +212,7 @@ export default function Landing() {
                 items: [
                   { title: 'A year in one upload', desc: 'Drop a bank statement, screenshots or an Excel export. Every transaction is read and sorted.' },
                   { title: 'The story of your money', desc: 'Money in and out by month, where it went, where you paid most, and what you kept.' },
-                  { title: 'Charges you forgot', desc: 'Regular payments are found for you, with what they cost in a year, ready to track.' },
+                  { title: 'Charges you forgot', desc: 'Regular payments are found for you, with what they cost in a year, and added as a subscription in one tap.' },
                   { title: 'Owed and borrowed', desc: 'Friends, family or the bank: amounts, due dates and paybacks in one place.' },
                 ],
                 cta: 'Try it free',
@@ -241,6 +249,15 @@ export default function Landing() {
                   { title: 'Rate last week', desc: 'Tap 😍 😐 or 😩 on what you bought two days ago.' },
                   { title: 'Take a suggestion', desc: 'Move money toward what you love, or skip it.' },
                   { title: 'Check your forks', desc: 'See how your "what if" futures moved this week.' },
+                ],
+              },
+              {
+                label: 'Payday',
+                steps: [
+                  { title: 'Jot it down', desc: 'Pay back a friend, book a ticket, fill a jar. Pick the payday, or any date.' },
+                  { title: 'Get a nudge', desc: 'The morning the pay lands, your phone says what is waiting. Bills due tomorrow too.' },
+                  { title: 'Tick it off', desc: 'One tap each. Must-dos come first, and you see what it all costs next to your pay.' },
+                  { title: 'Read your Monday email', desc: 'Optional. The week ahead, bills, and what waits for payday, in one short email.' },
                 ],
               },
               {
@@ -283,6 +300,8 @@ export default function Landing() {
               <a href="#how">How it works</a>
               <a href="#features">Statements</a>
               <a href="#features">Want to buy</a>
+              <a href="#features">When money lands</a>
+              <a href="#features">Reminders</a>
             </div>
             <div className={styles.footerCol}>
               <span className={styles.footerTitle}>Company</span>

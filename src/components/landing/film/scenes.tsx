@@ -42,6 +42,7 @@ const P = {
   mic: 'M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3ZM19 10v2a7 7 0 0 1-14 0v-2M12 19v3',
   play: 'M7 4l13 8-13 8Z',
   cart: 'M3 4h2l2.4 11.2a2 2 0 0 0 2 1.6h8.2a2 2 0 0 0 2-1.6L21 8H6.2M10 20.5h.01M17 20.5h.01',
+  wallet: 'M20 12V8H6a2 2 0 0 1 0-4h12v4M4 6v12a2 2 0 0 0 2 2h14v-4M18 12a2 2 0 0 0 0 4h4v-4Z',
 };
 
 function I({ d, size = 16, stroke = 2 }: { d: string; size?: number; stroke?: number }) {
@@ -1058,7 +1059,7 @@ function StatementScene({ t, phone, brand }: SceneProps) {
 }
 
 export type SceneDef = {
-  id: 'weather' | 'worth' | 'future' | 'fork' | 'plan' | 'wish' | 'statements';
+  id: 'weather' | 'worth' | 'future' | 'fork' | 'plan' | 'wish' | 'statements' | 'payday';
   tab: string;
   title: string;
   caption: string;
@@ -1069,6 +1070,91 @@ export type SceneDef = {
   bursts: number[];
   Scene: (p: SceneProps) => React.ReactElement;
 };
+
+/* ---------- 8. When money lands ---------- */
+
+const TYPE_AT = 700;
+const ADDED_AT = 2400;
+const THIRD_AT = 3000;
+const LANDS_AT = 4300;
+const TICKS = [5700, 6700, 7700];
+const ALL_DONE = 8300;
+
+function PaydayScene({ t, phone, brand }: SceneProps) {
+  const items: Array<{ text: string; amount: number; must?: boolean; at: number }> = [
+    { text: 'Pay back Sam for the concert', amount: 120, must: true, at: -1 },
+    { text: 'Book the train to Tampere', amount: 45.9, at: ADDED_AT },
+    { text: 'Move €200 to the Porto jar', amount: 200, at: THIRD_AT },
+  ];
+  const shown = items.filter((i) => t >= i.at);
+  const planned = shown.reduce((s, i) => s + i.amount, 0);
+  const landed = t >= LANDS_AT;
+  const done = TICKS.filter((at) => t >= at).length;
+  const all = done === items.length;
+  const push = within(t, LANDS_AT, LANDS_AT + 3000);
+  return (
+    <AppFrame phone={phone} active={4} brand={brand} bell={landed && !all ? 'ring' : 'idle'}>
+      <PageHead title="When money lands" sub="A to-do list for payday" icon="wallet" />
+      <div className={styles.card}>
+        <div className={styles.todoInputs}>
+          <span className={`${styles.todoField} ${within(t, TYPE_AT - 100, ADDED_AT) ? styles.todoFocus : ''}`}>
+            {within(t, TYPE_AT, ADDED_AT) ? typed('Book the train to Tampere', t, TYPE_AT, TYPE_AT + 1000) : <em>Pay back Sam, book the train…</em>}
+            {within(t, TYPE_AT - 100, ADDED_AT - 300) && <i className={styles.caret} />}
+          </span>
+          {!phone && <span className={styles.todoField}>{within(t, TYPE_AT + 1100, ADDED_AT) ? typed('€45.90', t, TYPE_AT + 1100, TYPE_AT + 1500) : <em>Cost</em>}</span>}
+          <span className={styles.todoField}>When Salary lands · Oct 9</span>
+          <span className={`${styles.btn} ${styles.btnSmall} ${within(t, ADDED_AT - 250, ADDED_AT + 50) ? styles.pressed : ''}`} data-target="tadd">
+            <I d={P.plus} size={13} stroke={2.6} /> Add
+          </span>
+        </div>
+        <div className={styles.todoGroup} data-landed={landed || undefined}>
+          <div className={styles.todoHead}>
+            <span className={styles.todoBadge}>
+              <I d={landed ? P.check : P.wallet} size={14} stroke={2.4} />
+            </span>
+            <span>
+              <b>{landed ? 'Salary is in' : 'When Salary lands'}</b>
+              <small>{all ? 'All done' : landed ? 'Landed today · time to do these' : 'Oct 9 · in 3 days'}</small>
+            </span>
+            <b className={styles.amount}>
+              €{planned.toFixed(2).replace('.00', '')} <small>of €2,900</small>
+            </b>
+          </div>
+          <span className={styles.meter}>
+            <span style={{ width: `${(planned / 2900) * 100}%` }} />
+          </span>
+          {shown.map((it, i) => (
+            <motion.div key={it.text} className={styles.todoLine} data-done={i < done || undefined} initial={it.at > 0 ? { opacity: 0, y: -6 } : false} animate={{ opacity: 1, y: 0 }}>
+              <span className={`${styles.tick} ${within(t, TICKS[i]! - 250, TICKS[i]! + 50) ? styles.pressed : ''}`} data-target={`tick${i}`}>
+                <I d={P.check} size={11} stroke={3} />
+              </span>
+              <span className={styles.todoText}>
+                {it.text}
+                {it.must && <em className={styles.mustTag}>Must</em>}
+              </span>
+              <b className={styles.amount}>€{it.amount.toFixed(2).replace('.00', '')}</b>
+            </motion.div>
+          ))}
+        </div>
+      </div>
+      <AnimatePresence>
+        {push && (
+          <motion.div className={styles.push} initial={{ opacity: 0, y: -40, scale: 0.96 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: -30 }} transition={{ type: 'spring', stiffness: 380, damping: 30 }}>
+            <span className={styles.pushIcon}>
+              <Mark />
+            </span>
+            <span>
+              <small>PURSECAST · now</small>
+              <b>Salary landed · 3 things to do</b>
+              <span>Pay back Sam, Book the train and 1 more</span>
+            </span>
+          </motion.div>
+        )}
+      </AnimatePresence>
+      <Toast show={t >= ALL_DONE} text="All done · €365.90 of your pay had a job" />
+    </AppFrame>
+  );
+}
 
 export const SCENES: SceneDef[] = [
   {
@@ -1212,5 +1298,29 @@ export const SCENES: SceneDef[] = [
     beats: [[0, null]],
     bursts: [5300],
     Scene: StatementScene,
+  },
+  {
+    id: 'payday',
+    tab: 'Payday',
+    title: 'Know what to do when pay lands.',
+    caption: 'Jot down what waits for payday. Pursecast nudges you when the money arrives, and bills or debts are due, even with the app closed.',
+    dur: 11000,
+    glow: '#10b981',
+    url: 'app.pursecast.com/plan#todo',
+    beats: [
+      [0, null],
+      [1900, 'tadd'],
+      [2150, 'tadd', 300],
+      [2600, null],
+      [5200, 'tick0'],
+      [5450, 'tick0', 250],
+      [6200, 'tick1'],
+      [6450, 'tick1', 250],
+      [7200, 'tick2'],
+      [7450, 'tick2', 250],
+      [8000, null],
+    ],
+    bursts: [8300],
+    Scene: PaydayScene,
   },
 ];
