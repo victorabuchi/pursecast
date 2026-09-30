@@ -1,10 +1,10 @@
 'use client';
 
-import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 import confetti from 'canvas-confetti';
 import styles from './film.module.css';
-import { SCENES, BRAND, type Beat } from './scenes';
+import { SCENES, BRAND, type Beat, type SceneDef } from './scenes';
 
 const TICK = 100;
 const DESK = { w: 1100, h: 640 };
@@ -18,9 +18,11 @@ function beatAt(beats: Beat[], t: number): { target: string | null; press: boole
 }
 
 // The landing page "video": the Pursecast screens, played scene by scene
-// with a cursor, inside a browser window. Plays only while on screen; with
-// reduced motion it shows each scene's finished state and does not advance.
-export default function ProductFilm() {
+// with a cursor, inside a browser window, with its own tabs underneath.
+// Plays only while on screen; with reduced motion it shows each scene's
+// finished state and does not advance. `scenes` picks which ones, in order.
+export default function ProductFilm({ scenes }: { scenes?: Array<SceneDef['id']> }) {
+  const list = useMemo(() => (scenes ? scenes.map((id) => SCENES.find((s) => s.id === id)!).filter(Boolean) : SCENES), [scenes]);
   const [clock, setClock] = useState({ scene: 0, t: 0 });
   const [playing, setPlaying] = useState(true);
   const [visible, setVisible] = useState(false);
@@ -55,10 +57,10 @@ export default function ProductFilm() {
   useEffect(() => {
     if (!running) return;
     const id = window.setInterval(() => {
-      setClock((c) => (c.t + TICK >= SCENES[c.scene]!.dur ? { scene: (c.scene + 1) % SCENES.length, t: 0 } : { scene: c.scene, t: c.t + TICK }));
+      setClock((c) => (c.t + TICK >= list[c.scene]!.dur ? { scene: (c.scene + 1) % list.length, t: 0 } : { scene: c.scene, t: c.t + TICK }));
     }, TICK);
     return () => window.clearInterval(id);
-  }, [running]);
+  }, [running, list]);
 
   // Keep the current tab in view when the row scrolls (phones).
   useEffect(() => {
@@ -67,7 +69,7 @@ export default function ProductFilm() {
     if (bar && tab) bar.scrollTo({ left: tab.offsetLeft - (bar.clientWidth - tab.offsetWidth) / 2, behavior: 'smooth' });
   }, [clock.scene]);
 
-  const def = SCENES[clock.scene]!;
+  const def = list[clock.scene]!;
   const t = reduced ? def.dur - 1 : clock.t;
   const phone = box?.phone ?? false;
   const size = phone ? PHONE : DESK;
@@ -165,7 +167,7 @@ export default function ProductFilm() {
           </button>
         </div>
         <div ref={tabs} className={styles.tabBar} role="tablist">
-          {SCENES.map((s, i) => (
+          {list.map((s, i) => (
             <button key={s.id} type="button" role="tab" aria-selected={i === clock.scene} className={styles.tab} onClick={() => select(i)}>
               {s.tab}
               {i === clock.scene && <i className={styles.tabProgress} style={{ width: `${(t / s.dur) * 100}%` }} />}

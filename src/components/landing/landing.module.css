@@ -948,3 +948,155 @@
 .navLogo {
   text-decoration: none;
 }
+
+/* The second film, in a panel of its own (after GitHub's layout). */
+.story {
+  position: relative;
+  padding: 24px 0 96px;
+  background: #0b2125;
+  background: linear-gradient(180deg, #0b2125 0%, #061114 100%);
+  color: #fff;
+  overflow: hidden;
+}
+
+.storyHead {
+  max-width: 720px;
+  margin: 0 auto 44px;
+  text-align: center;
+}
+
+.storyKicker {
+  display: inline-block;
+  margin-bottom: 14px;
+  padding: 5px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 99px;
+  color: #fcd34d;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.storyHead h2 {
+  margin: 0 0 14px;
+  font-size: clamp(30px, 5vw, 52px);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.06;
+  text-wrap: balance;
+}
+
+.storyHead h2 span {
+  background: linear-gradient(90deg, #fda4af 0%, #c4b5fd 50%, #6ee7b7 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.storyLede {
+  max-width: 660px;
+  margin: 0 auto;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: clamp(19px, 2.4vw, 24px);
+  font-weight: 600;
+  line-height: 1.45;
+  text-align: center;
+  text-wrap: balance;
+}
+
+.filmPanel {
+  position: relative;
+  padding: clamp(28px, 6vw, 72px) clamp(12px, 5vw, 64px) clamp(20px, 3vw, 36px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 28px 28px 0 0;
+  background: linear-gradient(180deg, rgba(10, 30, 34, 0.9) 0%, rgba(15, 122, 99, 0.35) 70%, rgba(56, 189, 248, 0.25) 100%);
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.panelGlow {
+  position: absolute;
+  top: -120px;
+  left: 50%;
+  z-index: -1;
+  width: min(720px, 90%);
+  height: 360px;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(110, 231, 183, 0.55), rgba(245, 165, 36, 0.18) 60%, transparent);
+  filter: blur(30px);
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+.filmPanel::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background-image: radial-gradient(rgba(255, 255, 255, 0.55) 1px, transparent 1px);
+  background-size: 38px 38px;
+  mask-image: radial-gradient(50% 30% at 50% 0%, #000, transparent);
+  opacity: 0.3;
+  pointer-events: none;
+}
+
+.storyCards {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-top: none;
+  border-radius: 0 0 28px 28px;
+}
+
+.storyCard {
+  display: grid;
+  align-content: start;
+  gap: 16px;
+  padding: clamp(24px, 4vw, 44px);
+}
+
+.storyCard + .storyCard {
+  border-left: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.storyCard p {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.62);
+  font-size: 18px;
+  line-height: 1.5;
+}
+
+.storyCard p b {
+  color: #fff;
+}
+
+.storyBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #fff;
+  font-size: 20px;
+  font-weight: 800;
+}
+
+.storyLink {
+  color: #7dd3fc;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.storyLink:hover {
+  text-decoration: underline;
+}
+
+@media (max-width: 760px) {
+  .storyCards {
+    grid-template-columns: 1fr;
+  }
+
+  .storyCard + .storyCard {
+    border-left: none;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+  }
+}

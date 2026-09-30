@@ -147,9 +147,44 @@ export default function Landing() {
           </div>
         </div>
         <div className={`${styles.wrap} ${styles.filmWrap} ${styles.fadeUp} ${styles.d3}`}>
-          <ProductFilm />
+          <ProductFilm scenes={['weather', 'fork', 'plan', 'wish', 'payday']} />
         </div>
       </header>
+
+      <section id="story" className={styles.story}>
+        <div className={styles.wrap}>
+          <div className={styles.storyHead}>
+            <span className={styles.storyKicker}>Spend wisely · Look back</span>
+            <h2>
+              Spend on what you love. <span>Know where it all went.</span>
+            </h2>
+            <p className={styles.storyLede}>Rate what you buy, hear a note from your future self at the right moment, and turn a year of statements into a story.</p>
+          </div>
+          <div className={styles.filmPanel}>
+            <div className={styles.panelGlow} aria-hidden="true" />
+            <ProductFilm scenes={['worth', 'future', 'statements']} />
+          </div>
+          <div className={styles.storyCards}>
+            <div className={styles.storyCard}>
+              <p>
+                <b>Your money, told as a story.</b> Drop in a year of statements, rate what you buy, and leave notes for the moments you usually regret.
+              </p>
+              <a href="#features" className={styles.storyLink}>
+                Explore every feature <span aria-hidden="true">›</span>
+              </a>
+            </div>
+            <div className={styles.storyCard}>
+              <span className={styles.storyBadge}>
+                <Icon name="shield" size={20} /> Private by design
+              </span>
+              <p>No bank login needed to start. Your data stays yours: export or delete everything any time.</p>
+              <a href="#how" className={styles.storyLink}>
+                See how it works <span aria-hidden="true">›</span>
+              </a>
+            </div>
+          </div>
+        </div>
+      </section>
 
       <section id="features" className={styles.sectionAlt}>
         <div className={styles.wrap}>

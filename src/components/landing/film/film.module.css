@@ -12,7 +12,6 @@
 
 .stage {
   position: relative;
-  padding-bottom: 30px;
 }
 
 .glow {
@@ -184,13 +183,13 @@
   background: rgba(8, 23, 27, 0.95);
 }
 
-/* The tab bar sits on the window's bottom edge, centered. */
+/* The tabs sit under the window, apart from it, centered (like GitHub's). */
 .tabBar {
-  position: absolute;
-  left: 50%;
-  bottom: 0;
+  position: relative;
   z-index: 6;
   display: flex;
+  width: fit-content;
+  margin: 26px auto 0;
   gap: 4px;
   padding: 5px;
   border: 1px solid rgba(255, 255, 255, 0.18);
@@ -198,7 +197,6 @@
   background: rgba(6, 18, 21, 0.86);
   backdrop-filter: blur(12px);
   box-shadow: 0 16px 40px -12px rgba(0, 0, 0, 0.6);
-  transform: translate(-50%, 0);
   max-width: calc(100% - 16px);
   overflow-x: auto;
   scrollbar-width: none;
@@ -251,7 +249,7 @@
 
 .caption {
   max-width: 640px;
-  margin: 26px auto 0;
+  margin: 18px auto 0;
   color: rgba(255, 255, 255, 0.68);
   font-size: 17px;
   line-height: 1.55;
