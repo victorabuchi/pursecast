@@ -34,7 +34,7 @@ import type {
 } from '@prisma/orm-postgres/contract/types';
 
 export type StorageHash =
-  StorageHashBase<'087e0d4ca06fac92412e90918256262dcf851ffaf56bda0249d0a04aa7a92c7b'>;
+  StorageHashBase<'6b6213d88c6af453633fcc2f2eb1ef4f647ae703820cff2c7b502ea84b37f6f3'>;
 export type ExecutionHash =
   ExecutionHashBase<'5fa8e78fcc6e0958f2d05513ebe990b5b1866edbfa92e5d083042237237ed681'>;
 export type ProfileHash =
@@ -276,7 +276,6 @@ export type FieldOutputTypes = {
       readonly linkId: CodecTypes['pg/uuid@1']['output'];
       readonly uid: CodecTypes['pg/text@1']['output'];
       readonly name: CodecTypes['pg/text@1']['output'];
-      readonly holder: CodecTypes['pg/text@1']['output'] | null;
       readonly iban: CodecTypes['pg/text@1']['output'] | null;
       readonly currency: CodecTypes['pg/text@1']['output'];
       readonly balance: CodecTypes['pg/int4@1']['output'] | null;
@@ -547,7 +546,6 @@ export type FieldInputTypes = {
       readonly linkId: CodecTypes['pg/uuid@1']['input'];
       readonly uid: CodecTypes['pg/text@1']['input'];
       readonly name: CodecTypes['pg/text@1']['input'];
-      readonly holder: CodecTypes['pg/text@1']['input'] | null;
       readonly iban: CodecTypes['pg/text@1']['input'] | null;
       readonly currency: CodecTypes['pg/text@1']['input'];
       readonly balance: CodecTypes['pg/int4@1']['input'] | null;
@@ -837,7 +835,6 @@ export type StorageColumnTypes = {
       readonly balanceAt: CodecTypes['pg/timestamptz-string@1']['output'] | null;
       readonly createdAt: CodecTypes['pg/timestamptz-string@1']['output'];
       readonly currency: CodecTypes['pg/text@1']['output'];
-      readonly holder: CodecTypes['pg/text@1']['output'] | null;
       readonly iban: CodecTypes['pg/text@1']['output'] | null;
       readonly id: CodecTypes['pg/uuid@1']['output'];
       readonly linkId: CodecTypes['pg/uuid@1']['output'];
@@ -1108,7 +1105,6 @@ export type StorageColumnInputTypes = {
       readonly balanceAt: CodecTypes['pg/timestamptz-string@1']['input'] | null;
       readonly createdAt: CodecTypes['pg/timestamptz-string@1']['input'];
       readonly currency: CodecTypes['pg/text@1']['input'];
-      readonly holder: CodecTypes['pg/text@1']['input'] | null;
       readonly iban: CodecTypes['pg/text@1']['input'] | null;
       readonly id: CodecTypes['pg/uuid@1']['input'];
       readonly linkId: CodecTypes['pg/uuid@1']['input'];
@@ -1700,11 +1696,6 @@ type ContractBase = Omit<
                   readonly nativeType: 'text';
                   readonly codecId: 'pg/text@1';
                   readonly nullable: false;
-                };
-                readonly holder: {
-                  readonly nativeType: 'text';
-                  readonly codecId: 'pg/text@1';
-                  readonly nullable: true;
                 };
                 readonly iban: {
                   readonly nativeType: 'text';
@@ -3725,10 +3716,6 @@ type ContractBase = Omit<
                 readonly nullable: false;
                 readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
               };
-              readonly holder: {
-                readonly nullable: true;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
-              };
               readonly iban: {
                 readonly nullable: true;
                 readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
@@ -3798,7 +3785,6 @@ type ContractBase = Omit<
                 readonly linkId: { readonly column: 'linkId' };
                 readonly uid: { readonly column: 'uid' };
                 readonly name: { readonly column: 'name' };
-                readonly holder: { readonly column: 'holder' };
                 readonly iban: { readonly column: 'iban' };
                 readonly currency: { readonly column: 'currency' };
                 readonly balance: { readonly column: 'balance' };

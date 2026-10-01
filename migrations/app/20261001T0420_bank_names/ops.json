@@ -1,0 +1,161 @@
+[
+  {
+    "id": "table.bank_name",
+    "label": "Create table \"bank_name\"",
+    "summary": "Creates table \"bank_name\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "bank_name"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"bank_name\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"bank_name\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"bank_name\"",
+        "sql": "CREATE TABLE \"public\".\"bank_name\" (\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"currency\" text NOT NULL,\n  \"iban\" text NOT NULL,\n  \"id\" uuid NOT NULL,\n  \"name\" text NOT NULL,\n  \"userId\" uuid NOT NULL,\n  PRIMARY KEY (\"id\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"bank_name\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"bank_name\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.bank_name.bank_name_userId_idx_a489d58a",
+    "label": "Create index \"bank_name_userId_idx_a489d58a\" on \"bank_name\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "bank_name_userId_idx_a489d58a",
+        "table": "bank_name"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"bank_name_userId_idx_a489d58a\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"bank_name_userId_idx_a489d58a\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"bank_name_userId_idx_a489d58a\"",
+        "sql": "CREATE INDEX \"bank_name_userId_idx_a489d58a\" ON \"public\".\"bank_name\" (\"userId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"bank_name_userId_idx_a489d58a\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"bank_name_userId_idx_a489d58a\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.bank_name.bank_name_userId_fkey",
+    "label": "Add foreign key \"bank_name_userId_fkey\" on \"bank_name\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "bank_name_userId_fkey",
+        "table": "bank_name"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"bank_name_userId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "bank_name_userId_fkey",
+          "public",
+          "\"public\".\"bank_name\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"bank_name_userId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"bank_name\"\nADD CONSTRAINT \"bank_name_userId_fkey\"\nFOREIGN KEY (\"userId\")\nREFERENCES \"public\".\"app_user\" (\"id\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"bank_name_userId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "bank_name_userId_fkey",
+          "public",
+          "\"public\".\"bank_name\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "rowLevelSecurity.public.bank_name",
+    "label": "Enable row-level security on \"bank_name\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "rowLevelSecurity",
+        "name": "bank_name"
+      }
+    },
+    "precheck": [
+      {
+        "description": "check RLS is not already enabled on \"bank_name\"",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_class\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"relnamespace\" WHERE (\"n\".\"nspname\" = $1 AND \"c\".\"relname\" = $2 AND NOT (\"c\".\"relrowsecurity\"))) AS \"result\"",
+        "params": [
+          "public",
+          "bank_name"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "enable row-level security on \"bank_name\"",
+        "sql": "ALTER TABLE \"public\".\"bank_name\" ENABLE ROW LEVEL SECURITY"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify row-level security is enabled on \"bank_name\"",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_class\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"relnamespace\" WHERE (\"n\".\"nspname\" = $1 AND \"c\".\"relname\" = $2 AND \"c\".\"relrowsecurity\")) AS \"result\"",
+        "params": [
+          "public",
+          "bank_name"
+        ]
+      }
+    ]
+  }
+]

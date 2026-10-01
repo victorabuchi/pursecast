@@ -49,6 +49,7 @@ model User {
   accounts     Account[]
   bankLinks    BankLink[]
   bankAccounts BankAccount[]
+  bankNames    BankName[]
   remindersSent ReminderSent[]
   statementTxns StatementTxn[]
 
@@ -515,6 +516,9 @@ model BankAccount {
   linkId      Uuid
   uid         String
   name        String
+  // The account holder's name as the bank gives it, for spotting money sent
+  // between the person's own accounts.
+  holder      String?
   iban        String?
   currency    String
   balance     Int?
@@ -528,4 +532,20 @@ model BankAccount {
   @@index([linkId])
   @@rls
   @@map("bank_account")
+}
+
+// Names the person gave linked accounts ("Revolut Pro"), by account number
+// and currency, so they survive disconnecting and connecting again.
+model BankName {
+  id        Uuid              @id @default(uuid())
+  user      User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    Uuid
+  iban      String
+  currency  String
+  name      String
+  createdAt TimestamptzString @default(now())
+
+  @@index([userId])
+  @@rls
+  @@map("bank_name")
 }

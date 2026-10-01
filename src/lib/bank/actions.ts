@@ -81,7 +81,11 @@ export async function renameBankAccountAction(id: string, name: string): Promise
   const me = await getMe();
   const clean = String(name ?? '').trim().slice(0, 60);
   if (!clean) return;
-  await db.orm.public.BankAccount.where({ id: String(id).slice(0, 40), userId: me.id }).update({ name: clean });
+  const account = await db.orm.public.BankAccount.where({ id: String(id).slice(0, 40), userId: me.id }).update({ name: clean });
+  if (account?.iban) {
+    await db.orm.public.BankName.where({ userId: me.id, iban: account.iban, currency: account.currency }).deleteAll();
+    await db.orm.public.BankName.create({ userId: me.id, iban: account.iban, currency: account.currency, name: clean });
+  }
   await applyRoles(me.id);
   refresh();
 }

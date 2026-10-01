@@ -56,7 +56,7 @@ export async function entriesFromBank(userId: string): Promise<number> {
   const currencyOf = new Map(accounts.map((a) => [a.statementId!, a.currency]));
   const [user, rates] = await Promise.all([db.orm.public.User.where({ id: userId }).first(), getRates()]);
   if (!user) return 0;
-  const names = [user.name, ...accounts.map((a) => a.name)].filter((n) => /^[\p{L}' -]+$/u.test(n));
+  const names = [user.name, ...accounts.map((a) => a.holder ?? '')].filter((n) => /^[\p{L}' -]+$/u.test(n));
   // Amounts in the person's own currency, at today's rate.
   const inMain = (amount: number, statementId: string) => {
     const cur = currencyOf.get(statementId) ?? user.currency;
@@ -67,7 +67,20 @@ export async function entriesFromBank(userId: string): Promise<number> {
     db.orm.public.Entry.where({ userId }).select('id', 'date', 'amount', 'note', 'categoryId', 'externalId').all(),
     db.orm.public.Category.where({ userId }).all(),
   ]);
-  const txns = txnsRaw.map((t) => ({ ...t, value: inMain(t.amount, t.statementId), internal: INTERNAL.test(`${t.place} ${t.description}`) || ownName(names, `${t.place} ${t.description}`) }));
+  // A payment to or from another bank the person connected (S-Pankki paying
+  // "Revolut 6234", a top-up) is money moving between their own accounts.
+  const links = await db.orm.public.BankLink.where({ userId }).select('id', 'aspspName').all();
+  const bankOf = new Map(accounts.map((a) => [a.statementId!, links.find((l) => l.id === a.linkId)?.aspspName ?? '']));
+  const bankWords = [...new Set(links.map((l) => l.aspspName.toLowerCase().split(/[^\p{L}]+/u).find((w) => w.length >= 4) ?? ''))].filter(Boolean);
+  const otherBank = (statementId: string, text: string) => {
+    const own = (bankOf.get(statementId) ?? '').toLowerCase();
+    const t = text.toLowerCase();
+    return bankWords.some((w) => !own.includes(w) && t.includes(w));
+  };
+  const txns = txnsRaw.map((t) => {
+    const text = `${t.place} ${t.description}`;
+    return { ...t, value: inMain(t.amount, t.statementId), internal: INTERNAL.test(text) || ownName(names, text) || otherBank(t.statementId, text) };
+  });
   const done = new Set(entries.map((e) => e.externalId).filter(Boolean));
   const byName = new Map(cats.map((c) => [c.name, c.id]));
   const history = new Map(entries.filter((e) => e.categoryId).map((e) => [e.note.trim().toLowerCase(), e.categoryId!]));
@@ -105,6 +118,10 @@ export async function entriesFromBank(userId: string): Promise<number> {
     creates.push({ userId, date: t.date, amount: t.value, note: t.place.slice(0, 80), categoryId, source: 'bank', externalId });
   }
   for (let i = 0; i < creates.length; i += 200) await db.orm.public.Entry.createAll(creates.slice(i, i + 200));
+  // Entries imported before a transaction was recognised as a transfer go.
+  const notSpending = txns.filter((t) => t.category === 'Transfers' || transfer.has(t.id) || t.internal).map((t) => `stx:${t.id}`);
+  const stale = entries.filter((e) => e.externalId && notSpending.includes(e.externalId)).map((e) => e.id);
+  for (let i = 0; i < stale.length; i += 200) await db.orm.public.Entry.where({ userId, source: 'bank' }).where((e) => e.id.in(stale.slice(i, i + 200))).deleteAll();
   for (const m of matched) await db.orm.public.Entry.where({ id: m.id, userId }).update({ externalId: m.externalId });
   return creates.length;
 }

@@ -44,6 +44,53 @@ export function toTxn(t: BankTxn): Txn | null {
 
 const masked = (iban: string | null) => (iban ? `•• ${iban.replace(/\s/g, '').slice(-4)}` : '');
 
+// Names linked accounts the way people know them. A name the person gave
+// (kept by account number and currency) always wins. Otherwise the account's
+// own transactions tell: "Pro Cashback" or a Revolut Pro plan fee makes it
+// "Revolut Pro"; Business, Metal, Ultra and Premium the same. A
+// pocket in another currency is "Revolut USD". Checked again on every sync.
+const HINTS: Array<[RegExp, string]> = [
+  [/\bbusiness\b/i, 'Business'],
+  [/\bmetal\b/i, 'Metal'],
+  [/\bultra\b/i, 'Ultra'],
+  [/\bpremium\b/i, 'Premium'],
+  [/\bpro\b/i, 'Pro'],
+];
+// Only lines about the account's own plan count (not a shop called "Pro Shop").
+const ABOUT_PLAN = /\bplan\b|cashback|\bfee\b|subscription|membership/i;
+
+export async function nameAccounts(userId: string): Promise<void> {
+  const [user, accounts, links, given] = await Promise.all([
+    db.orm.public.User.where({ id: userId }).first(),
+    db.orm.public.BankAccount.where({ userId }).all(),
+    db.orm.public.BankLink.where({ userId }).select('id', 'aspspName').all(),
+    db.orm.public.BankName.where({ userId }).all(),
+  ]);
+  if (!user) return;
+  const bankName = new Map(links.map((l) => [l.id, l.aspspName]));
+  const mine = new Map(given.map((n) => [`${n.iban}|${n.currency}`, n.name]));
+  for (const a of accounts) {
+    const bank = bankName.get(a.linkId) ?? 'Bank';
+    let name = mine.get(`${a.iban ?? ''}|${a.currency}`);
+    if (!name) {
+      let hint = '';
+      if (a.statementId) {
+        const lines = await db.orm.public.StatementTxn.where({ userId, statementId: a.statementId }).select('place', 'description').all();
+        const counts = new Map<string, number>();
+        for (const t of lines) {
+          const text = `${t.place} ${t.description}`;
+          const found = ABOUT_PLAN.test(text) ? HINTS.find(([re]) => re.test(text)) : undefined;
+          if (found) counts.set(found[1], (counts.get(found[1]) ?? 0) + 1);
+        }
+        const best = [...counts].sort((x, y) => y[1] - x[1])[0];
+        if (best && best[1] >= 2) hint = best[0];
+      }
+      name = [bank, hint, a.currency !== user.currency ? a.currency : ''].filter(Boolean).join(' ');
+    }
+    if (name !== a.name) await db.orm.public.BankAccount.where({ id: a.id, userId }).update({ name: name.slice(0, 60) });
+  }
+}
+
 // Puts each account's last known balance where it belongs: the main one is
 // the balance Money Weather starts from, the others sit next to it.
 export async function applyRoles(userId: string): Promise<void> {
@@ -64,7 +111,7 @@ export async function applyRoles(userId: string): Promise<void> {
     if (wantsRow) {
       // The bank's name, or the person's own name for the account ("Revolut Pro").
       const bank = bankName.get(a.linkId) ?? 'Bank';
-      const label = !a.name || a.name === user.name ? bank : a.name.toLowerCase().includes(bank.toLowerCase()) ? a.name : `${bank} ${a.name}`;
+      const label = !a.name ? bank : a.name;
       const row = { name: label.slice(0, 60), kind: 'everyday', currency: a.currency, balance: a.balance ?? 0, inForecast: a.role === 'counted', updatedAt: new Date().toISOString() };
       const existing = a.accountId ? await db.orm.public.Account.where({ id: a.accountId, userId }).first() : null;
       if (existing) await db.orm.public.Account.where({ id: existing.id, userId }).update(row);
@@ -115,6 +162,7 @@ export async function syncLink(userId: string, linkId: string): Promise<{ added:
     }
     await db.orm.public.BankLink.where({ id: link.id, userId }).update({ status: 'active', lastSyncAt: new Date().toISOString(), error: null });
     // Spending entries first, then the balance, so the bank's balance stays the truth.
+    await nameAccounts(userId);
     await entriesFromBank(userId);
     await applyRoles(userId);
     return { added };

@@ -1,0 +1,44 @@
+[
+  {
+    "id": "column.public.bank_account.holder",
+    "label": "Add column \"holder\" to \"bank_account\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "holder",
+        "table": "bank_account"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"holder\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "bank_account",
+          "holder"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"holder\"",
+        "sql": "ALTER TABLE \"public\".\"bank_account\" ADD COLUMN \"holder\" text"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"holder\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "bank_account",
+          "holder"
+        ]
+      }
+    ]
+  }
+]

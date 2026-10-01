@@ -34,13 +34,16 @@ export async function GET(request: Request) {
   const accounts = session!.accounts ?? [];
   const firstCurrent = accounts.findIndex((a) => !a.cash_account_type || a.cash_account_type === 'CACC');
   await db.orm.public.BankLink.where({ id: link!.id, userId: viewer.id }).update({ sessionId: session!.session_id, status: 'active', validUntil: session!.access?.valid_until ?? null, error: null });
+  // Names the person gave before ("Revolut Pro") carry over by account number and currency.
+  const given = new Map((await db.orm.public.BankName.where({ userId: viewer.id }).all()).map((n) => [`${n.iban}|${n.currency}`, n.name]));
   if (accounts.length) {
     await db.orm.public.BankAccount.createAll(
       accounts.map((a, i) => ({
         userId: viewer.id,
         linkId: link!.id,
         uid: a.uid,
-        name: (a.cash_account_type === 'CARD' ? `${a.product || a.name || 'Card'} (card)` : a.product || a.name || a.details || 'Account').slice(0, 60),
+        name: (given.get(`${a.account_id?.iban ?? ''}|${a.currency || 'EUR'}`) ?? (a.cash_account_type === 'CARD' ? `${a.product || a.name || 'Card'} (card)` : a.product || a.name || a.details || 'Account')).slice(0, 60),
+        holder: a.name ?? null,
         iban: a.account_id?.iban ?? null,
         currency: a.currency || 'EUR',
         // The first everyday account is the main one; the rest count in the forecast too
