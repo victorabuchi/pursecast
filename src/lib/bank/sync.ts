@@ -62,7 +62,10 @@ export async function applyRoles(userId: string): Promise<void> {
     }
     const wantsRow = a.role === 'counted' || a.role === 'other';
     if (wantsRow) {
-      const row = { name: `${bankName.get(a.linkId) ?? 'Bank'} · ${a.name}`.slice(0, 60), kind: 'everyday', currency: a.currency, balance: a.balance ?? 0, inForecast: a.role === 'counted', updatedAt: new Date().toISOString() };
+      // The bank's name, or the person's own name for the account ("Revolut Pro").
+      const bank = bankName.get(a.linkId) ?? 'Bank';
+      const label = !a.name || a.name === user.name ? bank : a.name.toLowerCase().includes(bank.toLowerCase()) ? a.name : `${bank} ${a.name}`;
+      const row = { name: label.slice(0, 60), kind: 'everyday', currency: a.currency, balance: a.balance ?? 0, inForecast: a.role === 'counted', updatedAt: new Date().toISOString() };
       const existing = a.accountId ? await db.orm.public.Account.where({ id: a.accountId, userId }).first() : null;
       if (existing) await db.orm.public.Account.where({ id: existing.id, userId }).update(row);
       else {

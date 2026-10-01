@@ -76,6 +76,16 @@ export async function disconnectBankAction(formData: FormData) {
   done(BACK, `${link.aspspName} disconnected · imported transactions are kept in Statements`);
 }
 
+// A name the person gives a linked account, like "Revolut Pro".
+export async function renameBankAccountAction(id: string, name: string): Promise<void> {
+  const me = await getMe();
+  const clean = String(name ?? '').trim().slice(0, 60);
+  if (!clean) return;
+  await db.orm.public.BankAccount.where({ id: String(id).slice(0, 40), userId: me.id }).update({ name: clean });
+  await applyRoles(me.id);
+  refresh();
+}
+
 // What an account is for. Only one account can be the main one.
 export async function setBankRoleAction(id: string, role: string): Promise<void> {
   const me = await getMe();

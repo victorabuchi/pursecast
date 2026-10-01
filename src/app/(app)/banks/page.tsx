@@ -6,6 +6,7 @@ import PageHead from '../../../components/app/PageHead';
 import Submit from '../../../components/app/Submit';
 import BankPicker from '../../../components/app/BankPicker';
 import BankRole from '../../../components/app/BankRole';
+import BankName from '../../../components/app/BankName';
 import { db } from '../../../prisma/db';
 import { getMe } from '../../../lib/money/load';
 import { ago, short, todayIn } from '../../../lib/money/dates';
@@ -140,7 +141,7 @@ export default async function BanksPage({ searchParams }: PageProps<'/banks'>) {
             {mine.map((a) => (
               <div key={a.id} className={styles.bankAcc} data-off={a.role === 'off' || undefined}>
                 <span>
-                  <b>{a.name}</b>
+                  <BankName id={a.id} name={a.name} />
                   <small>
                     {a.iban ? `•• ${a.iban.replace(/\s/g, '').slice(-4)} · ` : ''}
                     {a.currency}
