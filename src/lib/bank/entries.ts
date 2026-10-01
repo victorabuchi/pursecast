@@ -2,6 +2,8 @@ import 'server-only';
 import { db } from '../../prisma/db';
 import { diffDays } from '../money/dates';
 import { guessCategory } from '../money/categories';
+import { convert } from '../money/currencies';
+import { getRates } from '../money/fx';
 
 // Statement categories to the person's own spending categories. Transfers
 // between their own accounts are not spending, so they are left out.
@@ -28,6 +30,18 @@ const TO_APP: Record<string, string> = {
 // The same money within this many days counts as the same transaction.
 const MATCH_DAYS = 3;
 
+// Wording banks use for moving money between someone's own accounts.
+const INTERNAL = /\bexchang|\btop[- ]?up\b|\bpocket\b|\bvault\b|savings account|\bto savings\b|\bfrom savings\b|own account|internal transfer|oma tili|omalle tilille|omien tilien/i;
+
+// Money to or from the person themselves (their own name on the other side).
+function ownName(names: string[], text: string): boolean {
+  const t = text.toLowerCase();
+  return names.some((n) => {
+    const parts = n.toLowerCase().split(/\s+/).filter((p) => p.length > 1);
+    return parts.length >= 2 && parts.every((p) => t.includes(p));
+  });
+}
+
 // Turns the linked bank accounts' transactions into Spending entries, all of
 // their history, each once. An entry already there for the same amount within
 // a few days (a bill Pursecast posted, or one logged by hand) is the same
@@ -38,12 +52,22 @@ export async function entriesFromBank(userId: string): Promise<number> {
   // the truth the entries are measured against.
   const accounts = (await db.orm.public.BankAccount.where({ userId }).all()).filter((a) => a.role !== 'off' && a.statementId);
   if (!accounts.some((a) => a.role === 'main')) return 0;
-  const statementIds = accounts.map((a) => a.statementId!);
-  const [txns, entries, cats] = await Promise.all([
+  const statementIds = [...new Set(accounts.map((a) => a.statementId!))];
+  const currencyOf = new Map(accounts.map((a) => [a.statementId!, a.currency]));
+  const [user, rates] = await Promise.all([db.orm.public.User.where({ id: userId }).first(), getRates()]);
+  if (!user) return 0;
+  const names = [user.name, ...accounts.map((a) => a.name)].filter((n) => /^[\p{L}' -]+$/u.test(n));
+  // Amounts in the person's own currency, at today's rate.
+  const inMain = (amount: number, statementId: string) => {
+    const cur = currencyOf.get(statementId) ?? user.currency;
+    return cur === user.currency ? amount : (convert(amount, cur, user.currency, rates) ?? amount);
+  };
+  const [txnsRaw, entries, cats] = await Promise.all([
     db.orm.public.StatementTxn.where({ userId }).where((t) => t.statementId.in(statementIds)).orderBy((t) => t.date.asc()).all(),
     db.orm.public.Entry.where({ userId }).select('id', 'date', 'amount', 'note', 'categoryId', 'externalId').all(),
     db.orm.public.Category.where({ userId }).all(),
   ]);
+  const txns = txnsRaw.map((t) => ({ ...t, value: inMain(t.amount, t.statementId), internal: INTERNAL.test(`${t.place} ${t.description}`) || ownName(names, `${t.place} ${t.description}`) }));
   const done = new Set(entries.map((e) => e.externalId).filter(Boolean));
   const byName = new Map(cats.map((c) => [c.name, c.id]));
   const history = new Map(entries.filter((e) => e.categoryId).map((e) => [e.note.trim().toLowerCase(), e.categoryId!]));
@@ -58,7 +82,7 @@ export async function entriesFromBank(userId: string): Promise<number> {
   const pool = txns.filter((t) => t.category !== 'Transfers');
   for (const t of pool) {
     if (t.amount >= 0 || transfer.has(t.id)) continue;
-    const twin = pool.find((o) => !transfer.has(o.id) && o.statementId !== t.statementId && o.amount === -t.amount && Math.abs(diffDays(o.date, t.date)) <= MATCH_DAYS);
+    const twin = pool.find((o) => !transfer.has(o.id) && o.statementId !== t.statementId && o.amount > 0 && (o.amount === -t.amount || Math.abs(o.value + t.value) <= Math.max(100, Math.abs(t.value) * 0.02)) && Math.abs(diffDays(o.date, t.date)) <= MATCH_DAYS);
     if (twin) {
       transfer.add(t.id);
       transfer.add(twin.id);
@@ -69,16 +93,16 @@ export async function entriesFromBank(userId: string): Promise<number> {
   const matched: Array<{ id: string; externalId: string }> = [];
   for (const t of txns) {
     const externalId = `stx:${t.id}`;
-    if (done.has(externalId) || t.category === 'Transfers' || transfer.has(t.id) || !t.amount) continue;
-    const twin = open.get(t.amount)?.find((e) => !e.used && Math.abs(diffDays(e.date, t.date)) <= MATCH_DAYS);
+    if (done.has(externalId) || t.category === 'Transfers' || transfer.has(t.id) || t.internal || !t.amount) continue;
+    const twin = open.get(t.value)?.find((e) => !e.used && Math.abs(diffDays(e.date, t.date)) <= MATCH_DAYS);
     if (twin) {
       twin.used = true;
       matched.push({ id: twin.id, externalId });
       continue;
     }
     const mapped = TO_APP[t.category];
-    const categoryId = (mapped && byName.get(mapped)) ?? guessCategory(t.place, t.amount, history, byName);
-    creates.push({ userId, date: t.date, amount: t.amount, note: t.place.slice(0, 80), categoryId, source: 'bank', externalId });
+    const categoryId = (mapped && byName.get(mapped)) ?? guessCategory(t.place, t.value, history, byName);
+    creates.push({ userId, date: t.date, amount: t.value, note: t.place.slice(0, 80), categoryId, source: 'bank', externalId });
   }
   for (let i = 0; i < creates.length; i += 200) await db.orm.public.Entry.createAll(creates.slice(i, i + 200));
   for (const m of matched) await db.orm.public.Entry.where({ id: m.id, userId }).update({ externalId: m.externalId });

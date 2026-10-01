@@ -101,7 +101,8 @@ export async function syncLink(userId: string, linkId: string): Promise<{ added:
       let statementId = a.statementId;
       if (!statementId || !(await db.orm.public.Statement.where({ id: statementId, userId }).first())) {
         // Reconnecting the same account continues its statement.
-        const name = `${link.aspspName} · ${a.name} ${masked(a.iban)}`.trim().slice(0, 80);
+        // One statement per account and currency (Revolut keeps several currencies under one number).
+        const name = `${link.aspspName} · ${a.name} ${masked(a.iban)}${a.currency !== user.currency ? ` · ${a.currency}` : ''}`.trim().slice(0, 80);
         const s = (await db.orm.public.Statement.where({ userId, name }).first()) ?? (await db.orm.public.Statement.create({ userId, name }));
         statementId = s.id;
         await db.orm.public.BankAccount.where({ id: a.id, userId }).update({ statementId });
