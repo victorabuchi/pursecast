@@ -2,6 +2,7 @@ import 'server-only';
 import { db } from '../../prisma/db';
 import { diffDays } from '../money/dates';
 import { guessCategory } from '../money/categories';
+import { findTransfers, MATCH_DAYS } from './transfers';
 import { convert } from '../money/currencies';
 import { getRates } from '../money/fx';
 
@@ -26,21 +27,6 @@ const TO_APP: Record<string, string> = {
   Fees: 'Bills & insurance',
   Other: 'Other',
 };
-
-// The same money within this many days counts as the same transaction.
-const MATCH_DAYS = 3;
-
-// Wording banks use for moving money between someone's own accounts.
-const INTERNAL = /\bexchang|\btop[- ]?up\b|\bpocket\b|\bvault\b|savings account|\bto savings\b|\bfrom savings\b|own account|internal transfer|oma tili|omalle tilille|omien tilien/i;
-
-// Money to or from the person themselves (their own name on the other side).
-function ownName(names: string[], text: string): boolean {
-  const t = text.toLowerCase();
-  return names.some((n) => {
-    const parts = n.toLowerCase().split(/\s+/).filter((p) => p.length > 1);
-    return parts.length >= 2 && parts.every((p) => t.includes(p));
-  });
-}
 
 // Turns the linked bank accounts' transactions into Spending entries, all of
 // their history, each once. An entry already there for the same amount within
@@ -67,20 +53,10 @@ export async function entriesFromBank(userId: string): Promise<number> {
     db.orm.public.Entry.where({ userId }).select('id', 'date', 'amount', 'note', 'categoryId', 'externalId').all(),
     db.orm.public.Category.where({ userId }).all(),
   ]);
-  // A payment to or from another bank the person connected (S-Pankki paying
-  // "Revolut 6234", a top-up) is money moving between their own accounts.
   const links = await db.orm.public.BankLink.where({ userId }).select('id', 'aspspName').all();
   const bankOf = new Map(accounts.map((a) => [a.statementId!, links.find((l) => l.id === a.linkId)?.aspspName ?? '']));
-  const bankWords = [...new Set(links.map((l) => l.aspspName.toLowerCase().split(/[^\p{L}]+/u).find((w) => w.length >= 4) ?? ''))].filter(Boolean);
-  const otherBank = (statementId: string, text: string) => {
-    const own = (bankOf.get(statementId) ?? '').toLowerCase();
-    const t = text.toLowerCase();
-    return bankWords.some((w) => !own.includes(w) && t.includes(w));
-  };
-  const txns = txnsRaw.map((t) => {
-    const text = `${t.place} ${t.description}`;
-    return { ...t, value: inMain(t.amount, t.statementId), internal: INTERNAL.test(text) || ownName(names, text) || otherBank(t.statementId, text) };
-  });
+  const txns = txnsRaw.map((t) => ({ ...t, value: inMain(t.amount, t.statementId) }));
+  const notSpendingIds = findTransfers(txns, { names, bankOf });
   const done = new Set(entries.map((e) => e.externalId).filter(Boolean));
   const byName = new Map(cats.map((c) => [c.name, c.id]));
   const history = new Map(entries.filter((e) => e.categoryId).map((e) => [e.note.trim().toLowerCase(), e.categoryId!]));
@@ -88,25 +64,11 @@ export async function entriesFromBank(userId: string): Promise<number> {
   const open = new Map<number, Array<{ id: string; date: string; used: boolean }>>();
   for (const e of entries) if (!e.externalId) open.set(e.amount, [...(open.get(e.amount) ?? []), { id: e.id, date: e.date, used: false }]);
 
-  // Money moved between the person's own accounts (a Revolut top-up from
-  // S-Pankki) shows as the same amount out of one and into another within a
-  // few days: a transfer, not spending or income.
-  const transfer = new Set<string>();
-  const pool = txns.filter((t) => t.category !== 'Transfers');
-  for (const t of pool) {
-    if (t.amount >= 0 || transfer.has(t.id)) continue;
-    const twin = pool.find((o) => !transfer.has(o.id) && o.statementId !== t.statementId && o.amount > 0 && (o.amount === -t.amount || Math.abs(o.value + t.value) <= Math.max(100, Math.abs(t.value) * 0.02)) && Math.abs(diffDays(o.date, t.date)) <= MATCH_DAYS);
-    if (twin) {
-      transfer.add(t.id);
-      transfer.add(twin.id);
-    }
-  }
-
   const creates: Array<{ userId: string; date: string; amount: number; note: string; categoryId: string | null; source: string; externalId: string }> = [];
   const matched: Array<{ id: string; externalId: string }> = [];
   for (const t of txns) {
     const externalId = `stx:${t.id}`;
-    if (done.has(externalId) || t.category === 'Transfers' || transfer.has(t.id) || t.internal || !t.amount) continue;
+    if (done.has(externalId) || notSpendingIds.has(t.id) || !t.amount) continue;
     const twin = open.get(t.value)?.find((e) => !e.used && Math.abs(diffDays(e.date, t.date)) <= MATCH_DAYS);
     if (twin) {
       twin.used = true;
@@ -119,8 +81,8 @@ export async function entriesFromBank(userId: string): Promise<number> {
   }
   for (let i = 0; i < creates.length; i += 200) await db.orm.public.Entry.createAll(creates.slice(i, i + 200));
   // Entries imported before a transaction was recognised as a transfer go.
-  const notSpending = txns.filter((t) => t.category === 'Transfers' || transfer.has(t.id) || t.internal).map((t) => `stx:${t.id}`);
-  const stale = entries.filter((e) => e.externalId && notSpending.includes(e.externalId)).map((e) => e.id);
+  const notSpending = new Set([...notSpendingIds].map((id) => `stx:${id}`));
+  const stale = entries.filter((e) => e.externalId && notSpending.has(e.externalId)).map((e) => e.id);
   for (let i = 0; i < stale.length; i += 200) await db.orm.public.Entry.where({ userId, source: 'bank' }).where((e) => e.id.in(stale.slice(i, i + 200))).deleteAll();
   for (const m of matched) await db.orm.public.Entry.where({ id: m.id, userId }).update({ externalId: m.externalId });
   return creates.length;

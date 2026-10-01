@@ -408,3 +408,28 @@ test('the Monday email lists the week and warns about a storm', async () => {
   assert.match(d.text, /\+€2,900/);
   assert.match(d.text, /• Pay back Sam/);
 });
+
+test('transfers between your own accounts are not spending or income', async () => {
+  const { findTransfers } = await import('../src/lib/bank/transfers');
+  const line = (id: string, statementId: string, date: string, amount: number, place: string, description = place, category = 'Other', value = amount) => ({ id, statementId, date, amount, value, place, description, category });
+  const bankOf = new Map([
+    ['sp', 'S-Pankki'],
+    ['rv', 'Revolut'],
+    ['usd', 'Revolut'],
+  ]);
+  const lines = [
+    line('topup', 'sp', '2026-09-08', -300000, 'Revolut 1891'), // S-Pankki pays your Revolut
+    line('self', 'rv', '2026-09-23', -98, 'Victor Abuchi', 'Sent from Revolut To Victor Abuchi'), // to yourself
+    line('exch', 'rv', '2026-09-10', -5000, 'Exchanged to USD'),
+    line('out', 'sp', '2026-04-13', -9100, 'Siirto'),
+    line('in', 'rv', '2026-04-14', 9100, 'Siirto'), // same amount in your other bank the next day
+    line('fx-out', 'rv', '2026-05-02', -10000, 'Payment', 'Payment', 'Other', -10000),
+    line('fx-in', 'usd', '2026-05-02', 11500, 'Payment', 'Payment', 'Other', 9950), // dollars worth almost the same
+    line('fee', 'sp', '2026-07-15', -1000, 'S-PANKKI OYJ'), // your own bank's fee: real cost
+    line('tuition', 'rv', '2026-09-07', -300000, 'Flywire uef'), // real spending
+    line('friend', 'rv', '2026-09-27', 30000, 'Lloyd Chibuike Oleka'), // a friend paying you: real income
+    line('shop', 'sp', '2026-09-09', -243400, 'Gigantti Kuopio'),
+  ];
+  const t = findTransfers(lines, { names: ['Victor Abuchi'], bankOf });
+  assert.deepEqual([...t].sort(), ['exch', 'fx-in', 'fx-out', 'in', 'out', 'self', 'topup']);
+});
