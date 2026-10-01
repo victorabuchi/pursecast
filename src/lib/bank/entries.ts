@@ -28,16 +28,19 @@ const TO_APP: Record<string, string> = {
 // The same money within this many days counts as the same transaction.
 const MATCH_DAYS = 3;
 
-// Turns the main bank account's transactions into Spending entries, all of
-// its history, each once. An entry already there for the same amount within
+// Turns the linked bank accounts' transactions into Spending entries, all of
+// their history, each once. An entry already there for the same amount within
 // a few days (a bill Pursecast posted, or one logged by hand) is the same
 // transaction: it is matched instead of added again. Returns how many were
 // added.
 export async function entriesFromBank(userId: string): Promise<number> {
-  const main = await db.orm.public.BankAccount.where({ userId, role: 'main' }).first();
-  if (!main?.statementId) return 0;
+  // Every linked account in use. A main account is required: its balance is
+  // the truth the entries are measured against.
+  const accounts = (await db.orm.public.BankAccount.where({ userId }).all()).filter((a) => a.role !== 'off' && a.statementId);
+  if (!accounts.some((a) => a.role === 'main')) return 0;
+  const statementIds = accounts.map((a) => a.statementId!);
   const [txns, entries, cats] = await Promise.all([
-    db.orm.public.StatementTxn.where({ userId, statementId: main.statementId }).orderBy((t) => t.date.asc()).all(),
+    db.orm.public.StatementTxn.where({ userId }).where((t) => t.statementId.in(statementIds)).orderBy((t) => t.date.asc()).all(),
     db.orm.public.Entry.where({ userId }).select('id', 'date', 'amount', 'note', 'categoryId', 'externalId').all(),
     db.orm.public.Category.where({ userId }).all(),
   ]);
@@ -48,11 +51,25 @@ export async function entriesFromBank(userId: string): Promise<number> {
   const open = new Map<number, Array<{ id: string; date: string; used: boolean }>>();
   for (const e of entries) if (!e.externalId) open.set(e.amount, [...(open.get(e.amount) ?? []), { id: e.id, date: e.date, used: false }]);
 
+  // Money moved between the person's own accounts (a Revolut top-up from
+  // S-Pankki) shows as the same amount out of one and into another within a
+  // few days: a transfer, not spending or income.
+  const transfer = new Set<string>();
+  const pool = txns.filter((t) => t.category !== 'Transfers');
+  for (const t of pool) {
+    if (t.amount >= 0 || transfer.has(t.id)) continue;
+    const twin = pool.find((o) => !transfer.has(o.id) && o.statementId !== t.statementId && o.amount === -t.amount && Math.abs(diffDays(o.date, t.date)) <= MATCH_DAYS);
+    if (twin) {
+      transfer.add(t.id);
+      transfer.add(twin.id);
+    }
+  }
+
   const creates: Array<{ userId: string; date: string; amount: number; note: string; categoryId: string | null; source: string; externalId: string }> = [];
   const matched: Array<{ id: string; externalId: string }> = [];
   for (const t of txns) {
     const externalId = `stx:${t.id}`;
-    if (done.has(externalId) || t.category === 'Transfers' || !t.amount) continue;
+    if (done.has(externalId) || t.category === 'Transfers' || transfer.has(t.id) || !t.amount) continue;
     const twin = open.get(t.amount)?.find((e) => !e.used && Math.abs(diffDays(e.date, t.date)) <= MATCH_DAYS);
     if (twin) {
       twin.used = true;

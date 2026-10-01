@@ -60,6 +60,12 @@ export default async function SpendingPage({ searchParams }: PageProps<'/spendin
 
 type Data = Money;
 
+// The last day of a month (YYYY-MM).
+function monthEnd(month: string): string {
+  const [y, m] = month.split('-').map(Number);
+  return `${month}-${String(new Date(Date.UTC(y!, m!, 0)).getUTCDate()).padStart(2, '0')}`;
+}
+
 function Activity({ data, month, focus }: { data: Data; month: string; focus: boolean }) {
   const { me, cats, entries } = data;
   const cur = me.currency;
@@ -88,7 +94,7 @@ function Activity({ data, month, focus }: { data: Data; month: string; focus: bo
             </option>
           ))}
         </select>
-        <input className={`${styles.input} ${styles.dateInput}`} type="date" name="date" defaultValue={me.today} max={me.today} aria-label="Date" />
+        <input key={month} className={`${styles.input} ${styles.dateInput}`} type="date" name="date" defaultValue={isThisMonth ? me.today : monthEnd(month)} max={me.today} aria-label="Date" />
         <Submit className={styles.btn}>
           <I d="plus" size={15} stroke={2.6} />
           Add
