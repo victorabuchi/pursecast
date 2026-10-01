@@ -1,0 +1,161 @@
+[
+  {
+    "id": "table.note_file",
+    "label": "Create table \"note_file\"",
+    "summary": "Creates table \"note_file\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "note_file"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"note_file\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"note_file\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"note_file\"",
+        "sql": "CREATE TABLE \"public\".\"note_file\" (\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"data\" text NOT NULL,\n  \"id\" uuid NOT NULL,\n  \"kind\" text NOT NULL,\n  \"mime\" text NOT NULL,\n  \"name\" text NOT NULL,\n  \"size\" int4 NOT NULL,\n  \"userId\" uuid NOT NULL,\n  PRIMARY KEY (\"id\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"note_file\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"note_file\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.note_file.note_file_userId_idx_a489d58a",
+    "label": "Create index \"note_file_userId_idx_a489d58a\" on \"note_file\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "note_file_userId_idx_a489d58a",
+        "table": "note_file"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"note_file_userId_idx_a489d58a\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"note_file_userId_idx_a489d58a\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"note_file_userId_idx_a489d58a\"",
+        "sql": "CREATE INDEX \"note_file_userId_idx_a489d58a\" ON \"public\".\"note_file\" (\"userId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"note_file_userId_idx_a489d58a\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"note_file_userId_idx_a489d58a\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.note_file.note_file_userId_fkey",
+    "label": "Add foreign key \"note_file_userId_fkey\" on \"note_file\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "note_file_userId_fkey",
+        "table": "note_file"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"note_file_userId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "note_file_userId_fkey",
+          "public",
+          "\"public\".\"note_file\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"note_file_userId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"note_file\"\nADD CONSTRAINT \"note_file_userId_fkey\"\nFOREIGN KEY (\"userId\")\nREFERENCES \"public\".\"app_user\" (\"id\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"note_file_userId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "note_file_userId_fkey",
+          "public",
+          "\"public\".\"note_file\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "rowLevelSecurity.public.note_file",
+    "label": "Enable row-level security on \"note_file\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "rowLevelSecurity",
+        "name": "note_file"
+      }
+    },
+    "precheck": [
+      {
+        "description": "check RLS is not already enabled on \"note_file\"",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_class\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"relnamespace\" WHERE (\"n\".\"nspname\" = $1 AND \"c\".\"relname\" = $2 AND NOT (\"c\".\"relrowsecurity\"))) AS \"result\"",
+        "params": [
+          "public",
+          "note_file"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "enable row-level security on \"note_file\"",
+        "sql": "ALTER TABLE \"public\".\"note_file\" ENABLE ROW LEVEL SECURITY"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify row-level security is enabled on \"note_file\"",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_class\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"relnamespace\" WHERE (\"n\".\"nspname\" = $1 AND \"c\".\"relname\" = $2 AND \"c\".\"relrowsecurity\")) AS \"result\"",
+        "params": [
+          "public",
+          "note_file"
+        ]
+      }
+    ]
+  }
+]

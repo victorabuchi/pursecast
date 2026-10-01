@@ -5,6 +5,7 @@ import { backTo, cents, day, done, str } from './act';
 import { exact } from './format';
 import { validAudio } from './notes';
 import { getMe } from './load';
+import { cleanNote } from '../notes/html';
 
 export async function createNoteAction(formData: FormData) {
   const me = await getMe();
@@ -40,6 +41,6 @@ export async function skipSpendAction(formData: FormData) {
 export async function saveNotepadAction(text: string): Promise<string> {
   const me = await getMe();
   const notepadAt = new Date().toISOString();
-  await db.orm.public.User.where({ id: me.id }).update({ notepad: String(text).slice(0, 20000), notepadAt });
+  await db.orm.public.User.where({ id: me.id }).update({ notepad: cleanNote(String(text)), notepadAt });
   return notepadAt;
 }

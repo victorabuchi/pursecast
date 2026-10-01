@@ -50,6 +50,7 @@ model User {
   bankLinks    BankLink[]
   bankAccounts BankAccount[]
   bankNames    BankName[]
+  noteFiles    NoteFile[]
   remindersSent ReminderSent[]
   statementTxns StatementTxn[]
 
@@ -548,4 +549,23 @@ model BankName {
   @@index([userId])
   @@rls
   @@map("bank_name")
+}
+
+// Photos, videos, recordings, files and drawings in the floating note. The
+// note links to them (/api/note-files/<id>) so the note itself stays light.
+model NoteFile {
+  id        Uuid              @id @default(uuid())
+  user      User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    Uuid
+  // image, video, audio, sketch or file
+  kind      String
+  name      String
+  mime      String
+  data      String
+  size      Int
+  createdAt TimestamptzString @default(now())
+
+  @@index([userId])
+  @@rls
+  @@map("note_file")
 }

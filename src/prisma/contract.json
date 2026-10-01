@@ -64,6 +64,10 @@
       "model": "LoginToken",
       "namespace": "public"
     },
+    "note_file": {
+      "model": "NoteFile",
+      "namespace": "public"
+    },
     "plan_event": {
       "model": "PlanEvent",
       "namespace": "public"
@@ -1911,6 +1915,114 @@
               "table": "login_token"
             }
           },
+          "NoteFile": {
+            "fields": {
+              "createdAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              },
+              "data": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "id": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/uuid@1",
+                  "kind": "scalar"
+                }
+              },
+              "kind": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "mime": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "name": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "size": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "userId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/uuid@1",
+                  "kind": "scalar"
+                }
+              }
+            },
+            "relations": {
+              "user": {
+                "cardinality": "N:1",
+                "nullable": false,
+                "on": {
+                  "localFields": [
+                    "userId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
+                },
+                "to": {
+                  "model": "User",
+                  "namespace": "public"
+                }
+              }
+            },
+            "storage": {
+              "fields": {
+                "createdAt": {
+                  "column": "createdAt"
+                },
+                "data": {
+                  "column": "data"
+                },
+                "id": {
+                  "column": "id"
+                },
+                "kind": {
+                  "column": "kind"
+                },
+                "mime": {
+                  "column": "mime"
+                },
+                "name": {
+                  "column": "name"
+                },
+                "size": {
+                  "column": "size"
+                },
+                "userId": {
+                  "column": "userId"
+                }
+              },
+              "namespaceId": "public",
+              "table": "note_file"
+            }
+          },
           "PlanEvent": {
             "fields": {
               "createdAt": {
@@ -3295,6 +3407,21 @@
                   "namespace": "public"
                 }
               },
+              "noteFiles": {
+                "cardinality": "1:N",
+                "on": {
+                  "localFields": [
+                    "id"
+                  ],
+                  "targetFields": [
+                    "userId"
+                  ]
+                },
+                "to": {
+                  "model": "NoteFile",
+                  "namespace": "public"
+                }
+              },
               "notes": {
                 "cardinality": "1:N",
                 "on": {
@@ -3715,6 +3842,11 @@
               "kind": "rls",
               "namespaceId": "public",
               "tableName": "login_token"
+            },
+            "note_file": {
+              "kind": "rls",
+              "namespaceId": "public",
+              "tableName": "note_file"
             },
             "plan_event": {
               "kind": "rls",
@@ -5352,6 +5484,89 @@
                 }
               ]
             },
+            "note_file": {
+              "columns": {
+                "createdAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "default": {
+                    "expression": "now()",
+                    "kind": "function"
+                  },
+                  "nativeType": "timestamptz",
+                  "nullable": false
+                },
+                "data": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "id": {
+                  "codecId": "pg/uuid@1",
+                  "nativeType": "uuid",
+                  "nullable": false
+                },
+                "kind": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "mime": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "name": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "size": {
+                  "codecId": "pg/int4@1",
+                  "nativeType": "int4",
+                  "nullable": false
+                },
+                "userId": {
+                  "codecId": "pg/uuid@1",
+                  "nativeType": "uuid",
+                  "nullable": false
+                }
+              },
+              "foreignKeys": [
+                {
+                  "onDelete": "cascade",
+                  "source": {
+                    "columns": [
+                      "userId"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "note_file"
+                  },
+                  "target": {
+                    "columns": [
+                      "id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "app_user"
+                  }
+                }
+              ],
+              "indexes": [
+                {
+                  "columns": [
+                    "userId"
+                  ],
+                  "name": "note_file_userId_idx_a489d58a",
+                  "prefix": "note_file_userId_idx",
+                  "unique": false
+                }
+              ],
+              "primaryKey": {
+                "columns": [
+                  "id"
+                ]
+              },
+              "uniques": []
+            },
             "plan_event": {
               "columns": {
                 "createdAt": {
@@ -6327,10 +6542,10 @@
         "kind": "postgres-schema"
       }
     },
-    "storageHash": "087e0d4ca06fac92412e90918256262dcf851ffaf56bda0249d0a04aa7a92c7b"
+    "storageHash": "045aa5b49b149f5d0dcce9d7fc7e4b6858e9c93c62994d71aa29bfda3bbbe14a"
   },
   "execution": {
-    "executionHash": "5fa8e78fcc6e0958f2d05513ebe990b5b1866edbfa92e5d083042237237ed681",
+    "executionHash": "f6f2930846f9d00c6e96bcc430dd700509e0c4009849a4227c32b083f3aba73c",
     "mutations": {
       "defaults": [
         {
@@ -6496,6 +6711,17 @@
             "column": "id",
             "namespace": "public",
             "table": "login_token"
+          }
+        },
+        {
+          "onCreate": {
+            "id": "uuidv4",
+            "kind": "generator"
+          },
+          "ref": {
+            "column": "id",
+            "namespace": "public",
+            "table": "note_file"
           }
         },
         {
