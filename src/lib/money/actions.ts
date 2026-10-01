@@ -260,7 +260,7 @@ export async function setEntryCategoryAction(formData: FormData) {
   redirect(backTo(formData, '/spending'));
 }
 
-// Worth-It: 😍 😐 😩. Tapping the same face again clears it.
+// Worth-It: loved it, fine, regret it. Tapping the same face again clears it.
 export async function rateAction(formData: FormData) {
   const me = await getMe();
   const mood = str(formData, 'mood', 10);

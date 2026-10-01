@@ -24,7 +24,14 @@ const RANGES = [
 ] as const;
 
 const SKY_ICON: Record<Sky, 'sun' | 'partly' | 'cloud' | 'storm'> = { sun: 'sun', partly: 'partly', cloud: 'cloud', storm: 'storm' };
-const SKY_EMOJI: Record<Sky, string> = { sun: '☀', partly: '⛅', cloud: '☁', storm: '⛈' };
+// A small weather icon inside a sentence, in the sky's own colour.
+function Sky({ sky }: { sky: Sky }) {
+  return (
+    <span className={styles.skyInline} data-sky={sky} aria-hidden="true">
+      <I d={SKY_ICON[sky]} size={15} stroke={2.2} />
+    </span>
+  );
+}
 const CONDITION: Record<Sky, string> = { sun: 'Clear skies', partly: 'Mostly sunny', cloud: 'Covered', storm: 'Storm ahead' };
 
 function list(names: string[]): string {
@@ -56,7 +63,12 @@ export default async function ForecastPage({ searchParams }: PageProps<'/forecas
     const names = namesIn(worst).slice(0, 3);
     tip = (
       <>
-        {sunny && <b>☀ Sunny through {short(sunny)}. </b>}⛈ Storm warning {view.byMonth ? `in ${monthName(monthOf(worst.start), true)}` : `for the week of ${short(worst.start)}`}:{' '}
+        {sunny && (
+          <b>
+            <Sky sky="sun" /> Sunny through {short(sunny)}.{' '}
+          </b>
+        )}
+        <Sky sky="storm" /> Storm warning {view.byMonth ? `in ${monthName(monthOf(worst.start), true)}` : `for the week of ${short(worst.start)}`}:{' '}
         {names.length >= 2 ? `${list(names)} land together.` : names.length === 1 ? `${names[0]} and everyday spending take you below zero.` : 'everyday spending takes you below zero.'}
       </>
     );
@@ -64,14 +76,17 @@ export default async function ForecastPage({ searchParams }: PageProps<'/forecas
     const payday = nextIncomeAfter(fc, worst.lowDate);
     tip = (
       <>
-        <b>☁ {view.byMonth ? monthName(monthOf(worst.start), true) : `Week of ${short(worst.start)}`} is tight but covered.</b>
+        <b>
+          <Sky sky="cloud" /> {view.byMonth ? monthName(monthOf(worst.start), true) : `Week of ${short(worst.start)}`} is tight but covered.</b>
         {payday ? ` Sunny again from payday on ${short(payday.date)}.` : ` Lowest point ${m(worst.low)} on ${short(worst.lowDate)}.`}
       </>
     );
   } else {
     tip = (
       <>
-        <b>{condition === 'sun' ? `☀ Sunny for the next ${view.words}.` : `⛅ Mostly sunny for the next ${view.words}.`}</b> Your lowest point is {m(fc.low.amount)} on {short(fc.low.date)}.
+        <b>
+          <Sky sky={condition === 'sun' ? 'sun' : 'partly'} /> {condition === 'sun' ? `Sunny for the next ${view.words}.` : `Mostly sunny for the next ${view.words}.`}
+        </b> Your lowest point is {m(fc.low.amount)} on {short(fc.low.date)}.
       </>
     );
   }
@@ -285,7 +300,12 @@ function WeekSheet({ week, fc: f, budgets: b, currency }: { week: Week; fc: Fore
   const fix = week.sky === 'storm' || week.sky === 'cloud' ? suggestFix(f, week, b) : null;
   const payday = nextIncomeAfter(f, week.lowDate);
   const until = payday ? diffDays(week.lowDate, payday.date) : null;
-  const title = week.sky === 'storm' ? `⛈ Storm warning · ${range(week.start, week.end)}` : `${SKY_EMOJI[week.sky]} ${CONDITION[week.sky]} · ${range(week.start, week.end)}`;
+  const title = (
+    <span className={styles.skyTitle}>
+      <Sky sky={week.sky} />
+      {week.sky === 'storm' ? 'Storm warning' : CONDITION[week.sky]} · {range(week.start, week.end)}
+    </span>
+  );
   const mm = (n: number, sign = false) => money(n, currency, { sign });
   return (
     <UrlSheet title={title} drop={['week']}>

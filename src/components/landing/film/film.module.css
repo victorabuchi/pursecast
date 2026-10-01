@@ -1832,8 +1832,13 @@
 }
 
 .storyList li::before {
-  content: '✦ ';
-  color: #fcd34d;
+  content: '';
+  display: inline-block;
+  width: 5px;
+  height: 5px;
+  margin: 0 8px 2px 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.7);
 }
 
 /* On phones the play button sits in the browser bar, clear of the app. */
@@ -2032,4 +2037,36 @@
 .push span span {
   color: var(--ink);
   font-size: 12px;
+}
+
+/* Weather icons inside sentences, in each sky's colour. */
+.skyInline {
+  display: inline-grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  margin-right: 2px;
+  border-radius: 6px;
+  vertical-align: -5px;
+}
+
+.skyInline[data-sky='sun'] {
+  color: #f5a524;
+  background: rgba(245, 165, 36, 0.16);
+}
+
+.skyInline[data-sky='cloud'] {
+  color: #6b7380;
+  background: rgba(107, 115, 128, 0.14);
+}
+
+.skyInline[data-sky='storm'] {
+  color: #7c3aed;
+  background: rgba(124, 58, 237, 0.14);
+}
+
+.skyTitle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
 }

@@ -232,7 +232,7 @@ export default function Landing() {
               {
                 title: 'Choose what is worth it',
                 items: [
-                  { title: 'Rate, then learn', desc: 'A quick 😍 😐 😩 after each purchase builds a map of joy per euro.' },
+                  { title: 'Rate, then learn', desc: 'One tap after each purchase, loved it, fine or regret it, builds a map of joy per euro.' },
                   { title: 'Budgets that follow joy', desc: 'Money moves from what you regret to what you love, with your approval.' },
                   { title: 'A note from you', desc: 'Your own voice reminds you of your goal right when you are tempted.' },
                   { title: 'Your real inflation', desc: 'See how much your life costs this year compared with last, item by item.' },
@@ -281,7 +281,7 @@ export default function Landing() {
                 label: 'Every week',
                 steps: [
                   { title: 'Log in seconds', desc: 'An amount and a word. The rest is filled in.' },
-                  { title: 'Rate last week', desc: 'Tap 😍 😐 or 😩 on what you bought two days ago.' },
+                  { title: 'Rate last week', desc: 'Loved it, fine or regret it: one tap on what you bought two days ago.' },
                   { title: 'Take a suggestion', desc: 'Move money toward what you love, or skip it.' },
                   { title: 'Check your forks', desc: 'See how your "what if" futures moved this week.' },
                 ],

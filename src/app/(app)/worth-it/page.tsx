@@ -12,7 +12,8 @@ import { loadMoney } from '../../../lib/money/load';
 import { db } from '../../../prisma/db';
 import { addDays, isoAgo, relative, short, weekday } from '../../../lib/money/dates';
 import { exact, money } from '../../../lib/money/format';
-import { adviceFor, FACE, isMood, joyByCategory, RATE_AFTER_DAYS, type Rated } from '../../../lib/money/worth';
+import { adviceFor, isMood, joyByCategory, RATE_AFTER_DAYS, type Rated } from '../../../lib/money/worth';
+import MoodIcon from '../../../components/app/MoodIcon';
 import { moveValueAction } from '../../../lib/money/actions';
 
 export const metadata: Metadata = { title: 'Worth-It', robots: { index: false } };
@@ -98,7 +99,7 @@ export default async function WorthPage({ searchParams }: PageProps<'/worth-it'>
               <div>
                 <b>Budget by value</b>
                 <p>
-                  You rated {advice.from.name.toLowerCase()} {FACE.regret} {advice.regrets} of your last {advice.of} times. Move {money(advice.amount, cur)} a month to {advice.to.name.toLowerCase()}?
+                  You regretted {advice.from.name.toLowerCase()} {advice.regrets} of your last {advice.of} times. Move {money(advice.amount, cur)} a month to {advice.to.name.toLowerCase()}?
                 </p>
                 <div className={styles.moves}>
                   <span>
@@ -147,7 +148,7 @@ export default async function WorthPage({ searchParams }: PageProps<'/worth-it'>
             <div className={styles.card}>
               <strong className={styles.cardTitle}>Your ratings</strong>
               <p className={styles.note}>
-                {rated.length} {rated.length === 1 ? 'purchase' : 'purchases'} rated in 90 days · {FACE.love} {Math.round((loved / rated.length) * 100)}% loved
+                {rated.length} {rated.length === 1 ? 'purchase' : 'purchases'} rated in 90 days · <MoodIcon mood="love" size={15} /> {Math.round((loved / rated.length) * 100)}% loved
               </p>
             </div>
           )}

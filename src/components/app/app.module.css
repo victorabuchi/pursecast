@@ -2516,8 +2516,13 @@
 }
 
 .story li::before {
-  content: '✦';
-  color: #fcd34d;
+  content: '';
+  flex: none;
+  width: 6px;
+  height: 6px;
+  margin-top: 0.55em;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.7);
 }
 
 .txnTable {
@@ -3384,4 +3389,41 @@
   border-color: var(--b);
   background: var(--card);
   outline: none;
+}
+
+/* Weather icons inside sentences and titles, in each sky's colour. */
+.skyInline {
+  display: inline-grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  margin-right: 2px;
+  border-radius: 7px;
+  vertical-align: -5px;
+  background: var(--soft);
+}
+
+.skyInline[data-sky='sun'] {
+  color: var(--sun);
+  background: color-mix(in srgb, var(--sun) 16%, transparent);
+}
+
+.skyInline[data-sky='partly'] {
+  color: #d97706;
+  background: color-mix(in srgb, #d97706 14%, transparent);
+}
+
+.skyInline[data-sky='cloud'] {
+  color: var(--muted);
+}
+
+.skyInline[data-sky='storm'] {
+  color: #7c3aed;
+  background: color-mix(in srgb, #7c3aed 16%, transparent);
+}
+
+.skyTitle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
 }

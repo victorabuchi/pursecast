@@ -1,6 +1,7 @@
 import { AnimatePresence, motion } from 'motion/react';
 import styles from './film.module.css';
 import Mark from '../../Mark';
+import MoodIcon from '../../app/MoodIcon';
 
 // The scenes of the landing page film. Each one is a pure function of the
 // scene clock t (milliseconds), so pausing, seeking and reduced motion are free.
@@ -141,7 +142,7 @@ function Toast({ show, text }: { show: boolean; text: string }) {
   );
 }
 
-function Sheet({ phone, open, title, children }: { phone: boolean; open: boolean; title: string; children: React.ReactNode }) {
+function Sheet({ phone, open, title, children }: { phone: boolean; open: boolean; title: React.ReactNode; children: React.ReactNode }) {
   return (
     <AnimatePresence>
       {open && (
@@ -200,6 +201,15 @@ function smooth(p: Pt[]): string {
   return d;
 }
 const pct = (p: Pt) => ({ left: `${(p[0] / VB.w) * 100}%`, top: `${(p[1] / VB.h) * 100}%` });
+
+// A small weather icon inside a sentence, in the sky's own colour.
+function SkyMark({ sky }: { sky: 'sun' | 'cloud' | 'storm' }) {
+  return (
+    <span className={styles.skyInline} data-sky={sky} aria-hidden="true">
+      <I d={P[sky]} size={13} stroke={2.2} />
+    </span>
+  );
+}
 
 /* ---------- 1. Money Weather ---------- */
 
@@ -302,11 +312,17 @@ function WeatherScene({ t, phone, brand }: SceneProps) {
             <div className={styles.tipCard}>
               {t >= FIXED_AT ? (
                 <>
-                  <b>☁ Week of Nov 3 is tight but covered.</b> Sunny again from payday on Nov 10.
+                  <b>
+                    <SkyMark sky="cloud" /> Week of Nov 3 is tight but covered.
+                  </b>{' '}
+                  Sunny again from payday on Nov 10.
                 </>
               ) : (
                 <>
-                  <b>☀ Sunny through Oct 31.</b> ⛈ Storm warning for the week of Nov 3: rent, car insurance and Maya&apos;s birthday land together.
+                  <b>
+                    <SkyMark sky="sun" /> Sunny through Oct 31.
+                  </b>{' '}
+                  <SkyMark sky="storm" /> Storm warning for the week of Nov 3: rent, car insurance and Maya&apos;s birthday land together.
                 </>
               )}
             </div>
@@ -330,7 +346,7 @@ function WeatherScene({ t, phone, brand }: SceneProps) {
           </div>
         )}
       </div>
-      <Sheet phone={phone} open={within(t, 2700, 5700)} title="⛈ Storm warning · Nov 3–9">
+      <Sheet phone={phone} open={within(t, 2700, 5700)} title={<span className={styles.skyTitle}><SkyMark sky="storm" /> Storm warning · Nov 3–9</span>}>
         <div className={styles.details}>
           <span>
             Rent <b>€950</b>
@@ -365,9 +381,9 @@ function WeatherScene({ t, phone, brand }: SceneProps) {
 
 type Mood = 'love' | 'meh' | 'regret';
 const FACES: Array<[Mood, string]> = [
-  ['love', '😍'],
-  ['meh', '😐'],
-  ['regret', '😩'],
+  ['love', 'Loved it'],
+  ['meh', 'It was fine'],
+  ['regret', 'Regret it'],
 ];
 const BUYS: Array<{ name: string; where: string; amount: number; mood: Mood; at: number }> = [
   { name: 'Concert', where: 'Fri · Tavastia', amount: 64, mood: 'love', at: 1950 },
@@ -405,7 +421,7 @@ function WorthScene({ t, phone, brand }: SceneProps) {
                   </span>
                   <b className={styles.amount}>{eur(b.amount)}</b>
                   <span className={styles.faces}>
-                    {FACES.map(([mood, face]) => (
+                    {FACES.map(([mood]) => (
                       <motion.i
                         key={mood}
                         className={styles.face}
@@ -415,7 +431,7 @@ function WorthScene({ t, phone, brand }: SceneProps) {
                         animate={picked === mood ? { scale: [1, 1.35, 1] } : { scale: 1 }}
                         transition={{ duration: 0.35 }}
                       >
-                        {face}
+                        <MoodIcon mood={mood} size={18} />
                       </motion.i>
                     ))}
                   </span>
@@ -431,7 +447,7 @@ function WorthScene({ t, phone, brand }: SceneProps) {
                 </span>
                 <div>
                   <b>Budget by value</b>
-                  <p>You rated takeaway 😩 7 of your last 9 times. Move €40 a month to concerts and live music?</p>
+                  <p>You regretted takeaway 7 of your last 9 times. Move €40 a month to concerts and live music?</p>
                   <div className={styles.moves}>
                     <span>
                       Takeaway <s data-on={moved || undefined}>€120</s> {moved && <b>€{Math.round(120 - 40 * shift)}</b>}
@@ -476,9 +492,9 @@ function WorthScene({ t, phone, brand }: SceneProps) {
               <b>Was Friday&apos;s concert worth it?</b>
               <small>€64 · Tavastia · 2 days ago</small>
               <span className={styles.faces}>
-                {FACES.map(([mood, face]) => (
+                {FACES.map(([mood]) => (
                   <i key={mood} className={styles.face} data-on={(mood === 'love' && t >= 1950) || undefined} data-target={mood === 'love' ? 'n-love' : undefined}>
-                    {face}
+                    <MoodIcon mood={mood} size={18} />
                   </i>
                 ))}
               </span>
@@ -797,7 +813,7 @@ function FutureScene({ t, phone, brand }: SceneProps) {
             Wolt pizza <small>Takeaway</small> <b>€32</b>
           </span>
         </div>
-        <p className={styles.note}>You rated takeaway 😩 7 of your last 8 times.</p>
+        <p className={styles.note}>You regretted takeaway 7 of your last 8 times.</p>
         <div className={styles.sheetActions}>
           <span className={styles.btnGhost}>Log it anyway</span>
           <span className={`${styles.btn} ${within(t, SKIP_AT - 300, SKIP_AT) ? styles.pressed : ''}`} data-target="skip">

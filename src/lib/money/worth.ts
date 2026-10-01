@@ -1,12 +1,11 @@
 // Worth-It: one tap after a purchase builds a joy per euro map.
 
 export type Mood = 'love' | 'meh' | 'regret';
-export const MOODS: Array<[Mood, string, string]> = [
-  ['love', '😍', 'Loved it'],
-  ['meh', '😐', 'It was fine'],
-  ['regret', '😩', 'Regret it'],
+export const MOODS: Array<[Mood, string]> = [
+  ['love', 'Loved it'],
+  ['meh', 'It was fine'],
+  ['regret', 'Regret it'],
 ];
-export const FACE: Record<Mood, string> = { love: '😍', meh: '😐', regret: '😩' };
 const SCORE: Record<Mood, number> = { love: 10, meh: 5, regret: 0 };
 
 export function isMood(v: unknown): v is Mood {

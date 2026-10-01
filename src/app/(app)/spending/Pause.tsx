@@ -6,7 +6,6 @@ import type { Cat, Me } from '../../../lib/money/load';
 import { short } from '../../../lib/money/dates';
 import { exact, money } from '../../../lib/money/format';
 import { parseQuick } from '../../../lib/money/categories';
-import { FACE } from '../../../lib/money/worth';
 import { quickAddAction } from '../../../lib/money/actions';
 import { skipSpendAction } from '../../../lib/money/note-actions';
 
@@ -38,7 +37,7 @@ export default async function Pause({ me, cats, params }: { me: Me; cats: Cat[];
       </div>
       <p className={styles.note}>
         {regret
-          ? `You rated ${cat?.name.toLowerCase() ?? 'this'} ${FACE.regret} ${regret[1]} of your last ${regret[2]} times.`
+          ? `You regretted ${cat?.name.toLowerCase() ?? 'this'} ${regret[1]} of your last ${regret[2]} times.`
           : over
             ? `This takes you ${money(Number(over[1]), me.currency)} over your ${cat?.name.toLowerCase() ?? ''} budget this month.`
             : ''}

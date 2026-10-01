@@ -13,7 +13,8 @@ import Owed from './Owed';
 import Pause from './Pause';
 import { addMonthKey, monthLabel, monthOf, relative } from '../../../lib/money/dates';
 import { exact, money } from '../../../lib/money/format';
-import { FACE, isMood } from '../../../lib/money/worth';
+import { isMood } from '../../../lib/money/worth';
+import MoodIcon from '../../../components/app/MoodIcon';
 import { addCategoryAction, deleteCategoryAction, deleteEntryAction, quickAddAction, saveBudgetsAction } from '../../../lib/money/actions';
 
 export const metadata: Metadata = { title: 'Spending', robots: { index: false } };
@@ -167,7 +168,7 @@ function Activity({ data, month, focus }: { data: Data; month: string; focus: bo
                     </span>
                     {isMood(e.mood) && (
                       <span title="Your Worth-It rating" aria-label={`Rated ${e.mood}`}>
-                        {FACE[e.mood]}
+                        <MoodIcon mood={e.mood} size={18} />
                       </span>
                     )}
                     <b className={`${styles.num} ${e.amount > 0 ? styles.pos : ''}`}>{exact(e.amount, cur, { sign: e.amount > 0 })}</b>
