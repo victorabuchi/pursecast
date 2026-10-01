@@ -35,7 +35,7 @@ function list(names: string[]): string {
 export default async function ForecastPage({ searchParams }: PageProps<'/forecast'>) {
   const params = await searchParams;
   const view = RANGES.find((r) => r.id === params['range']) ?? RANGES[1]!;
-  const { me, forecast: fc, budgets, balance, mainBalance, accounts } = await loadMoney(view.days);
+  const { me, forecast: fc, budgets, balance, mainBalance, mainName, accounts } = await loadMoney(view.days);
   // Things waiting for a payday, shown on that pay in Coming up.
   const todos = await db.orm.public.Todo.where({ userId: me.id }).where((t) => t.doneAt.isNull()).where((t) => t.incomeId.isNotNull()).select('incomeId', 'due').all();
   const toDo = new Map<string, number>();
@@ -119,13 +119,15 @@ export default async function ForecastPage({ searchParams }: PageProps<'/forecas
           <div className={`${styles.card} ${styles.today}`}>
             <div>
               <small>{accounts.some((a) => a.inForecast) ? 'Balance today, all counted accounts' : 'Balance today'}</small>
-              <strong className={styles.bigNum}>{m(balance)}</strong>
+              <strong className={styles.bigNum}>{Math.abs(balance) < 10000 ? exact(balance, me.currency) : m(balance)}</strong>
               {accounts.length > 0 && (
                 <span className={styles.accLine}>
-                  <span>Main {m(mainBalance)}</span>
+                  <span>
+                    {mainName} {exact(mainBalance, me.currency)}
+                  </span>
                   {accounts.filter((a) => a.balance !== 0).map((a) => (
                     <span key={a.id} data-off={!a.inForecast || undefined} title={a.inForecast ? 'Counted in the forecast' : 'Not counted in the forecast'}>
-                      {a.name} {exact(a.balance, a.currency)}
+                      {a.name.replace(/ · .*/, '')} {exact(a.balance, a.currency)}
                       {a.currency !== me.currency ? ` ≈ ${m(a.value)}` : ''}
                       {a.inForecast ? '' : ' (not counted)'}
                     </span>

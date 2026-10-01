@@ -307,6 +307,8 @@ export type Money = {
   // The main account alone, and the other accounts with their value in the
   // main currency. balance above is main plus the ones that count.
   mainBalance: number;
+  // The bank the main balance comes from, when one is connected.
+  mainName: string;
   accounts: AccountRow[];
 };
 
@@ -331,6 +333,8 @@ export async function moneyFor(me: Me & { balance: number; balanceSetAt: string 
     getAdvances(me.id),
     getAccounts(me.id),
   ]);
+  const mainBank = await db.orm.public.BankAccount.where({ userId: me.id, role: 'main' }).first();
+  const mainName = mainBank ? ((await db.orm.public.BankLink.where({ id: mainBank.linkId, userId: me.id }).first())?.aspspName ?? 'Main') : 'Main';
   const accounts = accountRows.map((a) => ({ ...a, value: convert(a.balance, a.currency, me.currency, rates) ?? 0 }));
   const balance = mainBalance + accounts.filter((a) => a.inForecast).reduce((s, a) => s + a.value, 0);
   const month = monthOf(me.today);
@@ -346,5 +350,5 @@ export async function moneyFor(me: Me & { balance: number; balanceSetAt: string 
   const fcEvents: FcEvent[] = events.filter((e) => !e.hidden && e.cost > 0).map((e) => ({ id: e.id, name: e.name, date: e.date, cost: e.cost, saveMonthly: e.saveMonthly, saveFrom: e.saveFrom, source: e.source }));
   const fcDebts = debts.filter((d) => d.direction === 'borrowed' && d.left > 0 && d.dueDate).map((d) => ({ id: d.id, person: d.person, remaining: d.left, dueDate: d.dueDate! }));
   const forecast = buildForecast({ today: me.today, balance, cushion: me.cushion, recurring: forForecast(recurring, advances), budgets, events: fcEvents, debts: fcDebts, days });
-  return { me, cats, recurring, entries, events, debts, budgets, balance, forecast, rates, advances, mainBalance, accounts };
+  return { me, cats, recurring, entries, events, debts, budgets, balance, forecast, rates, advances, mainBalance, mainName, accounts };
 }
