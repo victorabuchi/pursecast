@@ -53,20 +53,10 @@ services:
       - key: ENABLE_BANKING_APP_ID
         sync: false
 
-  # Every hour: push reminders (from 8:00 in each person's time zone) and the
-  # Monday email. Set CRON_SECRET to the same value as on the web service.
-  - type: cron
-    name: pursecast-reminders
-    runtime: node
-    region: frankfurt
-    plan: starter
-    schedule: "5 * * * *"
-    buildCommand: "true"
-    startCommand: node -e "fetch(process.env.APP_URL + '/api/cron/reminders', { headers: { authorization: 'Bearer ' + process.env.CRON_SECRET } }).then(async (r) => { console.log(r.status, await r.text()); process.exit(r.ok ? 0 : 1); })"
-    envVars:
-      - key: NODE_VERSION
-        value: "22"
-      - key: APP_URL
-        value: https://pursecast.onrender.com
-      - key: CRON_SECRET
-        sync: false
+# The hourly job (reminders at 8:00 local time, the Monday email, bank
+# updates every 6 hours) runs from the Supabase database with pg_cron:
+#   select cron.schedule('pursecast-reminders', '5 * * * *',
+#     $$select net.http_get(url := 'https://pursecast.onrender.com/api/cron/reminders',
+#       headers := jsonb_build_object('Authorization', 'Bearer <CRON_SECRET>'),
+#       timeout_milliseconds := 280000)$$);
+# Stop it with: select cron.unschedule('pursecast-reminders');
