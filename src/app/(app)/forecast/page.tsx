@@ -8,9 +8,9 @@ import { MoneyInput, SignToggle } from '../../../components/app/Fields';
 import { SheetButton, UrlSheet, CloseButton } from '../../../components/app/Sheet';
 import Submit from '../../../components/app/Submit';
 import { VB, pct, smooth, type Pt } from '../../../components/app/chart';
-import { loadMoney } from '../../../lib/money/load';
+import { getMe, loadMoney } from '../../../lib/money/load';
 import { conditionOf, everyday, monthsOfForecast, nextIncomeAfter, suggestFix, sunnyUntil, weekFlows, weeksOf, worstWeek, type FcBudget, type Forecast, type Sky, type Week } from '../../../lib/money/forecast';
-import { countWord, diffDays, monthName, monthOf, range, short } from '../../../lib/money/dates';
+import { addDays, addMonths, countWord, diffDays, monthName, monthOf, range, short } from '../../../lib/money/dates';
 import { exact, money } from '../../../lib/money/format';
 import { fixStormAction, setBalanceAction, setCushionAction } from '../../../lib/money/actions';
 
@@ -39,20 +39,40 @@ function list(names: string[]): string {
   return `${names.slice(0, -1).join(', ')} and ${names[names.length - 1]}`;
 }
 
+// The forecast seen through one calendar month: its days, and the lowest
+// point within them.
+function focusMonth(fc: Forecast, month: string): Forecast {
+  const days = fc.days.filter((d) => monthOf(d.date) === month);
+  if (!days.length) return fc;
+  let low = days[0]!;
+  for (const d of days) if (d.spendable < low.spendable) low = d;
+  return { ...fc, days, low: { date: low.date, amount: low.spendable } };
+}
+
 export default async function ForecastPage({ searchParams }: PageProps<'/forecast'>) {
   const params = await searchParams;
   const view = RANGES.find((r) => r.id === params['range']) ?? RANGES[1]!;
-  const { me, forecast: fc, budgets, balance, mainBalance, mainName, accounts } = await loadMoney(view.days);
+  // The 1 month view is one calendar month, chosen with the arrows (this
+  // month and the 11 after it); the forecast runs to its last day.
+  const first = await getMe();
+  const months = Array.from({ length: 12 }, (_, i) => monthOf(addMonths(`${monthOf(first.today)}-01`, i)));
+  const focus = view.id === '1m' ? (months.includes(String(params['month'])) ? String(params['month']) : months[0]!) : null;
+  const focusEnd = focus ? addDays(addMonths(`${focus}-01`, 1), -1) : null;
+  const loaded = await loadMoney(focusEnd ? diffDays(first.today, focusEnd) + 1 : view.days);
+  const { me, budgets, balance, mainBalance, mainName, accounts } = loaded;
+  const fc = focus ? focusMonth(loaded.forecast, focus) : loaded.forecast;
   // Things waiting for a payday, shown on that pay in Coming up.
   const todos = await db.orm.public.Todo.where({ userId: me.id }).where((t) => t.doneAt.isNull()).where((t) => t.incomeId.isNotNull()).select('incomeId', 'due').all();
   const toDo = new Map<string, number>();
   for (const t of todos) toDo.set(`${t.incomeId}|${t.due}`, (toDo.get(`${t.incomeId}|${t.due}`) ?? 0) + 1);
   // Links inside the page keep the chosen range.
-  const q = (extra: string) => `/forecast?${view.id === '3m' ? '' : `range=${view.id}&`}${extra}`;
+  const q = (extra: string) => `/forecast?${view.id === '3m' ? '' : `range=${view.id}&`}${focus && focus !== months[0] ? `month=${focus}&` : ''}${extra}`;
   const cur = me.currency;
   const m = (n: number, sign = false) => money(n, cur, { sign });
   // Weeks for the short views, calendar months for the long ones.
-  const weeks = view.byMonth ? monthsOfForecast(fc) : weeksOf(fc, Math.ceil(view.days / 7) + 1);
+  const weeks = view.byMonth ? monthsOfForecast(fc) : focus ? weeksOf({ ...fc, today: fc.days[0]!.date }, 6) : weeksOf(fc, Math.ceil(view.days / 7) + 1);
+  // How the chosen period is named in sentences.
+  const period = focus ? (focus === months[0] ? 'the rest of this month' : monthName(focus, true)) : `the next ${view.words}`;
   const condition = conditionOf(fc);
   const worst = worstWeek(weeks);
   const sunny = sunnyUntil(weeks);
@@ -85,7 +105,7 @@ export default async function ForecastPage({ searchParams }: PageProps<'/forecas
     tip = (
       <>
         <b>
-          <Sky sky={condition === 'sun' ? 'sun' : 'partly'} /> {condition === 'sun' ? `Sunny for the next ${view.words}.` : `Mostly sunny for the next ${view.words}.`}
+          <Sky sky={condition === 'sun' ? 'sun' : 'partly'} /> {condition === 'sun' ? `Sunny for ${period}.` : `Mostly sunny for ${period}.`}
         </b> Your lowest point is {m(fc.low.amount)} on {short(fc.low.date)}.
       </>
     );
@@ -113,7 +133,7 @@ export default async function ForecastPage({ searchParams }: PageProps<'/forecas
     <>
       <PageHead
         title="Money Weather"
-        sub={`Next ${view.words}`}
+        sub={focus ? `${monthName(focus, true)} ${focus.slice(0, 4)}` : `Next ${view.words}`}
         icon="sun"
         right={
           <>
@@ -169,18 +189,45 @@ export default async function ForecastPage({ searchParams }: PageProps<'/forecas
             </Link>
           </div>
 
-          <nav className={styles.segment} aria-label="Forecast range" style={{ alignSelf: 'flex-start' }}>
-            {RANGES.map((r) => (
-              <Link key={r.id} href={r.id === '3m' ? '/forecast' : `/forecast?range=${r.id}`} scroll={false} aria-current={r.id === view.id ? 'page' : undefined}>
-                {r.label}
-              </Link>
-            ))}
-          </nav>
+          <div className={styles.rangeRow}>
+            <nav className={styles.segment} aria-label="Forecast range">
+              {RANGES.map((r) => (
+                <Link key={r.id} href={r.id === '3m' ? '/forecast' : `/forecast?range=${r.id}`} scroll={false} aria-current={r.id === view.id ? 'page' : undefined}>
+                  {r.label}
+                </Link>
+              ))}
+            </nav>
+            {focus && (
+              <nav className={styles.monthPick} aria-label="Month">
+                {months.indexOf(focus) > 0 ? (
+                  <Link href={`/forecast?range=1m&month=${months[months.indexOf(focus) - 1]}`} scroll={false} aria-label="Previous month">
+                    <I d="left" size={16} />
+                  </Link>
+                ) : (
+                  <span aria-hidden="true">
+                    <I d="left" size={16} />
+                  </span>
+                )}
+                <b>
+                  {monthName(focus, true)} {focus.slice(0, 4)}
+                </b>
+                {months.indexOf(focus) < months.length - 1 ? (
+                  <Link href={`/forecast?range=1m&month=${months[months.indexOf(focus) + 1]}`} scroll={false} aria-label="Next month">
+                    <I d="right" size={16} />
+                  </Link>
+                ) : (
+                  <span aria-hidden="true">
+                    <I d="right" size={16} />
+                  </span>
+                )}
+              </nav>
+            )}
+          </div>
 
           <div className={styles.strip} style={{ gridTemplateColumns: `repeat(${weeks.length}, minmax(0, 1fr))` }}>
             {weeks.map((w, i) => (
               <Link key={w.start} href={q(`week=${w.start}`)} scroll={false} className={`${styles.wk} ${styles[`wk_${w.sky}`]} ${String(params['toast'] ?? '').startsWith('Storm cleared') && w.start === worst?.start ? styles.wkPop : ''}`} style={{ textDecoration: 'none', color: 'inherit' }} aria-label={`${view.byMonth ? monthName(monthOf(w.start), true) : `Week of ${short(w.start)}`}: ${CONDITION[w.sky]}, lowest ${m(w.low)}`}>
-                <small>{view.byMonth ? (i === 0 ? 'This month' : monthName(monthOf(w.start))) : i === 0 ? 'This week' : short(w.start)}</small>
+                <small>{view.byMonth ? (i === 0 ? 'This month' : monthName(monthOf(w.start))) : i === 0 && !(focus && focus !== months[0]) ? 'This week' : short(w.start)}</small>
                 <span className={styles[`sky_${w.sky}`]}>
                   <I d={SKY_ICON[w.sky]} size={22} />
                 </span>
@@ -211,7 +258,7 @@ export default async function ForecastPage({ searchParams }: PageProps<'/forecas
             <div className={styles.months} style={{ position: 'relative', height: 14 }}>
               {monthTicks.map(({ d, i }) => (
                 <span key={d.date} style={{ position: 'absolute', left: `${(i / (fc.days.length - 1)) * 100}%`, transform: i === 0 ? undefined : 'translateX(-50%)' }}>
-                  {i === 0 ? 'Today' : short(d.date).split(' ')[0]}
+                  {i === 0 ? (d.date === me.today ? 'Today' : short(d.date)) : short(d.date).split(' ')[0]}
                 </span>
               ))}
             </div>

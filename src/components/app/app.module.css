@@ -3427,3 +3427,44 @@
   align-items: center;
   gap: 8px;
 }
+
+/* Forecast range: the 1 month view has a month picker beside it. */
+.rangeRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+
+.monthPick {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--card);
+}
+
+.monthPick b {
+  min-width: 140px;
+  text-align: center;
+}
+
+.monthPick a,
+.monthPick span {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 9px;
+  color: var(--ink);
+}
+
+.monthPick a:hover {
+  background: var(--soft);
+}
+
+.monthPick span {
+  opacity: 0.3;
+}

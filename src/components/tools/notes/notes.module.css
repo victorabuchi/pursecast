@@ -10,6 +10,11 @@
   height: 520px;
 }
 
+.notesBig {
+  width: min(1100px, calc(100vw - 32px)) !important;
+  height: calc(100dvh - 90px) !important;
+}
+
 :global(html[data-theme='dark']) .notes {
   --n-pop: rgba(44, 44, 46, 0.94);
   --n-pop-line: rgba(255, 255, 255, 0.12);

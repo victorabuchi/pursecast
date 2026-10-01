@@ -236,6 +236,23 @@ export default function Notepad({ initial, savedAt, onClose }: { initial: string
   // One kind of list at a time: bullets, dashes, numbers or a checklist.
   const setList = (kind: 'bullet' | 'dash' | 'number' | 'check') => {
     restore();
+    // An empty note or line: start the list right there, with its circle.
+    const el = editor.current;
+    if (el && !el.innerText.trim() && !el.querySelector('img, video, audio, table, figure')) {
+      const tag = kind === 'number' ? 'ol' : 'ul';
+      const cls = kind === 'check' ? ' class="checklist"' : kind === 'dash' ? ' class="dashed"' : '';
+      el.innerHTML = `<${tag}${cls}><li${kind === 'check' ? ' data-checked="false"' : ''}><br></li></${tag}>`;
+      const r = document.createRange();
+      r.setStart(el.querySelector('li')!, 0);
+      r.collapse(true);
+      const sel = window.getSelection();
+      sel?.removeAllRanges();
+      sel?.addRange(r);
+      el.focus();
+      changed();
+      where();
+      return;
+    }
     keepCaret(() => applyList(kind));
     changed();
     where();
@@ -424,13 +441,26 @@ export default function Notepad({ initial, savedAt, onClose }: { initial: string
     changed();
   };
 
+  // The green light: fills most of the screen, and back. A size the person
+  // dragged to is set aside while zoomed.
+  const zoom = () => {
+    const win = editor.current?.closest('[aria-label="Note"][role="dialog"], [data-window]') as HTMLElement | null;
+    const el = win ?? (editor.current?.closest(`.${tools.note}`) as HTMLElement | null);
+    if (el) {
+      el.style.width = '';
+      el.style.height = '';
+    }
+    setMin(false);
+    setBig((b) => !b);
+  };
+
   // Toolbar clicks keep the text selection.
   const keep = (e: React.MouseEvent) => e.preventDefault();
 
   return (
-    <FloatWindow id="notepad" start={start} className={`${tools.note} ${styles.notes} ${big ? tools.noteBig : ''} ${min ? tools.noteMin : ''}`} label="Note">
+    <FloatWindow id="notepad" start={start} className={`${tools.note} ${styles.notes} ${big ? styles.notesBig : ''} ${min ? tools.noteMin : ''}`} label="Note">
       <div className={styles.bar} data-drag>
-        <Lights onClose={onClose} onMin={() => setMin((m) => !m)} onMax={() => setBig((b) => !b)} />
+        <Lights onClose={onClose} onMin={() => setMin((m) => !m)} onMax={zoom} />
         <b className={styles.title}>{title}</b>
         {!min && (
           <span className={styles.toolRow}>
