@@ -2,7 +2,7 @@ import { db } from '../../prisma/db';
 import { exact } from './format';
 import { addMonths, monthStart, short } from './dates';
 import { occurrences, type Cadence } from './recurrence';
-import { splitSkips } from './load';
+import { bankLed, splitSkips } from './load';
 
 type Row = { id: string; name: string; amount: number; cadence: string; nextDate: string; skips: string; paused: boolean; categoryId: string | null };
 
@@ -25,10 +25,13 @@ export async function addAdvance(userId: string, row: Row | null, amount: number
     const left = usable.amount - open.reduce((s, a) => s + a.amount, 0);
     if (amount > left) return { error: `Up to ${exact(left, currency)} can come from the ${short(payday)} pay.` };
   }
+  const fromBank = await bankLed(userId);
   await db.transaction(async (tx) => {
-    // Money that arrives today goes into the balance now; later ones on their day.
-    const entry = arrivesOn <= today ? await tx.orm.public.Entry.create({ userId, date: arrivesOn, amount, note: `${usable?.name ?? 'Salary'} advance`, categoryId: usable?.categoryId ?? null }) : null;
-    await tx.orm.public.SalaryAdvance.create({ userId, recurringId: usable?.id ?? null, amount, takenOn: arrivesOn, payday, entryId: entry?.id ?? null });
+    // Money that arrives today goes into the balance now; later ones on their
+    // day. With a connected bank, the bank shows it: only marked as arrived.
+    const entry = arrivesOn <= today && !fromBank ? await tx.orm.public.Entry.create({ userId, date: arrivesOn, amount, note: `${usable?.name ?? 'Salary'} advance`, categoryId: usable?.categoryId ?? null }) : null;
+    const adv = await tx.orm.public.SalaryAdvance.create({ userId, recurringId: usable?.id ?? null, amount, takenOn: arrivesOn, payday, entryId: entry?.id ?? null });
+    if (arrivesOn <= today && fromBank) await tx.orm.public.SalaryAdvance.where({ id: adv.id, userId }).update({ entryId: adv.id });
   });
   return { payday };
 }

@@ -105,12 +105,23 @@ export const getCategories = cache(async (userId: string): Promise<Cat[]> => {
 });
 
 // Advances whose day has come are logged as money in, once each.
+// With a connected main bank account, the bank says what happened: bills,
+// income and advances are not posted by Pursecast (they stay in the forecast
+// until their day, and the bank's own transactions show them).
+export const bankLed = cache(async (userId: string): Promise<boolean> => Boolean(await db.orm.public.BankAccount.where({ userId, role: 'main' }).first()));
+
 export async function postDueAdvances(userId: string, today: string): Promise<void> {
   const due = await db.orm.public.SalaryAdvance.where({ userId })
     .where((a) => a.entryId.isNull())
     .where((a) => a.takenOn.lte(today))
     .all();
+  const fromBank = due.length > 0 && (await bankLed(userId));
   for (const a of due) {
+    // Arrived: marked on the advance itself; the bank shows the money.
+    if (fromBank) {
+      await db.orm.public.SalaryAdvance.where({ id: a.id, userId, entryId: null }).update({ entryId: a.id });
+      continue;
+    }
     const r = a.recurringId ? await db.orm.public.Recurring.where({ id: a.recurringId, userId }).first() : null;
     await db.transaction(async (tx) => {
       const entry = await tx.orm.public.Entry.create({ userId, date: a.takenOn, amount: a.amount, note: `${r?.name ?? 'Salary'} advance`, categoryId: r?.categoryId ?? null });
@@ -152,8 +163,19 @@ export async function postDueRecurring(userId: string, today: string): Promise<v
     .where((r) => r.nextDate.lte(today))
     .all();
   // Payments the bank already showed: a bill is not posted a second time.
-  const banked = due.length ? await db.orm.public.Entry.where({ userId, source: 'bank' }).where((e) => e.date.gte(addDays(today, -70))).select('date', 'amount').all() : [];
+  const banked = due.length ? await db.orm.public.Entry.where({ userId, source: 'bank' }).where((e) => e.date.gte(addDays(today, -70))).select('date', 'amount', 'note').all() : [];
   const inBank = (date: string, amount: number) => banked.some((b) => b.amount === amount && Math.abs(diffDays(b.date, date)) <= 3);
+  const fromBank = due.length > 0 && (await bankLed(userId));
+  // With a bank, a due date only passes once the bank shows the payment (same
+  // name or a close amount, up to a week late), or after a week without it.
+  const seenInBank = (name: string, date: string, amount: number) => {
+    const word = name.toLowerCase().split(/[^\p{L}\p{N}]+/u).find((w) => w.length >= 3) ?? '';
+    return banked.some((b) => {
+      const d = diffDays(date, b.date);
+      if (d < -3 || d > 7 || Math.sign(b.amount) !== Math.sign(amount || b.amount)) return false;
+      return (word && b.note.toLowerCase().includes(word)) || (amount !== 0 && Math.abs(b.amount - amount) <= Math.abs(amount) * 0.05);
+    });
+  };
   for (const r of due) {
     const anchor = Number(r.nextDate.slice(8, 10));
     const skips = new Set(splitSkips(r.skips));
@@ -162,6 +184,7 @@ export async function postDueRecurring(userId: string, today: string): Promise<v
     const rows: Array<{ userId: string; date: string; amount: number; note: string; categoryId: string | null; recurringId: string }> = [];
     const settled: string[] = [];
     for (let i = 0; i < 60 && date <= today; i++) {
+      if (fromBank && !skips.has(date) && diffDays(date, today) <= 7 && !seenInBank(r.name, date, r.amount)) break;
       if (skips.has(date)) {
         skips.delete(date);
       } else if (r.variable) {
@@ -174,11 +197,12 @@ export async function postDueRecurring(userId: string, today: string): Promise<v
       }
       date = nextAfter(date, r.cadence as Cadence, anchor);
     }
+    if (date === r.nextDate) continue;
     // Moving the date first means a second request running at the same time
     // finds nothing due and posts nothing.
     const moved = await db.orm.public.Recurring.where({ id: r.id, nextDate: r.nextDate }).update({ nextDate: date, skips: [...skips].join(',') });
     if (!moved) continue;
-    if (rows.length) await db.orm.public.Entry.createAll(rows);
+    if (rows.length && !fromBank) await db.orm.public.Entry.createAll(rows);
     for (const id of settled) await db.orm.public.SalaryAdvance.where({ id, userId }).update({ settledAt: new Date().toISOString() });
   }
 }
@@ -281,13 +305,13 @@ export const getDebts = cache(async (userId: string): Promise<DebtRow[]> => {
 
 // Recurring items as the forecast wants them: paused ones left out, and
 // advances that have not arrived yet coming in on their day.
-export function forForecast(rows: RecurringRow[], advances: AdvanceRow[] = []) {
+export function forForecast(rows: RecurringRow[], advances: AdvanceRow[] = [], today = '0000-00-00') {
   const live = rows.filter((r) => !r.paused);
   const ids = new Set(live.map((r) => r.id));
   // Advances with no pay (or a paused one) still come in on their day.
   const loose = advances.filter((a) => a.pending && !(a.recurringId && ids.has(a.recurringId)));
   return [
-    ...live.map((r) => ({ ...r, advances: r.advances.map((a) => ({ payday: a.payday, amount: a.amount, arrivesOn: a.pending ? a.takenOn : undefined })) })),
+    ...live.map((r) => ({ ...r, nextDate: r.nextDate < today ? today : r.nextDate, advances: r.advances.map((a) => ({ payday: a.payday, amount: a.amount, arrivesOn: a.pending ? a.takenOn : undefined })) })),
     ...(loose.length ? [{ id: 'advances', name: 'Salary', amount: 0, cadence: 'monthly' as Cadence, nextDate: '9999-12-01', advances: loose.map((a) => ({ payday: '9999-12-01', amount: a.amount, arrivesOn: a.takenOn })) }] : []),
   ];
 }
@@ -349,6 +373,6 @@ export async function moneyFor(me: Me & { balance: number; balanceSetAt: string 
     }));
   const fcEvents: FcEvent[] = events.filter((e) => !e.hidden && e.cost > 0).map((e) => ({ id: e.id, name: e.name, date: e.date, cost: e.cost, saveMonthly: e.saveMonthly, saveFrom: e.saveFrom, source: e.source }));
   const fcDebts = debts.filter((d) => d.direction === 'borrowed' && d.left > 0 && d.dueDate).map((d) => ({ id: d.id, person: d.person, remaining: d.left, dueDate: d.dueDate! }));
-  const forecast = buildForecast({ today: me.today, balance, cushion: me.cushion, recurring: forForecast(recurring, advances), budgets, events: fcEvents, debts: fcDebts, days });
+  const forecast = buildForecast({ today: me.today, balance, cushion: me.cushion, recurring: forForecast(recurring, advances, me.today), budgets, events: fcEvents, debts: fcDebts, days });
   return { me, cats, recurring, entries, events, debts, budgets, balance, forecast, rates, advances, mainBalance, mainName, accounts };
 }

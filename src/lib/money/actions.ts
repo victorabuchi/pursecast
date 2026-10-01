@@ -422,7 +422,7 @@ export async function fixStormAction(formData: FormData) {
   for (const [month, cut] of Object.entries(cuts)) merged[month] = (merged[month] ?? 0) + cut;
   const budgets = m.budgets.map((b) => (b.id === budget.id ? { ...b, cuts: merged } : b));
   const debts = m.debts.filter((d) => d.direction === 'borrowed' && d.left > 0 && d.dueDate).map((d) => ({ id: d.id, person: d.person, remaining: d.left, dueDate: d.dueDate! }));
-  const fc = buildForecast({ today: m.me.today, balance: m.balance, cushion: m.me.cushion, recurring: forForecast(m.recurring, m.advances), budgets, events: eventsOf(m), debts, days: 91 });
+  const fc = buildForecast({ today: m.me.today, balance: m.balance, cushion: m.me.cushion, recurring: forForecast(m.recurring, m.advances, m.me.today), budgets, events: eventsOf(m), debts, days: 91 });
   done('/forecast', fc.low.amount >= 0 ? `Storm cleared · lowest point now ${money(fc.low.amount, m.me.currency)}` : `Better · lowest point now ${money(fc.low.amount, m.me.currency)} on ${short(fc.low.date)}`);
 }
 
