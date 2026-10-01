@@ -123,7 +123,7 @@ export default async function ForecastPage({ searchParams }: PageProps<'/forecas
               {accounts.length > 0 && (
                 <span className={styles.accLine}>
                   <span>Main {m(mainBalance)}</span>
-                  {accounts.map((a) => (
+                  {accounts.filter((a) => a.balance !== 0).map((a) => (
                     <span key={a.id} data-off={!a.inForecast || undefined} title={a.inForecast ? 'Counted in the forecast' : 'Not counted in the forecast'}>
                       {a.name} {exact(a.balance, a.currency)}
                       {a.currency !== me.currency ? ` ≈ ${m(a.value)}` : ''}
