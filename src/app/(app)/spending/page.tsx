@@ -151,6 +151,11 @@ function Activity({ data, month, focus }: { data: Data; month: string; focus: bo
                         {e.note}
                         {e.recurringId && <span className={styles.tag}>repeats</span>}
                         {e.debtId && <span className={styles.tag}>owed</span>}
+                        {e.source === 'bank' && (
+                          <span className={styles.tag} title="From your bank">
+                            <I d="bank" size={11} /> bank
+                          </span>
+                        )}
                       </b>
                       <CategorySelect id={e.id} value={e.categoryId} options={options} back={back} />
                     </span>

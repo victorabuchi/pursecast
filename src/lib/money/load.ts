@@ -2,7 +2,7 @@ import { cache } from 'react';
 import { redirect } from 'next/navigation';
 import { db } from '../../prisma/db';
 import { requireViewer } from '../auth/viewer';
-import { addDays, monthOf, todayIn } from './dates';
+import { addDays, diffDays, monthOf, todayIn } from './dates';
 import { nextAfter, type Cadence } from './recurrence';
 import { DEFAULT_CATEGORIES } from './categories';
 import { buildForecast, type FcBudget, type FcEvent, type Forecast } from './forecast';
@@ -32,7 +32,7 @@ export type Me = {
 };
 
 export type Cat = { id: string; name: string; kind: string; budget: number; color: string; position: number };
-export type EntryRow = { id: string; date: string; amount: number; note: string; categoryId: string | null; recurringId: string | null; debtId: string | null; mood: string | null; createdAt: string };
+export type EntryRow = { id: string; date: string; amount: number; note: string; categoryId: string | null; recurringId: string | null; debtId: string | null; mood: string | null; createdAt: string; source: string | null };
 export type DebtRow = { id: string; person: string; party: string; photo: string | null; direction: string; amount: number; note: string | null; dueDate: string | null; settledAt: string | null; createdAt: string; paid: number; left: number };
 export type RecurringRow = {
   id: string;
@@ -151,6 +151,9 @@ export async function postDueRecurring(userId: string, today: string): Promise<v
   const due = await db.orm.public.Recurring.where({ userId, paused: false })
     .where((r) => r.nextDate.lte(today))
     .all();
+  // Payments the bank already showed: a bill is not posted a second time.
+  const banked = due.length ? await db.orm.public.Entry.where({ userId, source: 'bank' }).where((e) => e.date.gte(addDays(today, -70))).select('date', 'amount').all() : [];
+  const inBank = (date: string, amount: number) => banked.some((b) => b.amount === amount && Math.abs(diffDays(b.date, date)) <= 3);
   for (const r of due) {
     const anchor = Number(r.nextDate.slice(8, 10));
     const skips = new Set(splitSkips(r.skips));
@@ -167,7 +170,7 @@ export async function postDueRecurring(userId: string, today: string): Promise<v
         const mine = advances.filter((a) => a.payday <= date && !settled.includes(a.id));
         const taken = mine.reduce((s, a) => s + a.amount, 0);
         settled.push(...mine.map((a) => a.id));
-        rows.push({ userId, date, amount: r.amount - taken, note: taken ? `${r.name} (advance taken off)` : r.name, categoryId: r.categoryId, recurringId: r.id });
+        if (!inBank(date, r.amount - taken)) rows.push({ userId, date, amount: r.amount - taken, note: taken ? `${r.name} (advance taken off)` : r.name, categoryId: r.categoryId, recurringId: r.id });
       }
       date = nextAfter(date, r.cadence as Cadence, anchor);
     }
@@ -223,7 +226,7 @@ export const getEntries = cache(async (userId: string, since: string): Promise<E
     .where((e) => e.date.gte(since))
     .orderBy([(e) => e.date.desc(), (e) => e.createdAt.desc()])
     .all();
-  return rows.map((e) => ({ id: e.id, date: e.date, amount: e.amount, note: e.note, categoryId: e.categoryId, recurringId: e.recurringId, debtId: e.debtId, mood: e.mood, createdAt: e.createdAt }));
+  return rows.map((e) => ({ id: e.id, date: e.date, amount: e.amount, note: e.note, categoryId: e.categoryId, recurringId: e.recurringId, debtId: e.debtId, mood: e.mood, createdAt: e.createdAt, source: e.source }));
 });
 
 // The account balance now: what was entered plus everything logged since.

@@ -247,7 +247,9 @@ export async function quickAddAction(formData: FormData) {
 
 export async function deleteEntryAction(formData: FormData) {
   const me = await getMe();
-  await db.orm.public.Entry.where({ id: str(formData, 'id', 40), userId: me.id }).delete();
+  const row = await db.orm.public.Entry.where({ id: str(formData, 'id', 40), userId: me.id }).delete();
+  // A bank transaction removed here is not spending; it stays out next sync.
+  if (row?.externalId?.startsWith('stx:')) await db.orm.public.StatementTxn.where({ id: row.externalId.slice(4), userId: me.id }).update({ category: 'Transfers' });
   done(backTo(formData, '/spending'), 'Entry deleted');
 }
 

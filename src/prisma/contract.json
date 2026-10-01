@@ -1228,6 +1228,13 @@
                   "kind": "scalar"
                 }
               },
+              "externalId": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
               "id": {
                 "nullable": false,
                 "type": {
@@ -1260,6 +1267,13 @@
                 "nullable": true,
                 "type": {
                   "codecId": "pg/uuid@1",
+                  "kind": "scalar"
+                }
+              },
+              "source": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
                   "kind": "scalar"
                 }
               },
@@ -1354,6 +1368,9 @@
                 "debtId": {
                   "column": "debtId"
                 },
+                "externalId": {
+                  "column": "externalId"
+                },
                 "id": {
                   "column": "id"
                 },
@@ -1368,6 +1385,9 @@
                 },
                 "recurringId": {
                   "column": "recurringId"
+                },
+                "source": {
+                  "column": "source"
                 },
                 "userId": {
                   "column": "userId"
@@ -4614,6 +4634,11 @@
                   "nativeType": "uuid",
                   "nullable": true
                 },
+                "externalId": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
                 "id": {
                   "codecId": "pg/uuid@1",
                   "nativeType": "uuid",
@@ -4637,6 +4662,11 @@
                 "recurringId": {
                   "codecId": "pg/uuid@1",
                   "nativeType": "uuid",
+                  "nullable": true
+                },
+                "source": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
                   "nullable": true
                 },
                 "userId": {
@@ -6097,7 +6127,7 @@
         "kind": "postgres-schema"
       }
     },
-    "storageHash": "a2a68aa60601c5dd3a084f88a05a7cec2ff2b35d99ae09ed024be7eb424e2266"
+    "storageHash": "aa8320c0aa06007f7ace33d63b8d18472e21c04837aa730726c7d0bad9874129"
   },
   "execution": {
     "executionHash": "ae73c0a452ebd8684a4e5d62c76ccdfebb8a53efdc5ed17c0459b6cac4c9cd31",

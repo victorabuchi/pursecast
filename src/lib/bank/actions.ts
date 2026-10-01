@@ -9,6 +9,7 @@ import { done, str } from '../money/act';
 import { getMe } from '../money/load';
 import { bankReady, banksIn, deleteSession, startAuth } from './enable';
 import { applyRoles, isRole, syncLink } from './sync';
+import { entriesFromBank } from './entries';
 
 const BACK = '/banks';
 
@@ -83,6 +84,7 @@ export async function setBankRoleAction(id: string, role: string): Promise<void>
   if (!account) return;
   if (role === 'main') await db.orm.public.BankAccount.where({ userId: me.id, role: 'main' }).updateAll({ role: 'counted' });
   await db.orm.public.BankAccount.where({ id: account.id, userId: me.id }).update({ role });
+  if (role === 'main') await entriesFromBank(me.id);
   await applyRoles(me.id);
   refresh();
 }

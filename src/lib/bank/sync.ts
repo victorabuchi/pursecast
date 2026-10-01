@@ -7,6 +7,7 @@ import { txnKey } from '../statements/analysis';
 import { categorize, tidyPlace } from '../statements/tabular';
 import type { Txn } from '../statements/types';
 import { BankError, balances, transactions, type BankTxn, type Money } from './enable';
+import { entriesFromBank } from './entries';
 
 export type Role = 'main' | 'counted' | 'other' | 'off';
 export const ROLES: Array<[Role, string]> = [
@@ -109,6 +110,8 @@ export async function syncLink(userId: string, linkId: string): Promise<{ added:
       added += fresh.length;
     }
     await db.orm.public.BankLink.where({ id: link.id, userId }).update({ status: 'active', lastSyncAt: new Date().toISOString(), error: null });
+    // Spending entries first, then the balance, so the bank's balance stays the truth.
+    await entriesFromBank(userId);
     await applyRoles(userId);
     return { added };
   } catch (e) {

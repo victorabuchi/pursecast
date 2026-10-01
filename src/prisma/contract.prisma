@@ -131,6 +131,10 @@ model Entry {
   debtId      Uuid?
   mood        String?
   ratedAt     TimestamptzString?
+  // "bank" for transactions from a connected bank; externalId says which
+  // one (stx:<statement transaction id>) so it is never added twice.
+  source      String?
+  externalId  String?
   createdAt   TimestamptzString  @default(now())
 
   @@index([userId, date])
