@@ -15,3 +15,7 @@ next-env.d.ts
 # Enable Banking private key
 enablebanking.pem
 *.pem
+
+# Local assistant notes (kept out of GitHub)
+CLAUDE.md
+AGENTS.md

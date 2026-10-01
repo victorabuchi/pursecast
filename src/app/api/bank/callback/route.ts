@@ -43,7 +43,9 @@ export async function GET(request: Request) {
         name: (a.cash_account_type === 'CARD' ? `${a.product || a.name || 'Card'} (card)` : a.product || a.name || a.details || 'Account').slice(0, 60),
         iban: a.account_id?.iban ?? null,
         currency: a.currency || 'EUR',
-        role: !hasMain && i === Math.max(0, firstCurrent) ? 'main' : 'other',
+        // The first everyday account is the main one; the rest count in the forecast too
+        // (savings stay out until switched on).
+        role: !hasMain && i === Math.max(0, firstCurrent) ? 'main' : a.cash_account_type === 'SVGS' ? 'other' : 'counted',
       })),
     );
   }
