@@ -1,5 +1,6 @@
 import styles from '../../../components/app/app.module.css';
 import I from '../../../components/app/Icon';
+import ConfirmX from '../../../components/app/ConfirmX';
 import Submit from '../../../components/app/Submit';
 import { MoneyInput, SignToggle } from '../../../components/app/Fields';
 import { CloseButton, SheetButton } from '../../../components/app/Sheet';
@@ -180,9 +181,7 @@ function Row({ d, currency, today }: { d: DebtRow; currency: string; today: stri
         </SheetButton>
         <form action={deleteDebtAction}>
           <input type="hidden" name="id" value={d.id} />
-          <button type="submit" className={styles.xBtn} aria-label={`Remove ${d.person}`} title="Remove">
-            <I d="trash" size={14} />
-          </button>
+          <ConfirmX label={`Remove ${d.person}`} icon="trash" />
         </form>
       </span>
     </div>

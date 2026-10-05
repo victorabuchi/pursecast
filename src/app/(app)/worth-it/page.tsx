@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import styles from '../../../components/app/app.module.css';
 import I from '../../../components/app/Icon';
+import ConfirmX from '../../../components/app/ConfirmX';
 import PageHead from '../../../components/app/PageHead';
 import Faces from '../../../components/app/Faces';
 import Submit from '../../../components/app/Submit';
@@ -195,9 +196,7 @@ export default async function WorthPage({ searchParams }: PageProps<'/worth-it'>
                 </div>
                 <form action={deleteNoteAction}>
                   <input type="hidden" name="id" value={n.id} />
-                  <button type="submit" className={styles.xBtn} aria-label="Remove note">
-                    <I d="trash" size={14} />
-                  </button>
+                  <ConfirmX label="Remove note" icon="trash" />
                 </form>
               </div>
             );

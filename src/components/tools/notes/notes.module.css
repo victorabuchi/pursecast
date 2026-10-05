@@ -994,3 +994,69 @@
   color: #1d1d1f;
   font-weight: 700;
 }
+
+/* Phones: the note fills the screen under the top bar, toolbar on its own row. */
+@media (max-width: 640px) {
+  .notes,
+  .notesBig {
+    top: 70px !important;
+    right: 8px !important;
+    bottom: calc(var(--tabs-h, 64px) + 8px) !important;
+    left: 8px !important;
+    width: auto !important;
+    height: calc(100dvh - 70px - var(--tabs-h, 64px) - 16px) !important;
+    max-height: none;
+    min-width: 0;
+    transform: none !important;
+    resize: none;
+  }
+
+  .bar {
+    flex-wrap: wrap;
+    row-gap: 10px;
+    padding: 12px 12px 8px 14px;
+  }
+
+  .title {
+    flex: 1 1 60%;
+  }
+
+  .toolRow {
+    order: 3;
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .pill {
+    flex: 1;
+    justify-content: space-between;
+  }
+
+  .tb {
+    width: 38px;
+  }
+
+  .editor {
+    padding: 4px 16px 24px;
+  }
+
+  .formatPop {
+    position: fixed;
+    top: 150px;
+    left: 12px;
+    right: 12px;
+    width: auto;
+  }
+
+  .formatPop::before {
+    display: none;
+  }
+
+  .menuPop,
+  .morePop {
+    position: fixed;
+    top: 150px;
+    right: 12px;
+    left: auto;
+  }
+}

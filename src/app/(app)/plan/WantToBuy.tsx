@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import styles from '../../../components/app/app.module.css';
 import I from '../../../components/app/Icon';
+import ConfirmX from '../../../components/app/ConfirmX';
 import Submit from '../../../components/app/Submit';
 import PhotoInput from '../../../components/app/PhotoInput';
 import { MoneyInput } from '../../../components/app/Fields';
@@ -177,9 +178,7 @@ export default async function WantToBuy({ me, fc, events, openNew }: { me: Me; f
               </SheetButton>
               <form action={deleteWishAction}>
                 <input type="hidden" name="id" value={w.id} />
-                <button type="submit" className={styles.xBtn} aria-label={`Remove ${w.name}`}>
-                  <I d="trash" size={14} />
-                </button>
+                <ConfirmX label={`Remove ${w.name}`} icon="trash" />
               </form>
             </span>
           </div>

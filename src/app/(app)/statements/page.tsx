@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import styles from '../../../components/app/app.module.css';
 import I from '../../../components/app/Icon';
+import ConfirmX from '../../../components/app/ConfirmX';
 import PageHead from '../../../components/app/PageHead';
 import Uploader from '../../../components/app/Uploader';
 import TxnCategory from '../../../components/app/TxnCategory';
@@ -318,10 +319,10 @@ export default async function StatementsPage({ searchParams }: PageProps<'/state
               <tbody>
                 {listed.slice(0, shown).map((t) => (
                   <tr key={t.id}>
-                    <td className={styles.muted} style={{ whiteSpace: 'nowrap' }}>
+                    <td className={`${styles.muted} ${styles.txnDate}`} style={{ whiteSpace: 'nowrap' }}>
                       {short(t.date)} {t.date.slice(2, 4)}
                     </td>
-                    <td style={{ width: '45%' }}>
+                    <td className={styles.txnPlace}>
                       <b>{t.place}</b>
                       {t.description !== t.place && (
                         <small className={styles.muted} style={{ display: 'block', fontSize: 12 }}>
@@ -329,19 +330,17 @@ export default async function StatementsPage({ searchParams }: PageProps<'/state
                         </small>
                       )}
                     </td>
-                    <td>
+                    <td className={styles.txnCat}>
                       <TxnCategory id={t.id} value={t.category} back={back} />
                     </td>
-                    <td className={`${styles.num} ${t.amount > 0 ? styles.pos : ''}`} style={{ textAlign: 'right' }}>
+                    <td className={`${styles.num} ${styles.txnAmt} ${t.amount > 0 ? styles.pos : ''}`} style={{ textAlign: 'right' }}>
                       {exact(t.amount, cur, { sign: t.amount > 0 })}
                     </td>
-                    <td>
+                    <td className={styles.txnX}>
                       <form action={deleteTxnAction}>
                         <input type="hidden" name="id" value={t.id} />
                         <input type="hidden" name="back" value={back} />
-                        <button type="submit" className={styles.xBtn} aria-label={`Delete ${t.place}`}>
-                          <I d="x" size={13} />
-                        </button>
+                        <ConfirmX label={`Delete ${t.place}`} />
                       </form>
                     </td>
                   </tr>

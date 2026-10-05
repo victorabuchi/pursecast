@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import styles from '../../../components/app/app.module.css';
 import I from '../../../components/app/Icon';
+import ConfirmX from '../../../components/app/ConfirmX';
 import PageHead from '../../../components/app/PageHead';
 import CategorySelect from '../../../components/app/CategorySelect';
 import Submit from '../../../components/app/Submit';
@@ -175,9 +176,7 @@ function Activity({ data, month, focus }: { data: Data; month: string; focus: bo
                     <form action={deleteEntryAction}>
                       <input type="hidden" name="id" value={e.id} />
                       <input type="hidden" name="back" value={back} />
-                      <button type="submit" className={styles.xBtn} aria-label={`Delete ${e.note}`}>
-                        <I d="x" size={14} />
-                      </button>
+                      <ConfirmX label={`Delete ${e.note}`} />
                     </form>
                   </div>
                 );
@@ -230,9 +229,7 @@ function Budgets({ data }: { data: Data }) {
             </span>
             <form action={deleteCategoryAction}>
               <input type="hidden" name="id" value={c.id} />
-              <button type="submit" className={styles.xBtn} aria-label={`Remove ${c.name}`}>
-                <I d="trash" size={14} />
-              </button>
+              <ConfirmX label={`Remove ${c.name}`} icon="trash" />
             </form>
           </div>
         ))}

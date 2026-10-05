@@ -3,6 +3,7 @@
 import { useOptimistic, useRef, useState, useTransition } from 'react';
 import styles from './app.module.css';
 import I from './Icon';
+import ConfirmX from './ConfirmX';
 import { addTodoAction, deleteTodoAction, setTodoDoneAction } from '../../lib/money/todo-actions';
 import { amountOf } from '../../lib/money/calc';
 import { currencySymbol, exact } from '../../lib/money/format';
@@ -156,9 +157,7 @@ export default function TodoBoard({ groups, options, currency, today }: { groups
                       )}
                     </span>
                     {i.amount ? <span className={`${styles.num} ${styles.todoAmt}`}>{exact(i.amount, currency)}</span> : null}
-                    <button type="button" className={styles.xBtn} aria-label={`Remove ${i.text}`} onClick={() => remove(i)} disabled={i.id.startsWith('new-')}>
-                      <I d="x" size={13} />
-                    </button>
+                    <ConfirmX label={`Remove ${i.text}`} onConfirm={() => remove(i)} disabled={i.id.startsWith('new-')} />
                   </li>
                 ))}
               </ul>

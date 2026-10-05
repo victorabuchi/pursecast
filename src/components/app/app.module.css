@@ -3468,3 +3468,170 @@
 .monthPick span {
   opacity: 0.3;
 }
+
+.txnPlace {
+  width: 45%;
+}
+
+/* Phones: each transaction as two lines, place and amount, then date,
+   category and remove, so nothing runs off the screen. */
+@media (max-width: 640px) {
+  .txnTable,
+  .txnTable tbody {
+    display: block;
+  }
+
+  .txnTable tr {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto auto;
+    grid-template-areas:
+      'place place amt'
+      'date cat x';
+    align-items: center;
+    gap: 2px 10px;
+    padding: 10px 0;
+    border-top: 1px solid var(--line);
+  }
+
+  .txnTable td {
+    padding: 0;
+    border: none;
+  }
+
+  .txnPlace {
+    grid-area: place;
+    width: auto;
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .txnAmt {
+    grid-area: amt;
+    font-weight: 700;
+  }
+
+  .txnDate {
+    grid-area: date;
+    font-size: 12.5px;
+  }
+
+  .txnCat {
+    grid-area: cat;
+  }
+
+  .txnX {
+    grid-area: x;
+  }
+
+  .txnTable td:last-child {
+    width: auto;
+  }
+}
+
+/* No page ever scrolls sideways; wide pieces scroll inside themselves. */
+.main {
+  min-width: 0;
+  overflow-x: clip;
+}
+
+@media (max-width: 760px) {
+  .segment {
+    flex-wrap: nowrap;
+    max-width: 100%;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .segment a,
+  .segment button {
+    flex: none;
+    white-space: nowrap;
+  }
+}
+
+/* Remove, after a second tap */
+.confirmX {
+  position: relative;
+  display: inline-flex;
+}
+
+.confirmPop {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: -4px;
+  z-index: 30;
+  display: grid;
+  gap: 10px;
+  width: max-content;
+  max-width: 240px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--card);
+  box-shadow: 0 18px 40px -16px rgba(0, 0, 0, 0.35);
+  font-size: 13.5px;
+  font-weight: 600;
+  white-space: normal;
+  animation: rise 0.15s ease both;
+}
+
+.confirmBtns {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.confirmNo,
+.confirmYes {
+  padding: 7px 14px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--card);
+  color: var(--ink);
+  font: inherit;
+  cursor: pointer;
+}
+
+.confirmYes {
+  border-color: var(--neg);
+  background: var(--neg);
+  color: #fff;
+}
+
+/* Phones: menus from the top bar open as a full-width panel under it. */
+@media (max-width: 640px) {
+  .pop,
+  .popWide {
+    position: fixed;
+    top: 70px;
+    right: 10px;
+    left: 10px;
+    width: auto;
+    max-height: calc(100dvh - 70px - var(--tabs-h) - 20px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+
+  /* Spending: what, then category and date side by side, then Add. */
+  .quick {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+
+  .quick .input:not(.dateInput) {
+    grid-column: 1 / -1;
+  }
+
+  .quick .select,
+  .quick .dateInput {
+    width: 100%;
+    min-width: 0;
+    border-color: var(--line);
+    text-align: left;
+  }
+
+  .quick button[type='submit'] {
+    grid-column: 1 / -1;
+    justify-content: center;
+  }
+}

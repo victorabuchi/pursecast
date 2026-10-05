@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import styles from '../../../components/app/app.module.css';
 import I from '../../../components/app/Icon';
+import ConfirmX from '../../../components/app/ConfirmX';
 import PageHead from '../../../components/app/PageHead';
 import NewFork from '../../../components/app/NewFork';
 import { SheetButton } from '../../../components/app/Sheet';
@@ -100,9 +101,7 @@ export default async function ForksPage({ searchParams }: PageProps<'/forks'>) {
             )}
             <form action={deleteForkAction}>
               <input type="hidden" name="id" value={l.fork.id} />
-              <button type="submit" className={styles.xBtn} aria-label={`Remove fork ${l.fork.name}`}>
-                <I d="x" size={14} />
-              </button>
+              <ConfirmX label={`Remove fork ${l.fork.name}`} />
             </form>
           </div>
         ))}
