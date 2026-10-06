@@ -4,8 +4,9 @@ import { redirect } from 'next/navigation';
 import { db } from '../../../../prisma/db';
 import { googleProfile, googleReady } from '../../../../lib/auth/google';
 import { requestOrigin } from '../../../../lib/auth/origin';
-import { createSession } from '../../../../lib/auth/session';
+import { createSession, mintSessionToken } from '../../../../lib/auth/session';
 import { HOME } from '../../../../lib/auth/constants';
+import { appReturn, mintHandoff } from '../../../../lib/mobile/handoff';
 
 const same = (a: string, b: string) => a.length === b.length && timingSafeEqual(Buffer.from(a), Buffer.from(b));
 
@@ -15,13 +16,18 @@ export async function GET(request: Request) {
   const url = new URL(request.url);
   const jar = await cookies();
   const expected = jar.get('pursecast_google')?.value ?? '';
+  const challenge = jar.get('pursecast_google_app')?.value ?? '';
   jar.delete({ name: 'pursecast_google', path: '/auth/google' });
+  jar.delete({ name: 'pursecast_google_app', path: '/auth/google' });
   const state = url.searchParams.get('state') ?? '';
   const code = url.searchParams.get('code');
-  if (!googleReady() || !code || !expected || !same(state, expected)) redirect('/login?error=google');
+  // A sign-in the phone app started (state "app.…") goes back to the app.
+  const fromApp = state.startsWith('app.');
+  const fail = () => (fromApp ? appReturn({ error: 'Google sign-in did not finish. Try again.' }) : redirect('/login?error=google'));
+  if (!googleReady() || !code || !expected || !same(state, expected)) return fail();
 
   const profile = await googleProfile(code, await requestOrigin());
-  if (!profile) redirect('/login?error=google');
+  if (!profile) return fail();
 
   const now = new Date().toISOString();
   const identity = await db.orm.public.AuthIdentity.where({ provider: 'google', subject: profile.sub }).first();
@@ -36,6 +42,8 @@ export async function GET(request: Request) {
     await db.orm.public.AuthIdentity.where({ id: identity!.id }).update({ lastUsedAt: now });
   }
   await db.orm.public.User.where({ id: userId }).update({ lastSignInAt: now });
+  // With a challenge the app gets a short-lived code to exchange; without one, the token itself.
+  if (fromApp) return appReturn(challenge ? { code: mintHandoff(userId, challenge) } : { token: mintSessionToken(userId) });
   await createSession(userId);
   redirect(HOME);
 }
