@@ -19,3 +19,6 @@ enablebanking.pem
 # Local assistant notes (kept out of GitHub)
 CLAUDE.md
 AGENTS.md
+
+# Apple sign-in key
+*.p8
