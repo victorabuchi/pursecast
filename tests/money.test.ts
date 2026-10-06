@@ -400,7 +400,7 @@ test('the Monday email lists the week and warns about a storm', async () => {
     todos: ['Pay back Sam'],
     low: { date: '2026-11-08', amount: -20300 },
     cushion: 0,
-    appUrl: 'https://pursecast.onrender.com',
+    appUrl: 'https://pursecast.com',
   });
   assert.equal(d.subject, 'Your week: storm on Nov 8');
   assert.match(d.text, /Hi Alex,/);

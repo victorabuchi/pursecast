@@ -57,11 +57,20 @@ services:
         sync: false
       - key: GOOGLE_CLIENT_SECRET
         sync: false
+      # Sign in with Apple (developer.apple.com): Services ID, Team ID, Key ID and the .p8 key text.
+      - key: APPLE_CLIENT_ID
+        sync: false
+      - key: APPLE_TEAM_ID
+        sync: false
+      - key: APPLE_KEY_ID
+        sync: false
+      - key: APPLE_PRIVATE_KEY
+        sync: false
 
 # The hourly job (reminders at 8:00 local time, the Monday email, bank
 # updates every 6 hours) runs from the Supabase database with pg_cron:
 #   select cron.schedule('pursecast-reminders', '5 * * * *',
-#     $$select net.http_get(url := 'https://pursecast.onrender.com/api/cron/reminders',
+#     $$select net.http_get(url := 'https://pursecast.com/api/cron/reminders',
 #       headers := jsonb_build_object('Authorization', 'Bearer <CRON_SECRET>'),
 #       timeout_milliseconds := 280000)$$);
 # Stop it with: select cron.unschedule('pursecast-reminders');

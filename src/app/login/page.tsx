@@ -6,18 +6,17 @@ import PasswordField from '../../components/auth/PasswordField';
 import GoogleButton from '../../components/auth/GoogleButton';
 import styles from '../../components/auth/auth.module.css';
 import { getViewer } from '../../lib/auth/viewer';
-import { passwordSignInAction, requestLinkAction } from '../../lib/auth/actions';
-import { HOME, LOGIN_LINK_MINUTES } from '../../lib/auth/constants';
+import { passwordSignInAction } from '../../lib/auth/actions';
+import { HOME } from '../../lib/auth/constants';
 
 export const metadata: Metadata = { title: 'Log in' };
 
 const ERRORS: Record<string, string> = {
   missing: 'Enter your email address, and your password to sign in with one.',
   invalid: 'That email and password do not match.',
-  throttled: 'Too many attempts. Wait a few minutes, or sign in with an email link.',
-  link: 'That sign-in link has expired or was already used. Ask for a new one.',
-  email: 'We could not send the email. Try again in a moment.',
-  google: 'Google sign-in did not finish. Try again, or use your email.',
+  throttled: 'Too many attempts. Wait a few minutes, or continue with Google.',
+  google: 'Google sign-in did not finish. Try again.',
+  apple: 'Apple sign-in did not finish. Try again.',
 };
 
 export default async function LoginPage({ searchParams }: PageProps<'/login'>) {
@@ -25,7 +24,6 @@ export default async function LoginPage({ searchParams }: PageProps<'/login'>) {
   const params = await searchParams;
   const one = (k: string) => (typeof params[k] === 'string' ? params[k] : '');
   const error = ERRORS[one('error')];
-  const devLink = process.env.NODE_ENV !== 'production' ? one('dev') : '';
 
   return (
     <AuthShell
@@ -42,17 +40,6 @@ export default async function LoginPage({ searchParams }: PageProps<'/login'>) {
           {error}
         </p>
       )}
-      {one('sent') && (
-        <p className={styles.success} role="status">
-          If that email has a Pursecast account, a sign-in link is on its way. It works for {LOGIN_LINK_MINUTES} minutes.
-        </p>
-      )}
-      {devLink && (
-        <div className={styles.notice}>
-          <span>Development: email is not set up, so here is the link.</span>
-          <a href={devLink}>{devLink}</a>
-        </div>
-      )}
       <GoogleButton />
       <form action={passwordSignInAction} className={styles.form}>
         <label className={styles.field}>
@@ -62,10 +49,6 @@ export default async function LoginPage({ searchParams }: PageProps<'/login'>) {
         <PasswordField label="Password" autoComplete="current-password" />
         <button className={styles.button} type="submit">
           Log in
-        </button>
-        <div className={styles.divider}>or</div>
-        <button className={styles.buttonGhost} type="submit" formAction={requestLinkAction} formNoValidate>
-          Email me a sign-in link
         </button>
       </form>
     </AuthShell>

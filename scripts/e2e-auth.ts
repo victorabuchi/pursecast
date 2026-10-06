@@ -80,30 +80,16 @@ try {
 
   // Password sign-in.
   const login = await http('GET', '/login');
-  const [passwordAction, linkAction] = actionIds(login.body);
+  const [passwordAction] = actionIds(login.body);
   const wrong = await http('POST', '/login', { form: { [passwordAction!]: '', email, password: 'wrong-password' } });
   check('wrong password is refused', wrong.location.includes('error=invalid') && !wrong.cookie, wrong.location);
   const right = await http('POST', '/login', { form: { [passwordAction!]: '', email: email.toUpperCase(), password } });
   check('right password signs in (email case ignored)', right.location.startsWith('/forecast') && Boolean(right.cookie), right.location);
 
-  // Email link.
-  const unknown = await http('POST', '/login', { form: { [linkAction!]: '', email: `nobody-${tag}@example.test` } });
-  check('unknown email still says sent', unknown.location.includes('sent=1') && !unknown.location.includes('dev='), unknown.location);
-  const sent = await http('POST', '/login', { form: { [linkAction!]: '', email } });
-  const link = new URL(sent.location, 'http://x').searchParams.get('dev');
-  check('link is issued (shown in development)', Boolean(link), sent.location);
-  const token = new URL(link!).searchParams.get('token')!;
-  const verify = await http('GET', `/auth/verify?token=${token}`);
-  const [consumeAction] = actionIds(verify.body);
-  const used = await http('POST', '/auth/verify', { form: { [consumeAction!]: '', token } });
-  check('link signs in', used.location.startsWith('/forecast') && Boolean(used.cookie), used.location);
-  const reused = await http('POST', '/auth/verify', { form: { [consumeAction!]: '', token } });
-  check('link works only once', reused.location.includes('error=link') && !reused.cookie, reused.location);
-
   // Sign out.
-  const signed = await http('GET', '/settings', { cookie: used.cookie });
+  const signed = await http('GET', '/settings', { cookie: right.cookie });
   const signOut = actionIds(signed.body).find((id, i, all) => all.indexOf(id) === i && signed.body.split(id)[1]!.slice(0, 2000).includes('Log out'));
-  const out = await http('POST', '/settings', { cookie: used.cookie, form: { [signOut!]: '' } });
+  const out = await http('POST', '/settings', { cookie: right.cookie, form: { [signOut!]: '' } });
   check('log out clears the session', out.location === '/' && out.cookie === 'pursecast_session=', out.location);
 } finally {
   await db.orm.public.LoginToken.where({ email }).deleteAll();
