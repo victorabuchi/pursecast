@@ -46,11 +46,16 @@ services:
       - key: CRON_SECRET
         sync: false
       - key: APP_URL
-        value: https://pursecast.onrender.com
+        value: https://pursecast.com
 
       # Bank connections (Enable Banking). Add the private key as a Secret File
       # named enablebanking.pem (Environment > Secret Files).
       - key: ENABLE_BANKING_APP_ID
+        sync: false
+      # Sign in with Google (Google Cloud > APIs & Services > Credentials).
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: GOOGLE_CLIENT_SECRET
         sync: false
 
 # The hourly job (reminders at 8:00 local time, the Monday email, bank

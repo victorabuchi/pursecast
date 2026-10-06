@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import AuthShell from '../../components/auth/AuthShell';
 import PasswordField from '../../components/auth/PasswordField';
+import GoogleButton from '../../components/auth/GoogleButton';
 import styles from '../../components/auth/auth.module.css';
 import { getViewer } from '../../lib/auth/viewer';
 import { passwordSignInAction, requestLinkAction } from '../../lib/auth/actions';
@@ -16,6 +17,7 @@ const ERRORS: Record<string, string> = {
   throttled: 'Too many attempts. Wait a few minutes, or sign in with an email link.',
   link: 'That sign-in link has expired or was already used. Ask for a new one.',
   email: 'We could not send the email. Try again in a moment.',
+  google: 'Google sign-in did not finish. Try again, or use your email.',
 };
 
 export default async function LoginPage({ searchParams }: PageProps<'/login'>) {
@@ -51,6 +53,7 @@ export default async function LoginPage({ searchParams }: PageProps<'/login'>) {
           <a href={devLink}>{devLink}</a>
         </div>
       )}
+      <GoogleButton />
       <form action={passwordSignInAction} className={styles.form}>
         <label className={styles.field}>
           Email

@@ -42,7 +42,8 @@ export async function connectBankAction(formData: FormData) {
   if (!bankReady()) done(BACK, 'Bank connections are not set up yet.', 'error');
   const bank = (await banksIn(country)).find((a) => a.name === name);
   if (!bank) done(BACK, 'Pick your bank from the list.', 'error');
-  const state = randomUUID();
+  // The phone app marks its attempts so the callback can send the person back to it.
+  const state = formData.get('app') ? `app.${randomUUID()}` : randomUUID();
   const days = Math.max(1, Math.min(180, Math.floor((bank.maximum_consent_validity ?? 90 * 86400) / 86400)));
   let url: string;
   try {

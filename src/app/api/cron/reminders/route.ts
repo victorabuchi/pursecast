@@ -3,7 +3,7 @@ import { meFrom, moneyFor } from '../../../../lib/money/load';
 import { remindersFor } from '../../../../lib/money/reminders-load';
 import { weeklyDigest } from '../../../../lib/money/reminders';
 import { addDays } from '../../../../lib/money/dates';
-import { pushReady, pushTo } from '../../../../lib/push';
+import { pushTo } from '../../../../lib/push';
 import { emailConfigured, sendEmail } from '../../../../lib/email';
 import { bankReady } from '../../../../lib/bank/enable';
 import { syncLink } from '../../../../lib/bank/sync';
@@ -24,7 +24,7 @@ export async function GET(request: Request) {
   if (!secret || request.headers.get('authorization') !== `Bearer ${secret}`) return new Response('Not allowed', { status: 401 });
   const appUrl = (process.env['APP_URL'] || new URL(request.url).origin).replace(/\/$/, '');
 
-  const [users, subs] = await Promise.all([db.orm.public.User.where((u) => u.balance.isNotNull()).all(), pushReady() ? db.orm.public.PushSub.select('userId').all() : Promise.resolve([])]);
+  const [users, subs] = await Promise.all([db.orm.public.User.where((u) => u.balance.isNotNull()).all(), db.orm.public.PushSub.select('userId').all()]);
   const withPush = new Set(subs.map((s) => s.userId));
   const email = emailConfigured();
   let pushed = 0;

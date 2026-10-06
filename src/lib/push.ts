@@ -14,13 +14,44 @@ function setup() {
   configured = true;
 }
 
+// The phone app registers an Expo push token instead of a browser subscription.
+export const isExpoToken = (endpoint: string) => endpoint.startsWith('ExponentPushToken[') || endpoint.startsWith('ExpoPushToken[');
+
+// Sends to the phone app through Expo's push service. Tokens Expo says are no
+// longer valid (app removed) are forgotten.
+async function pushToApp(userId: string, subs: Array<{ id: string; endpoint: string }>, message: { title: string; body: string; url: string; tag?: string }): Promise<number> {
+  if (!subs.length) return 0;
+  let sent = 0;
+  try {
+    const res = await fetch('https://exp.host/--/api/v2/push/send', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+      body: JSON.stringify(subs.map((s) => ({ to: s.endpoint, title: message.title, body: message.body, data: { url: message.url }, sound: 'default', channelId: 'default' }))),
+    });
+    const json = (await res.json()) as { data?: Array<{ status: string; details?: { error?: string } }> };
+    await Promise.all(
+      subs.map(async (s, i) => {
+        const ticket = json.data?.[i];
+        if (ticket?.status === 'ok') sent++;
+        else if (ticket?.details?.error === 'DeviceNotRegistered') await db.orm.public.PushSub.where({ id: s.id, userId }).delete();
+        else if (ticket) console.error('App push failed', ticket.details?.error);
+      }),
+    );
+  } catch (e) {
+    console.error('App push failed', (e as Error).message);
+  }
+  return sent;
+}
+
 // Sends to every device the person turned notifications on for. Devices that
 // are gone (unsubscribed, app removed) are forgotten. Returns how many got it.
 export async function pushTo(userId: string, message: { title: string; body: string; url: string; tag?: string }): Promise<number> {
-  if (!pushReady()) return 0;
+  const all = await db.orm.public.PushSub.where({ userId }).all();
+  const appSent = await pushToApp(userId, all.filter((s) => isExpoToken(s.endpoint)), message);
+  if (!pushReady()) return appSent;
   setup();
-  const subs = await db.orm.public.PushSub.where({ userId }).all();
-  let sent = 0;
+  const subs = all.filter((s) => !isExpoToken(s.endpoint));
+  let sent = appSent;
   await Promise.all(
     subs.map(async (s) => {
       try {

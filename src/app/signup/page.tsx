@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import AuthShell from '../../components/auth/AuthShell';
 import PasswordField from '../../components/auth/PasswordField';
+import GoogleButton from '../../components/auth/GoogleButton';
 import styles from '../../components/auth/auth.module.css';
 import { getViewer } from '../../lib/auth/viewer';
 import { signUpAction } from '../../lib/auth/actions';
@@ -38,6 +39,7 @@ export default async function SignupPage({ searchParams }: PageProps<'/signup'>)
           {error}
         </p>
       )}
+      <GoogleButton />
       <form action={signUpAction} className={styles.form}>
         <label className={styles.field}>
           Your name

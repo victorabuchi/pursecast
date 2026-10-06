@@ -10,10 +10,14 @@ export async function GET(request: Request) {
   const url = new URL(request.url);
   const state = url.searchParams.get('state') ?? '';
   const code = url.searchParams.get('code');
-  const viewer = await getViewer();
-  if (!viewer) redirect('/login');
-  const link = state ? await db.orm.public.BankLink.where({ userId: viewer.id, state, status: 'pending' }).first() : null;
-  const back = (kind: 'toast' | 'error', msg: string) => redirect(`/banks?${kind}=${encodeURIComponent(msg)}`);
+  // A link the phone app started (state "app.…") is found by its private state:
+  // the phone's browser has no web session, only the app has its token.
+  const fromApp = state.startsWith('app.');
+  const web = await getViewer();
+  const link = state ? (web ? await db.orm.public.BankLink.where({ userId: web.id, state, status: 'pending' }).first() : fromApp ? await db.orm.public.BankLink.where({ state, status: 'pending' }).first() : null) : null;
+  if (!web && !(fromApp && link)) redirect('/login');
+  const viewer = { id: web?.id ?? link!.userId };
+  const back = (kind: 'toast' | 'error', msg: string) => redirect(fromApp ? `/api/bank/app?${kind}=${encodeURIComponent(msg)}` : `/banks?${kind}=${encodeURIComponent(msg)}`);
   if (!link) back('error', 'That bank connection was not started here. Try again.');
   if (!code) {
     await db.orm.public.BankLink.where({ id: link!.id, userId: viewer.id }).delete();
