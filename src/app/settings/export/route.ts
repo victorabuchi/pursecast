@@ -6,7 +6,7 @@ export async function GET() {
   const viewer = await getViewer();
   if (!viewer) return new Response('Sign in first', { status: 401 });
   const userId = viewer.id;
-  const [user, categories, entries, recurring, budgetMoves, forks, forkEffects, planEvents, planItems, debts, notes, wishes, advances, todos, accounts] = await Promise.all([
+  const [user, categories, entries, recurring, budgetMoves, forks, forkEffects, planEvents, planItems, debts, notes, wishes, advances, todos, accounts, goals, savings, capsules] = await Promise.all([
     db.orm.public.User.where({ id: userId }).first(),
     db.orm.public.Category.where({ userId }).all(),
     db.orm.public.Entry.where({ userId }).orderBy((e) => e.date.asc()).all(),
@@ -22,6 +22,9 @@ export async function GET() {
     db.orm.public.SalaryAdvance.where({ userId }).all(),
     db.orm.public.Todo.where({ userId }).all(),
     db.orm.public.Account.where({ userId }).all(),
+    db.orm.public.SavingGoal.where({ userId }).all(),
+    db.orm.public.SavingDeposit.where({ userId }).all(),
+    db.orm.public.Capsule.where({ userId }).all(),
   ]);
   const { calendarUrl, ...profile } = user!;
   const body = {
@@ -40,6 +43,9 @@ export async function GET() {
     salaryAdvances: advances,
     whenMoneyLands: todos,
     otherAccounts: accounts,
+    savingGoals: goals,
+    savings,
+    timeCapsules: capsules,
   };
   return new Response(JSON.stringify(body, null, 2), {
     headers: {

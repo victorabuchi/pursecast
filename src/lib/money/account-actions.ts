@@ -4,7 +4,7 @@ import { redirect } from 'next/navigation';
 import { db } from '../../prisma/db';
 import { destroySession } from '../auth/session';
 import { hashPassword, MIN_PASSWORD_LENGTH, verifyPassword } from '../auth/password';
-import { done, str } from './act';
+import { day, done, str } from './act';
 import { getMe } from './load';
 import { normalizeCalendarUrl } from './plan';
 import { syncCalendar } from './calendar';
@@ -32,6 +32,7 @@ export async function updateProfileAction(formData: FormData) {
     currency: CURRENCIES.has(currency) ? currency : me.currency,
     timezone: validZone(timezone) ? timezone : me.timezone,
     ...photoChange(formData),
+    ...(day(formData, 'birthday') && day(formData, 'birthday')! <= me.today ? { birthday: day(formData, 'birthday') } : {}),
   });
   done('/settings', 'Profile saved');
 }

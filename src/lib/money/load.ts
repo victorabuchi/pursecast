@@ -28,6 +28,7 @@ export type Me = {
   notepad: string;
   notepadAt: string | null;
   photo: string | null;
+  birthday: string | null;
   today: string;
 };
 
@@ -76,6 +77,7 @@ export function meFrom(u: UserRow): Me {
     notepad: u.notepad,
     notepadAt: u.notepadAt,
     photo: photoUrl('user', u.id, u.photo),
+    birthday: u.birthday,
     today: todayIn(u.timezone),
   };
 }

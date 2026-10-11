@@ -40,6 +40,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
   const palette: PaletteItem[] = [
     { group: 'Go to', label: 'Money Weather', hint: 'Forecast for the next 90 days', href: '/forecast' },
+    { group: 'Go to', label: 'Life', hint: 'Saving, goals, future you', href: '/life' },
     { group: 'Go to', label: 'Spending', hint: 'Everything you logged', href: '/spending' },
     { group: 'Go to', label: 'Worth-It', hint: 'Joy per euro', href: '/worth-it' },
     { group: 'Go to', label: 'Timeline Forks', hint: 'What if…', href: '/forks' },
@@ -65,6 +66,8 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     { group: 'Do', label: 'Add money owed', hint: 'Lent or borrowed', href: '/spending?tab=owed&new=1' },
     { group: 'Do', label: 'Write a note to future me', href: '/worth-it?note=1' },
     { group: 'Do', label: 'Update my balance', href: '/forecast?balance=1' },
+    { group: 'Do', label: 'I saved money', hint: 'Count it towards a goal', href: '/life' },
+    { group: 'Do', label: 'Write to future me', hint: 'A letter that opens later', href: '/life#capsule' },
     { group: 'Do', label: 'Connect my bank', hint: 'Balance and transactions by themselves', href: '/banks?add=1' },
     ...recent.slice(0, 80).map((e) => ({
       group: 'Spending',

@@ -3635,3 +3635,235 @@
     justify-content: center;
   }
 }
+
+/* Life */
+.lifeHero {
+  flex-direction: row;
+  align-items: center;
+  gap: 18px;
+  background: linear-gradient(135deg, var(--card), color-mix(in srgb, var(--b) 8%, var(--card)));
+}
+
+.lifeHero[data-birthday] {
+  background: linear-gradient(135deg, color-mix(in srgb, var(--sun) 18%, var(--card)), color-mix(in srgb, var(--b) 14%, var(--card)));
+}
+
+.lifeHero > span:last-child {
+  flex: 1;
+}
+
+.lifeAge {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 84px;
+  height: 84px;
+  border-radius: 24px;
+  background: var(--b);
+  color: var(--on-b);
+}
+
+.lifeAge b {
+  font-size: 34px;
+  line-height: 1;
+}
+
+.lifeAge small {
+  margin-top: -14px;
+  font-size: 12px;
+  font-weight: 700;
+  opacity: 0.85;
+}
+
+.lifeTitle {
+  display: block;
+  font-size: 22px;
+  letter-spacing: -0.01em;
+}
+
+.lifeStats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.lifeStats > span {
+  display: grid;
+  align-content: start;
+  gap: 2px;
+  padding: 12px;
+  border-radius: 12px;
+  background: var(--soft);
+}
+
+.lifeStats small {
+  color: var(--muted);
+  font-size: 12.5px;
+  font-weight: 600;
+}
+
+.lifeStats b {
+  font-size: 22px;
+}
+
+.lifeStats em {
+  color: var(--muted);
+  font-size: 12px;
+  font-style: normal;
+}
+
+.lifeSave {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr) auto;
+  gap: 8px;
+  align-items: center;
+}
+
+.goalRow {
+  display: grid;
+  gap: 6px;
+  padding: 10px 0;
+  border-top: 1px solid var(--line);
+}
+
+.goalRow[data-done] b {
+  color: var(--pos);
+}
+
+.goalTop {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.goalTop > b {
+  flex: 1;
+  min-width: 0;
+}
+
+.goalTop small {
+  color: var(--muted);
+  font-weight: 500;
+}
+
+.goalSuggest {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  padding: 12px;
+  border: 1px dashed var(--line2);
+  border-radius: 12px;
+}
+
+.goalSuggest > span:first-of-type {
+  display: grid;
+  flex: 1 1 220px;
+}
+
+.goalSuggest small {
+  color: var(--muted);
+}
+
+.goalSuggest .money {
+  flex: 0 1 140px;
+}
+
+.futureGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 10px;
+}
+
+.futureCell {
+  display: grid;
+  gap: 2px;
+  padding: 16px;
+  border-radius: 14px;
+  background: linear-gradient(160deg, var(--bt), var(--card));
+}
+
+.futureCell small {
+  color: var(--b);
+  font-weight: 800;
+}
+
+.futureCell b {
+  font-size: 24px;
+  letter-spacing: -0.01em;
+}
+
+.futureCell em {
+  color: var(--muted);
+  font-size: 12px;
+  font-style: normal;
+}
+
+.insights {
+  display: grid;
+  gap: 8px;
+  margin: 4px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.insights li {
+  display: flex;
+  gap: 10px;
+  font-size: 14px;
+}
+
+.insights li::before {
+  content: '';
+  flex: none;
+  width: 6px;
+  height: 6px;
+  margin-top: 0.55em;
+  border-radius: 50%;
+  background: var(--b);
+}
+
+.capsule {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--soft);
+}
+
+.capsule > span {
+  display: grid;
+  flex: 1;
+}
+
+.capsule small {
+  color: var(--muted);
+}
+
+.capsule[data-ready] {
+  border-color: var(--sun);
+  background: color-mix(in srgb, var(--sun) 12%, var(--card));
+}
+
+.capsuleText {
+  margin: 6px 0 0;
+  white-space: pre-wrap;
+  font-size: 15px;
+}
+
+@media (max-width: 640px) {
+  .lifeStats {
+    grid-template-columns: 1fr;
+  }
+
+  .lifeSave {
+    grid-template-columns: 1fr;
+  }
+
+  .lifeHero {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}

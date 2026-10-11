@@ -43,6 +43,10 @@ export default async function SettingsPage() {
               Email
               <input className={styles.input} value={me.email} disabled />
             </label>
+            <label className={styles.field}>
+              Birthday <small>for the Life page</small>
+              <input className={styles.input} type="date" name="birthday" defaultValue={me.birthday ?? ''} max={me.today} />
+            </label>
             <div className={styles.row}>
               <label className={styles.field}>
                 Currency

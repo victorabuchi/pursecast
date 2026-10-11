@@ -433,3 +433,20 @@ test('transfers between your own accounts are not spending or income', async () 
   const t = findTransfers(lines, { names: ['Victor Abuchi'], bankOf });
   assert.deepEqual([...t].sort(), ['exch', 'fx-in', 'fx-out', 'in', 'out', 'self', 'topup']);
 });
+
+test('life: age, birthdays, streaks, growth and a safe amount to save', async () => {
+  const { ageOn, savingStreak, grows, weeklyPace, safeToSave } = await import('../src/lib/money/life');
+  const b = ageOn('2007-10-12', '2026-10-12');
+  assert.deepEqual([b.years, b.isBirthday, b.daysToNext, b.next], [19, true, 365, '2027-10-12']);
+  const d = ageOn('2007-10-12', '2026-10-11');
+  assert.deepEqual([d.years, d.isBirthday, d.daysToNext], [18, false, 1]);
+  assert.equal(ageOn('2008-02-29', '2027-02-28').isBirthday, true);
+  assert.equal(savingStreak(['2026-10-12', '2026-10-06', '2026-09-29'], '2026-10-13'), 3);
+  assert.equal(savingStreak(['2026-10-06', '2026-09-29'], '2026-10-13'), 2);
+  assert.equal(savingStreak(['2026-09-15'], '2026-10-13'), 0);
+  assert.equal(grows(10000, 1, 0), 120000);
+  assert.ok(grows(10000, 11, 0.04) > 10000 * 132);
+  assert.equal(weeklyPace(100000, '2026-10-12', '2027-10-12'), 1900);
+  const fc = { today: '2026-10-12', cushion: 5000, days: [{ date: '2026-10-12', spendable: 30000 }, { date: '2026-10-20', spendable: 12345 }, { date: '2026-12-01', spendable: -999999 }] } as never;
+  assert.equal(safeToSave(fc), 7000);
+});

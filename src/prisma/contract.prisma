@@ -24,6 +24,8 @@ model User {
   notepadAt    TimestamptzString?
   // Profile picture, a small JPEG data: URL. Null shows an empty avatar.
   photo        String?
+  // Date of birth (YYYY-MM-DD), for the Life page: age, birthdays, time capsules.
+  birthday     String?
   // A summary email each Monday morning (needs Resend on the server).
   weeklyEmail  Boolean            @default(false)
   weeklyAt     String?
@@ -51,6 +53,9 @@ model User {
   bankAccounts BankAccount[]
   bankNames    BankName[]
   noteFiles    NoteFile[]
+  savingGoals  SavingGoal[]
+  savings      SavingDeposit[]
+  capsules     Capsule[]
   remindersSent ReminderSent[]
   statementTxns StatementTxn[]
 
@@ -568,4 +573,57 @@ model NoteFile {
   @@index([userId])
   @@rls
   @@map("note_file")
+}
+
+// Something the person is saving for: an emergency fund, a sum by their next
+// birthday, anything. target in cents; byDate is optional.
+model SavingGoal {
+  id        Uuid              @id @default(uuid())
+  user      User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    Uuid
+  name      String
+  kind      String            @default("custom")
+  target    Int
+  byDate    String?
+  doneAt    TimestamptzString?
+  createdAt TimestamptzString @default(now())
+  deposits  SavingDeposit[]
+
+  @@index([userId])
+  @@rls
+  @@map("saving_goal")
+}
+
+// Money the person set aside (moved to savings), counted towards a goal.
+model SavingDeposit {
+  id        Uuid              @id @default(uuid())
+  user      User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    Uuid
+  goal      SavingGoal?       @relation(fields: [goalId], references: [id], onDelete: SetNull)
+  goalId    Uuid?
+  date      String
+  amount    Int
+  note      String?
+  createdAt TimestamptzString @default(now())
+
+  @@index([userId])
+  @@rls
+  @@map("saving_deposit")
+}
+
+// A letter to the person's future self, sealed until openOn (usually their
+// next birthday).
+model Capsule {
+  id        Uuid              @id @default(uuid())
+  user      User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    Uuid
+  text      String
+  writtenOn String
+  openOn    String
+  openedAt  TimestamptzString?
+  createdAt TimestamptzString @default(now())
+
+  @@index([userId])
+  @@rls
+  @@map("capsule")
 }

@@ -7,6 +7,7 @@ import I, { type IconName } from './Icon';
 
 export const NAV: Array<[IconName, string, string]> = [
   ['sun', 'Forecast', '/forecast'],
+  ['sprout', 'Life', '/life'],
   ['list', 'Spending', '/spending'],
   ['heart', 'Worth-It', '/worth-it'],
   ['fork', 'Forks', '/forks'],

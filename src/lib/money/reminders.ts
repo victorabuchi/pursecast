@@ -3,7 +3,7 @@ import { exact } from './format';
 
 // What Pursecast tells people, in the bell, as a push notification and in
 // the weekly email. Each has a stable key so it is sent once.
-export type Reminder = { key: string; title: string; body: string; href: string; kind: 'todo' | 'bill' | 'debt' | 'storm' | 'pay' | 'bank' };
+export type Reminder = { key: string; title: string; body: string; href: string; kind: 'todo' | 'bill' | 'debt' | 'storm' | 'pay' | 'bank' | 'life' };
 
 type Todo = { text: string; incomeId: string | null; due: string; doneAt: string | null; priority: number };
 type Bill = { id: string; name: string; amount: number; nextDate: string; paused: boolean; variable: boolean };
@@ -12,7 +12,7 @@ type Low = { date: string; amount: number } | null;
 
 const list = (items: string[]) => (items.length <= 2 ? items.join(' and ') : `${items.slice(0, 2).join(', ')} and ${items.length - 2} more`);
 
-export function buildReminders(input: { today: string; currency: string; cushion: number; todos: Todo[]; bills: Bill[]; debts: Debt[]; low?: Low; banks?: Array<{ id: string; name: string; validUntil: string | null }> }): Reminder[] {
+export function buildReminders(input: { today: string; currency: string; cushion: number; todos: Todo[]; bills: Bill[]; debts: Debt[]; low?: Low; banks?: Array<{ id: string; name: string; validUntil: string | null }>; capsules?: Array<{ id: string; openOn: string; openedAt: string | null }>; birthday?: string | null }): Reminder[] {
   const { today, currency } = input;
   const m = (c: number) => exact(Math.abs(c), currency);
   const tomorrow = addDays(today, 1);
@@ -63,6 +63,15 @@ export function buildReminders(input: { today: string; currency: string; cushion
     const days = diffDays(today, b.validUntil.slice(0, 10));
     if (days < 0 || days > 7) continue;
     out.push({ key: `bank:${b.id}:${b.validUntil.slice(0, 10)}`, kind: 'bank', title: `Reconnect ${b.name}`, body: days === 0 ? 'Access ends today. Approve it again to keep your balance updating.' : `Access ends in ${days} ${days === 1 ? 'day' : 'days'}. Approve it again to keep your balance updating.`, href: '/banks?add=1' });
+  }
+
+  // A sealed letter to future you is ready to open.
+  for (const c of input.capsules ?? []) {
+    if (c.openedAt || c.openOn > today) continue;
+    out.push({ key: `capsule:${c.id}`, kind: 'life', title: 'A letter from past you is ready', body: 'Open it on the Life page.', href: '/life#capsule' });
+  }
+  if (input.birthday && input.birthday.slice(5) === today.slice(5)) {
+    out.push({ key: `birthday:${today}`, kind: 'life', title: 'Happy birthday', body: 'A new year: see what you saved and what future you looks like.', href: '/life' });
   }
 
   // A storm in the next two weeks, told once for that low point.

@@ -1,0 +1,602 @@
+[
+  {
+    "id": "table.capsule",
+    "label": "Create table \"capsule\"",
+    "summary": "Creates table \"capsule\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "capsule"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"capsule\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"capsule\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"capsule\"",
+        "sql": "CREATE TABLE \"public\".\"capsule\" (\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"id\" uuid NOT NULL,\n  \"openOn\" text NOT NULL,\n  \"openedAt\" timestamptz,\n  \"text\" text NOT NULL,\n  \"userId\" uuid NOT NULL,\n  \"writtenOn\" text NOT NULL,\n  PRIMARY KEY (\"id\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"capsule\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"capsule\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.saving_deposit",
+    "label": "Create table \"saving_deposit\"",
+    "summary": "Creates table \"saving_deposit\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "saving_deposit"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"saving_deposit\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"saving_deposit\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"saving_deposit\"",
+        "sql": "CREATE TABLE \"public\".\"saving_deposit\" (\n  \"amount\" int4 NOT NULL,\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"date\" text NOT NULL,\n  \"goalId\" uuid,\n  \"id\" uuid NOT NULL,\n  \"note\" text,\n  \"userId\" uuid NOT NULL,\n  PRIMARY KEY (\"id\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"saving_deposit\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"saving_deposit\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.saving_goal",
+    "label": "Create table \"saving_goal\"",
+    "summary": "Creates table \"saving_goal\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "saving_goal"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"saving_goal\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"saving_goal\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"saving_goal\"",
+        "sql": "CREATE TABLE \"public\".\"saving_goal\" (\n  \"byDate\" text,\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"doneAt\" timestamptz,\n  \"id\" uuid NOT NULL,\n  \"kind\" text DEFAULT 'custom' NOT NULL,\n  \"name\" text NOT NULL,\n  \"target\" int4 NOT NULL,\n  \"userId\" uuid NOT NULL,\n  PRIMARY KEY (\"id\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"saving_goal\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"saving_goal\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.public.app_user.birthday",
+    "label": "Add column \"birthday\" to \"app_user\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "birthday",
+        "table": "app_user"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"birthday\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "app_user",
+          "birthday"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"birthday\"",
+        "sql": "ALTER TABLE \"public\".\"app_user\" ADD COLUMN \"birthday\" text"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"birthday\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "app_user",
+          "birthday"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.capsule.capsule_userId_idx_a489d58a",
+    "label": "Create index \"capsule_userId_idx_a489d58a\" on \"capsule\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "capsule_userId_idx_a489d58a",
+        "table": "capsule"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"capsule_userId_idx_a489d58a\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"capsule_userId_idx_a489d58a\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"capsule_userId_idx_a489d58a\"",
+        "sql": "CREATE INDEX \"capsule_userId_idx_a489d58a\" ON \"public\".\"capsule\" (\"userId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"capsule_userId_idx_a489d58a\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"capsule_userId_idx_a489d58a\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.saving_deposit.saving_deposit_goalId_idx_8733343e",
+    "label": "Create index \"saving_deposit_goalId_idx_8733343e\" on \"saving_deposit\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "saving_deposit_goalId_idx_8733343e",
+        "table": "saving_deposit"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"saving_deposit_goalId_idx_8733343e\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"saving_deposit_goalId_idx_8733343e\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"saving_deposit_goalId_idx_8733343e\"",
+        "sql": "CREATE INDEX \"saving_deposit_goalId_idx_8733343e\" ON \"public\".\"saving_deposit\" (\"goalId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"saving_deposit_goalId_idx_8733343e\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"saving_deposit_goalId_idx_8733343e\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.saving_deposit.saving_deposit_userId_idx_a489d58a",
+    "label": "Create index \"saving_deposit_userId_idx_a489d58a\" on \"saving_deposit\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "saving_deposit_userId_idx_a489d58a",
+        "table": "saving_deposit"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"saving_deposit_userId_idx_a489d58a\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"saving_deposit_userId_idx_a489d58a\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"saving_deposit_userId_idx_a489d58a\"",
+        "sql": "CREATE INDEX \"saving_deposit_userId_idx_a489d58a\" ON \"public\".\"saving_deposit\" (\"userId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"saving_deposit_userId_idx_a489d58a\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"saving_deposit_userId_idx_a489d58a\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.saving_goal.saving_goal_userId_idx_a489d58a",
+    "label": "Create index \"saving_goal_userId_idx_a489d58a\" on \"saving_goal\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "saving_goal_userId_idx_a489d58a",
+        "table": "saving_goal"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"saving_goal_userId_idx_a489d58a\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"saving_goal_userId_idx_a489d58a\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"saving_goal_userId_idx_a489d58a\"",
+        "sql": "CREATE INDEX \"saving_goal_userId_idx_a489d58a\" ON \"public\".\"saving_goal\" (\"userId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"saving_goal_userId_idx_a489d58a\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"saving_goal_userId_idx_a489d58a\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.capsule.capsule_userId_fkey",
+    "label": "Add foreign key \"capsule_userId_fkey\" on \"capsule\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "capsule_userId_fkey",
+        "table": "capsule"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"capsule_userId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "capsule_userId_fkey",
+          "public",
+          "\"public\".\"capsule\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"capsule_userId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"capsule\"\nADD CONSTRAINT \"capsule_userId_fkey\"\nFOREIGN KEY (\"userId\")\nREFERENCES \"public\".\"app_user\" (\"id\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"capsule_userId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "capsule_userId_fkey",
+          "public",
+          "\"public\".\"capsule\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.saving_deposit.saving_deposit_userId_fkey",
+    "label": "Add foreign key \"saving_deposit_userId_fkey\" on \"saving_deposit\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "saving_deposit_userId_fkey",
+        "table": "saving_deposit"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"saving_deposit_userId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "saving_deposit_userId_fkey",
+          "public",
+          "\"public\".\"saving_deposit\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"saving_deposit_userId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"saving_deposit\"\nADD CONSTRAINT \"saving_deposit_userId_fkey\"\nFOREIGN KEY (\"userId\")\nREFERENCES \"public\".\"app_user\" (\"id\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"saving_deposit_userId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "saving_deposit_userId_fkey",
+          "public",
+          "\"public\".\"saving_deposit\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.saving_deposit.saving_deposit_goalId_fkey",
+    "label": "Add foreign key \"saving_deposit_goalId_fkey\" on \"saving_deposit\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "saving_deposit_goalId_fkey",
+        "table": "saving_deposit"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"saving_deposit_goalId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "saving_deposit_goalId_fkey",
+          "public",
+          "\"public\".\"saving_deposit\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"saving_deposit_goalId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"saving_deposit\"\nADD CONSTRAINT \"saving_deposit_goalId_fkey\"\nFOREIGN KEY (\"goalId\")\nREFERENCES \"public\".\"saving_goal\" (\"id\")\nON DELETE SET NULL"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"saving_deposit_goalId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "saving_deposit_goalId_fkey",
+          "public",
+          "\"public\".\"saving_deposit\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.saving_goal.saving_goal_userId_fkey",
+    "label": "Add foreign key \"saving_goal_userId_fkey\" on \"saving_goal\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "saving_goal_userId_fkey",
+        "table": "saving_goal"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"saving_goal_userId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "saving_goal_userId_fkey",
+          "public",
+          "\"public\".\"saving_goal\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"saving_goal_userId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"saving_goal\"\nADD CONSTRAINT \"saving_goal_userId_fkey\"\nFOREIGN KEY (\"userId\")\nREFERENCES \"public\".\"app_user\" (\"id\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"saving_goal_userId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "saving_goal_userId_fkey",
+          "public",
+          "\"public\".\"saving_goal\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "rowLevelSecurity.public.capsule",
+    "label": "Enable row-level security on \"capsule\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "rowLevelSecurity",
+        "name": "capsule"
+      }
+    },
+    "precheck": [
+      {
+        "description": "check RLS is not already enabled on \"capsule\"",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_class\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"relnamespace\" WHERE (\"n\".\"nspname\" = $1 AND \"c\".\"relname\" = $2 AND NOT (\"c\".\"relrowsecurity\"))) AS \"result\"",
+        "params": [
+          "public",
+          "capsule"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "enable row-level security on \"capsule\"",
+        "sql": "ALTER TABLE \"public\".\"capsule\" ENABLE ROW LEVEL SECURITY"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify row-level security is enabled on \"capsule\"",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_class\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"relnamespace\" WHERE (\"n\".\"nspname\" = $1 AND \"c\".\"relname\" = $2 AND \"c\".\"relrowsecurity\")) AS \"result\"",
+        "params": [
+          "public",
+          "capsule"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "rowLevelSecurity.public.saving_deposit",
+    "label": "Enable row-level security on \"saving_deposit\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "rowLevelSecurity",
+        "name": "saving_deposit"
+      }
+    },
+    "precheck": [
+      {
+        "description": "check RLS is not already enabled on \"saving_deposit\"",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_class\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"relnamespace\" WHERE (\"n\".\"nspname\" = $1 AND \"c\".\"relname\" = $2 AND NOT (\"c\".\"relrowsecurity\"))) AS \"result\"",
+        "params": [
+          "public",
+          "saving_deposit"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "enable row-level security on \"saving_deposit\"",
+        "sql": "ALTER TABLE \"public\".\"saving_deposit\" ENABLE ROW LEVEL SECURITY"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify row-level security is enabled on \"saving_deposit\"",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_class\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"relnamespace\" WHERE (\"n\".\"nspname\" = $1 AND \"c\".\"relname\" = $2 AND \"c\".\"relrowsecurity\")) AS \"result\"",
+        "params": [
+          "public",
+          "saving_deposit"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "rowLevelSecurity.public.saving_goal",
+    "label": "Enable row-level security on \"saving_goal\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "rowLevelSecurity",
+        "name": "saving_goal"
+      }
+    },
+    "precheck": [
+      {
+        "description": "check RLS is not already enabled on \"saving_goal\"",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_class\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"relnamespace\" WHERE (\"n\".\"nspname\" = $1 AND \"c\".\"relname\" = $2 AND NOT (\"c\".\"relrowsecurity\"))) AS \"result\"",
+        "params": [
+          "public",
+          "saving_goal"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "enable row-level security on \"saving_goal\"",
+        "sql": "ALTER TABLE \"public\".\"saving_goal\" ENABLE ROW LEVEL SECURITY"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify row-level security is enabled on \"saving_goal\"",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_class\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"relnamespace\" WHERE (\"n\".\"nspname\" = $1 AND \"c\".\"relname\" = $2 AND \"c\".\"relrowsecurity\")) AS \"result\"",
+        "params": [
+          "public",
+          "saving_goal"
+        ]
+      }
+    ]
+  }
+]
